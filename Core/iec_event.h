@@ -52,4 +52,11 @@ struct iec_msg
 };
 
 
+extern osStatus iec_post_msg(osMessageQId q_id, struct iec_msg *msg, int millisec);
+extern struct iec_msg *iec_recv_msg(osMessageQId queue_id, int millisec);
+extern void iec_init_msg(struct iec_msg *msg, int sender, int recver, int evt_type, int *data);
+extern struct iec_msg *iec_create_msg(int sender, int recver, int evt_type, int *data);
+extern void iec_free_msg(struct iec_msg *msg);
+
+
 #endif

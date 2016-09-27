@@ -220,9 +220,9 @@ int32_t osKernelRunning(void);
 #define osThreadDef(name, priority, instances, stacksz)  \
 extern osThreadDef_t os_thread_def_##name
 #else                            // define the object
-#define osThreadDef(name, priority, instances, stacksz)  \
+#define osThreadDef(name,entry, priority, tick, stacksz)  \
 osThreadDef_t os_thread_def_##name = \
-{("cmsis"), (name), (stacksz), ((rt_uint8_t)(priority - osPriorityIdle) + 1), 50}
+{#name, (entry), (stacksz), ((rt_uint8_t)(priority - osPriorityIdle) + 1), tick}
 #endif
 
 /// Access a Thread defintion.
