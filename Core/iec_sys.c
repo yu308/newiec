@@ -29,7 +29,7 @@ void iec_main_thread_entry(void *param)
 {
 	struct sys_info *info = (struct sys_info*)param;
 	
-	XPRINTF("IEC:SYS: system is start.\n");
+	XPRINTF("IEC:SYS: system startup.\n");
 
 	struct iec_msg *msg = 0;
 
