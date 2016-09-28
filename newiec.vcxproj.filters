@@ -10,6 +10,9 @@
     <ClCompile Include="Core\iec_sys.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Layer\Link\serial_link.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="G:\newiec\CMakeLists.txt" />
@@ -27,6 +30,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Core\iec_sys.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Layer\Link\serial_link.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

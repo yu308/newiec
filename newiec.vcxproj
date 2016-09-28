@@ -266,6 +266,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="Core\iec_event.c" />
     <ClCompile Include="Core\iec_sys.c" />
     <ClCompile Include="G:\newiec\OS\cmsis_rtthread.c" />
+    <ClCompile Include="Layer\Link\serial_link.c" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="G:/newiec/ZERO_CHECK.vcxproj">
@@ -276,6 +277,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="Core\iec_cfg.h" />
     <ClInclude Include="Core\iec_event.h" />
     <ClInclude Include="Core\iec_sys.h" />
+    <ClInclude Include="Layer\Link\serial_link.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

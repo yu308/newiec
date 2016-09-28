@@ -70,8 +70,9 @@
 
 */
 
-#define CFG_LINK_MAX			(5)		/*支持的链路数量 */
+#define CFG_LINK_MAX			(4)		/*支持的链路数量 */
 #define CFG_APP_MAX				(1)		/*APP数量 */
+#define	CFG_SOCKET_MAX			(5)		/*网络模式下SOCKET最大连接数*/
 
 /********** Memory ************/
 #ifndef EXTMALLOC
