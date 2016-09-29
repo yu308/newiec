@@ -13,6 +13,9 @@
     <ClCompile Include="Layer\Link\serial_link.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Layer\App\app.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="G:\newiec\CMakeLists.txt" />
@@ -33,6 +36,15 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Layer\Link\serial_link.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Layer\App\app.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Layer\App\element.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Layer\App\asdu.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

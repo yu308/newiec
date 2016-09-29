@@ -12,6 +12,23 @@
 	声明			 xxxxx						全小写
 **************************************************/
 
+/********************* Memory *********************/
+#ifndef EXTMALLOC
+#define XMALLOC  malloc
+#define XFREE    free
+#define XREALLOC realloc
+#define XCALLOC  calloc
+#define XPRINTF	 printf
+#define XMEMSET	 memset
+#define XMEMCPY	 memcpy
+#else
+extern void *XMALLOC(size_t n);
+extern void *XREALLOC(void *p, size_t n);
+extern void *XCALLOC(size_t n, size_t s);
+extern void XFREE(void *p);
+extern void XPRINTF();
+#endif // !EXTMALLOC
+/************************************************/
 
 
 /********************运行工作模式配置***************************/
@@ -74,22 +91,9 @@
 #define CFG_APP_MAX				(1)		/*APP数量 */
 #define	CFG_SOCKET_MAX			(5)		/*网络模式下SOCKET最大连接数*/
 
-/********** Memory ************/
-#ifndef EXTMALLOC
-#define XMALLOC  malloc
-#define XFREE    free
-#define XREALLOC realloc
-#define XCALLOC  calloc
-#define XPRINTF	 printf
-#define XMEMSET	 memset
-#define XMEMCPY	 memcpy
-#else
-extern void *XMALLOC(size_t n);
-extern void *XREALLOC(void *p, size_t n);
-extern void *XCALLOC(size_t n, size_t s);
-extern void XFREE(void *p);
-extern void XPRINTF();
-#endif // !EXTMALLOC
-/**************************************/
+
+#define	CFG_ASDU_NODE_MAX       (10)		/*ASDU包含信息点数*/
+
+
 
 #endif
