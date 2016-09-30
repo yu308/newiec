@@ -1,4 +1,5 @@
 #include "app.h"
+#include "iec_event.h"
 
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
 void app_thread_entry(void *param);
@@ -46,16 +47,54 @@ struct app_info *app_create(int asdu_addr, int asdu_addr_len, int cause_len, int
 	app_init(info, asdu_addr, asdu_addr_len, cause_len, node_addr_len, sm2_enable);
 }
 
+int app_check_data()
+{
+
+}
+
+
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
 void app_thread_entry(void *param)
 {
 	struct app_info *info = (struct app_info *)param;
 
-	struct iec_msg *msg = 0;
+	struct iec_event *event = 0;
 
 	while (1)
 	{
-		msg=
+		event = iec_recv_msg(info->app_event, osWaitForever);
+
+		switch (event->evt_type)
+		{
+		case EVT_APP_ADD_NODE:
+			break;
+		case EVT_APP_NODE_UPDATE:				
+			break;		/*信息点变化*/
+		case EVT_APP_RECV_DATA: /*被动收到LINK至ASDU数据*/
+			if (event->msg->m_app_recv_info.funcode==APP_FUN_FIRST)	/*请求一类数据 检测一类任务缓存*/
+			{
+				/*若有任务,配置消息信息*/
+			}
+			else if (event->msg->m_app_recv_info.funcode == APP_FUN_SECOND) /*请求二类数据 检测二类任务缓存*/
+			{
+				/*若有任务,配置消息信息*/
+			}
+			else if (event->msg->m_app_recv_info.funcode == APP_FUN_USER) /*用户应用数据*/
+			{
+				/*控制、文件、参数设置*/
+			}
+			break;		
+		case EVT_APP_SEND_DATA:	/*主动发送ASDU数据,ASDU数据由用户应用产生*/			
+			break;		
+		case EVT_APP_CTRL_OP:					
+			break;		/*控制操作*/
+		case EVT_APP_SET_OP:					
+			break;		/*设置修改操作*/
+		case EVT_APP_READ_OP:					
+			break;		/*读取操作*/
+		case EVT_APP_FILE_OP:					
+			break;		/*文件操作*/
+		}
 	}
 }
 

@@ -18,9 +18,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="G:\newiec\CMakeLists.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <Filter Include="Source Files">
       <UniqueIdentifier>{D30D42BC-177A-3068-A5AA-CFB5612AF5A6}</UniqueIdentifier>
     </Filter>
@@ -47,5 +44,8 @@
     <ClInclude Include="Layer\App\asdu.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="READ.org" />
   </ItemGroup>
 </Project>

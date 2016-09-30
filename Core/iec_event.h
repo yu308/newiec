@@ -39,16 +39,77 @@
 #endif
 
 /// <summary>
+/// 创建Link时参数
+/// </summary>
+struct link_param
+{
+	unsigned char link_addr;
+	unsigned char link_addr_len;
+	unsigned char link_dir;
+};
+
+/// <summary>
+/// Link实例收到的数据信息
+/// </summary>
+struct link_recv_info
+{
+	char *recv_data;
+	int recv_len;
+};
+
+/// <summary>
+/// LINK实例收到APP实例需发送数据信息
+/// </summary>
+struct link_send_info
+{
+	char *app_data;
+	char app_data_len;
+};
+
+/// <summary>
+/// 创建APP实例时的参数
+/// </summary>
+struct app_param
+{
+	unsigned char asdu_addr;
+	unsigned char asdu_addr_len;
+	unsigned char cause_len;
+	unsigned char node_addr_len;
+	unsigned char sm2_enable;
+};
+
+
+/// <summary>
+/// APP实例收到LINK实例的数据信息
+/// </summary>
+struct app_recv_info
+{
+	char funcode;
+	char *app_data;
+};
+
+union event_msg
+{
+	struct link_param m_link_param;
+	struct link_send_info m_link_send_info;
+	struct link_recv_info m_link_recv_info;
+
+
+	struct app_param	m_app_param;
+	struct app_recv_info	m_app_recv_info;
+};
+
+/// <summary>
 /// 事件
 /// </summary>
-struct iec_msg
+struct iec_event
 {
 	int sender;		/*事件发送者*/
 	int recver;		/*事件接收者*/
 	int mem_auto;	/*是否自动回收*/
 	
 	int evt_type;		/*事件类型*/
-	int *msg;			/*事件数据*/
+	union event_msg *msg;			/*事件数据*/
 };
 
 

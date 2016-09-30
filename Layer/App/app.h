@@ -5,6 +5,7 @@
 #include "element.h"
 #include "asdu.h"
 
+
 /// <summary>
 /// ASDU传输数据任务
 /// </summary>
@@ -61,4 +62,8 @@ struct app_info
 	osThreadId app_tid;
 #endif
 };
+
+#define APP_FUN_FIRST		(4)
+#define APP_FUN_SECOND		(5)
+#define APP_FUN_USER		(6)
 #endif

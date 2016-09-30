@@ -45,8 +45,10 @@ struct serial_link_info
 #define NO_AWS				(0)			/*无回答*/
 #define INVAILD_FCB			(1)			/*无效FCB计数*/
 #define TO_LINK				(2)			/*至LINK*/
-#define TO_APP				(3)			/*至APP*/
-#define TO_LINK_REQ				(4)			/*至LINK链路状态*/
+#define TO_LINK_REQ				(3)			/*至LINK链路状态*/
+#define TO_APP_FIRST				(4)			/*至APP*/
+#define TO_APP_SECOND		(5)
+#define TO_APP_USER			(6)
 
 /// <summary>
 /// 网络方式--链路配置

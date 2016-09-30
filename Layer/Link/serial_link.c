@@ -281,9 +281,11 @@ int serial_link_dispatch(struct serial_link_info *info, struct serial_link_cfg *
 		return TO_LINK;
 		break;
 	case FC_DW_DATA_YES:
+		return TO_APP_USER;
 	case FC_DW_FIRST_DATA:	/**< 一级数据 */
+		return TO_APP_FIRST;
 	case FC_DW_SEC_DATA:
-		return TO_APP; //应用层---处理
+		return TO_APP_SECOND; //应用层---处理
 		break;
 	default:
 		break;
@@ -367,7 +369,7 @@ void serial_link_thread_entry(void *param)
 {
 	struct serial_link_info *info = (struct serial_link_info*)param;
 
-	struct iec_msg *msg = 0;
+	struct iec_event *event = 0;
 	char *data = 0;
 	int data_len = 0;
 	char domain_byte = 0;
@@ -377,19 +379,19 @@ void serial_link_thread_entry(void *param)
 
 	while (1)
 	{
-		msg=iec_recv_msg(info->serial_event, osWaitForever);
-		if (msg == 0)
+		event =iec_recv_msg(info->serial_event, osWaitForever);
+		if (event == 0)
 			continue;
 
-		switch (msg->evt_type)
+		switch (event->evt_type)
 		{
 		case EVT_LINK_PHY_CONNECT:
 			break;
 		case EVT_LINK_PHY_DISCONNECT:
 			break;
 		case EVT_LINK_RECV_DATA:
-			data = (char *)msg->msg[0];
-			data_len = msg->msg[1];
+			data = event->msg->m_link_recv_info.recv_data;
+			data_len = event->msg->m_link_recv_info.recv_len;
 			XMEMSET(info->cfg->recv_buff, 0, data_len);
 			XMEMCPY(info->cfg->recv_buff, data, data_len);
 
@@ -414,7 +416,7 @@ void serial_link_thread_entry(void *param)
 				info->cfg->serial_write(info->cfg->send_buff, data_len);
 				XMEMCPY(info->cfg->prev_sent_buff, info->cfg->send_buff, data_len);
 			}
-			else if (dispatch_res == TO_APP)
+			else 
 			{
 				/*发送APP部分数据至APP层*/
 			}
