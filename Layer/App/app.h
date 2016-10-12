@@ -2,8 +2,9 @@
 #define _app_h_
 
 #include "iec_cfg.h"
-#include "element.h"
-#include "asdu.h"
+#include "iec_element.h"
+#include "iec_asdu.h"
+#include "iec_node.h"
 
 
 /// <summary>

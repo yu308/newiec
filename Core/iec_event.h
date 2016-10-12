@@ -38,6 +38,29 @@
 #define		SYS_OBJ				(0x0)		/*使用单任务模式时 系统对象编号*/
 #endif
 
+
+struct normal_node_create_info
+{
+	unsigned int addr; /* 信息点地址 */
+	unsigned int appid;/* 所属app实例id */
+};
+
+struct seq_node_create_info
+{
+	unsigned int addr; /*信息点组起始地址*/
+	unsigned int appid;/*所属app实例id*/
+	unsigned int count;/*序列化信息点组数量*/
+};
+
+struct normal_node_update_info
+{
+	unsigned int appid;
+	unsigned int asdu_ident;
+	unsigned int cause;
+
+	int *val;
+};
+
 /// <summary>
 /// 创建Link时参数
 /// </summary>
@@ -97,6 +120,10 @@ union event_msg
 
 	struct app_param	m_app_param;
 	struct app_recv_info	m_app_recv_info;
+
+
+	struct normal_node_create_info m_nd_info;
+	struct seq_node_create_info m_snd_info;
 };
 
 /// <summary>
@@ -106,18 +133,19 @@ struct iec_event
 {
 	int sender;		/*事件发送者*/
 	int recver;		/*事件接收者*/
-	int mem_auto;	/*是否自动回收*/
+	int event_mem_auto;	/*event是否自动回收*/
+	int msg_mem_auto;
 	
 	int evt_type;		/*事件类型*/
 	union event_msg *msg;			/*事件数据*/
 };
 
 
-extern osStatus iec_post_msg(osMessageQId q_id, struct iec_msg *msg, int millisec);
-extern struct iec_msg *iec_recv_msg(osMessageQId queue_id, int millisec);
-extern void iec_init_msg(struct iec_msg *msg, int sender, int recver, int evt_type, int *data);
-extern struct iec_msg *iec_create_msg(int sender, int recver, int evt_type, int *data);
-extern void iec_free_msg(struct iec_msg *msg);
+extern osStatus iec_post_event(osMessageQId q_id, struct iec_event *msg, int millisec);
+extern struct iec_event *iec_recv_event(osMessageQId queue_id, int millisec);
+extern void iec_init_event(struct iec_event *msg, int sender, int recver, int evt_type, int *data);
+extern struct iec_event *iec_create_event(int sender, int recver, int evt_type, int *data,int data_auto);
+extern void iec_free_event(struct iec_event *msg);
 
 
 #endif

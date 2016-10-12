@@ -7,9 +7,9 @@
 /// <param name="msg">The MSG.</param>
 /// <param name="millisec">The millisec.</param>
 /// <returns></returns>
-osStatus iec_post_msg(osMessageQId q_id, struct iec_msg *msg, int millisec)
+osStatus iec_post_event(osMessageQId q_id, struct iec_event *evt, int millisec)
 {
-	return osMessagePut(q_id, (int)msg, millisec);
+	return osMessagePut(q_id, (int)evt, millisec);
 }
 
 /// <summary>
@@ -18,7 +18,7 @@ osStatus iec_post_msg(osMessageQId q_id, struct iec_msg *msg, int millisec)
 /// <param name="queue_id">The queue_id.</param>
 /// <param name="millisec">The millisec.</param>
 /// <returns></returns>
-struct iec_msg *iec_recv_msg(osMessageQId queue_id, int millisec)
+struct iec_msg *iec_recv_event(osMessageQId queue_id, int millisec)
 {
 	struct iec_msg *temp = 0;
 	osEvent	event=osMessageGet(queue_id,millisec);
@@ -39,12 +39,12 @@ struct iec_msg *iec_recv_msg(osMessageQId queue_id, int millisec)
 /// <param name="recver">The recver.</param>
 /// <param name="evt_type">The evt_type.</param>
 /// <param name="data">The data.</param>
-void iec_init_msg(struct iec_msg *msg, int sender, int recver, int evt_type, int *data)
+void iec_init_event(struct iec_event *evt, int sender, int recver, int evt_type, int *data,int data_auto)
 {
-	msg->sender = sender;
-	msg->recver = recver;
-	msg->evt_type = evt_type;
-	msg->msg = data;
+	evt->sender = sender;
+	evt->recver = recver;
+	evt->evt_type = evt_type;
+	evt->msg = data;
 }
 
 
@@ -56,28 +56,35 @@ void iec_init_msg(struct iec_msg *msg, int sender, int recver, int evt_type, int
 /// <param name="evt_type">The evt_type.</param>
 /// <param name="data">The data.</param>
 /// <returns></returns>
-struct iec_msg *iec_create_msg(int sender, int recver, int evt_type, int *data)
+struct iec_event *iec_create_event(int sender, int recver, int evt_type, int *data,int data_auto)
 {
-	struct iec_msg *msg = (struct iec_msg *)XMALLOC(sizeof(struct iec_msg));
-	if (msg == 0)
+	struct iec_event *evt = (struct iec_event *)XMALLOC(sizeof(struct iec_event));
+	if (evt == 0)
 	{
 		XPRINTF("MSG:ERROR: no memory.\n");
 		return 0;
 	}
-	msg->mem_auto = 1;
-	iec_init_msg(msg, sender, recver, evt_type, data);
+	XMEMSET(evt, 0, sizeof(struct iec_event));
 
-	return msg;
+	evt->event_mem_auto = 1;
+	iec_init_msg(evt, sender, recver, evt_type, data,data_auto);
+
+	return evt;
 }
 
 /// <summary>
 /// 清除一个消息
 /// </summary>
 /// <param name="msg">The MSG.</param>
-void iec_free_msg(struct iec_msg *msg)
+void iec_free_event(struct iec_event *evt)
 {
-	if (msg->mem_auto == 1)
+	if (evt->msg_mem_auto == 1)
 	{
-		XFREE(msg);
+		XFREE(evt->msg);
+	}
+
+	if (evt->event_mem_auto == 1)
+	{
+		XFREE(evt);
 	}
 }
