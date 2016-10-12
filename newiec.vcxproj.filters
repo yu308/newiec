@@ -16,6 +16,9 @@
     <ClCompile Include="Layer\App\app.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Iec\iec_asdu.c" />
+    <ClCompile Include="Iec\iec_asdu_table.c" />
+    <ClCompile Include="Iec\iec_node.c" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Files">
@@ -38,12 +41,10 @@
     <ClInclude Include="Layer\App\app.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Layer\App\element.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Layer\App\asdu.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
+    <ClInclude Include="Iec\iec_asdu.h" />
+    <ClInclude Include="Iec\iec_asdu_table.h" />
+    <ClInclude Include="Iec\iec_element.h" />
+    <ClInclude Include="Iec\iec_node.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="READ.org" />

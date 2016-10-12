@@ -1,5 +1,14 @@
 #ifndef _asdu_h_
 #define _asdu_h_
+
+#define NO_SEQ		(0)		/*无SEQ*/
+#define SEQ			(1)		/*支持SEQ*/
+
+#define NO_QUAL_WORD	(0)
+
+#define NO_TIME		(0)
+
+#define NO_EXT_TIME	(0)
 /// <summary>
 /// 应用单元标识
 /// </summary>
@@ -130,32 +139,15 @@ enum Cause
 
 
 
-union node_val
-{
-	int int_val;		/*整形*/
-	float float_val;	/*浮点*/
-	char iarray_val[4];		/*字符*/
-	volatile unsigned bit_val : 32;	/*位串*/
-};
 
-/// <summary>
-/// 信息点信息
-/// </summary>
-struct node
-{
-	int addr;	/* 信息点地址 */
-	union node_val val; /*信息点值*/
-	int changed;		/*是否有改变*/
-
-	int buffered;		/*是否缓存数据*/
-	int asdu_ident;		/*发送数据时采用ASDU类型*/
-};
 
 /// <summary>
 /// ASDU配置信息 用于解析或封装信息点数据
 /// </summary>
 struct asdu_cfg
-{
+{	
+	int asdu_ident;
+	/*int seq_tag;*/ /*运行时决定*/
 	int val_ident;	/* 信息点值类型标识*/
 	int qual_ident;	/* 信息点品质描述类型标识*/
 	int tm_ident;	/* 信息点时间标签标识*/

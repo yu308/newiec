@@ -95,5 +95,82 @@ extern void XPRINTF();
 #define	CFG_ASDU_NODE_MAX       (10)		/*ASDU包含信息点数*/
 
 
+/******************************ASDU 表格配置******************************/
 
+#define CFG_ASDU_M_SP_NA			(1)
+#define CFG_ASDU_M_SP_NA			(1)
+#define CFG_ASDU_M_SP_TA			(1)
+
+#define CFG_ASDU_M_DP_NA			(1)
+#define CFG_ASDU_M_DP_TA			(1)
+
+#define CFG_ASDU_M_ST_NA			(1)
+#define CFG_ASDU_M_ST_TA			(1)
+
+#define CFG_ASDU_M_BO_NA			(1)
+#define CFG_ASDU_M_BO_TA   (1)
+
+#define CFG_ASDU_M_ME_NA   (1)
+#define CFG_ASDU_M_ME_TA   (1)
+#define CFG_ASDU_M_ME_NB   (1)
+#define CFG_ASDU_M_ME_TB   (1)
+#define CFG_ASDU_M_ME_NC   (1)
+#define CFG_ASDU_M_ME_TC   (1)
+
+#define CFG_ASDU_M_IT_NA   (1)
+#define CFG_ASDU_M_IT_TA   (1)
+
+#define CFG_ASDU_M_EP_TA   (1)
+#define CFG_ASDU_M_EP_TB   (1)
+
+#define CFG_ASDU_M_EP_TC   (1)
+#define CFG_ASDU_M_PS_NA   (1)
+#define CFG_ASDU_M_ME_ND   (1)
+
+#define CFG_ASDU_M_SP_TB   (1)
+#define CFG_ASDU_M_DP_TB   (1)
+#define CFG_ASDU_M_ST_TB   (1)
+#define CFG_ASDU_M_BO_TB   (1)
+#define CFG_ASDU_M_ME_TD   (1)
+#define CFG_ASDU_M_ME_TE   (1)
+#define CFG_ASDU_M_ME_TF   (1)
+#define CFG_ASDU_M_IT_TB   (1)
+#define CFG_ASDU_M_EP_TD   (1)
+#define CFG_ASDU_M_EP_TE   (1)
+#define CFG_ASDU_M_EP_TF   (1)
+
+#define CFG_ASDU_C_SC_NA    (1)
+#define CFG_ASDU_C_DC_NA   (1)
+#define CFG_ASDU_C_RC_NA   (1)
+#define CFG_ASDU_C_SE_NA   (1)
+#define CFG_ASDU_C_SE_NB   (1)
+#define CFG_ASDU_C_SE_NC   (1)
+#define CFG_ASDU_C_BO_NA   (1)
+
+#define CFG_ASDU_M_EI_NA   (1)
+
+#define CFG_ASDU_C_IC_NA    (1)
+#define CFG_ASDU_C_CI_NA   (1)
+#define CFG_ASDU_C_RD_NA   (1)
+#define CFG_ASDU_C_CS_NA   (1)
+#define CFG_ASDU_C_TS_NA   (1)
+#define CFG_ASDU_C_RP_NA   (1)
+#define CFG_ASDU_C_CD_NA   (1)
+
+#define CFG_ASDU_P_ME_NA    (1)
+#define CFG_ASDU_P_ME_NB   (1)
+#define CFG_ASDU_P_ME_NC   (1)
+#define CFG_ASDU_P_AC_NA   (1)
+
+#define CFG_ASDU_F_FR_NA    (0)
+#define CFG_ASDU_F_SR_NA   (0)
+#define CFG_ASDU_F_SC_NA   (0)
+#define CFG_ASDU_F_LS_NA   (0)
+#define CFG_ASDU_F_AF_NA   (0)
+#define CFG_ASDU_F_SG_NA   (0)
+#define CFG_ASDU_F_DR_TA   (0)
+
+#define CFG_ASDU_COUNT		(51+CFG_ASDU_F_FR_NA+CFG_ASDU_F_SR_NA+CFG_ASDU_F_SC_NA+CFG_ASDU_F_LS_NA+CFG_ASDU_F_AF_NA+CFG_ASDU_F_SG_NA+CFG_ASDU_F_DR_TA)
+
+/************************************************************************/
 #endif
