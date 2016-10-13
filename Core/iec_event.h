@@ -4,6 +4,7 @@
 
 #include "cmsis_os.h"
 #include "iec_cfg.h"
+#include "iec_node.h"
 
 
 /***************************系统层事件定义*****************************************/
@@ -28,6 +29,10 @@
 #define		EVT_APP_RECV_DATA				(0x23)		/*收到ASDU数据*/
 #define		EVT_APP_SEND_DATA				(0x24)		/*需发送ASDU数据*/
 
+
+#define		EVT_APP_SUB_NORMAL_NODE		(1)
+#define		EVT_APP_SUB_SEQ_NODE		(2)
+
 /******************************APP用户应用层事件定义*************************************/
 #define		EVT_APP_CTRL_OP					(0x31)		/*控制操作*/
 #define		EVT_APP_SET_OP					(0x32)		/*设置修改操作*/
@@ -38,13 +43,18 @@
 #define		SYS_OBJ				(0x0)		/*使用单任务模式时 系统对象编号*/
 #endif
 
-
+/// <summary>
+/// 创建添加通用信息点信息
+/// </summary>
 struct normal_node_create_info
 {
 	unsigned int addr; /* 信息点地址 */
 	unsigned int appid;/* 所属app实例id */
 };
 
+/// <summary>
+/// 创建序列化信息点信息
+/// </summary>
 struct seq_node_create_info
 {
 	unsigned int addr; /*信息点组起始地址*/
@@ -52,13 +62,32 @@ struct seq_node_create_info
 	unsigned int count;/*序列化信息点组数量*/
 };
 
+/// <summary>
+/// 更新通用信息点时信息
+/// </summary>
 struct normal_node_update_info
 {
+	unsigned int appid; /*所属APP*/
+	unsigned int node_addr;	/*信息点地址*/
+	unsigned int asdu_ident;/*asdu标识*/
+	unsigned int cause; /*传送原因*/
+	int buffered;/*缓存数据*/
+	
+	struct node_frame_info f_info;/* node 帧格式数据*/
+};
+
+/// <summary>
+/// 序列化信息点更新时信息
+/// </summary>
+struct seq_node_update_info
+{
 	unsigned int appid;
+	unsigned int node_start_addr;
+	unsigned int count;
 	unsigned int asdu_ident;
 	unsigned int cause;
 
-	int *val;
+	struct node_frame_info *f_seq_info;/*对应count数量的 node 帧格式数据,*/
 };
 
 /// <summary>
@@ -124,6 +153,9 @@ union event_msg
 
 	struct normal_node_create_info m_nd_info;
 	struct seq_node_create_info m_snd_info;
+
+	struct normal_node_update_info m_nd_up_info;
+	struct seq_node_update_info m_snd_up_info;
 };
 
 /// <summary>
@@ -137,6 +169,7 @@ struct iec_event
 	int msg_mem_auto;
 	
 	int evt_type;		/*事件类型*/
+	int evt_sub_type;   /*事件细分*/
 	union event_msg *msg;			/*事件数据*/
 };
 

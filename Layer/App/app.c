@@ -1,6 +1,7 @@
 #include "app.h"
 #include "iec_event.h"
 
+
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
 void app_thread_entry(void *param);
 #define APP_THREAD_TICK		(50)
@@ -27,8 +28,13 @@ void app_init(struct app_info *info, int asdu_addr, int asdu_addr_len,int cause_
 	cfg->sm2_enable = sm2_enable;
 
 	info->cfg = cfg;
-	info->first_task = 0;
-	info->second_task = 0;
+
+	info->n_node_list = arraylist_create();
+	info->s_node_list = arraylist_create();
+
+	info->first_task = arraylist_create();
+	info->second_task = arraylist_create();
+	info->buffered = arraylist_create();
 
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
 	info->app_event = osMessageCreate(osMessageQ(appevent), 0);
@@ -53,6 +59,19 @@ int app_check_data()
 }
 
 
+void app_create_normal_node(struct app_info *info,unsigned int node_addr)
+{
+	struct normal_node *nd=iec_create_normal_node(node_addr);
+	arraylist_add(info->n_node_list, nd);
+}
+
+void app_create_seq_node(struct app_info *info, unsigned int node_start_addr)
+{
+	struct seq_node *snd = iec_create_seq_node(node_start_addr);
+	arraylist_add(info->s_node_list, snd);
+}
+
+
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
 void app_thread_entry(void *param)
 {
@@ -62,13 +81,28 @@ void app_thread_entry(void *param)
 
 	while (1)
 	{
-		event = iec_recv_msg(info->app_event, osWaitForever);
+		event = iec_recv_event(info->app_event, osWaitForever);
+
+		if (event == 0)
+			continue;
 
 		switch (event->evt_type)
 		{
 		case EVT_APP_ADD_NODE:
+			if (event->evt_sub_type == EVT_APP_SUB_NORMAL_NODE)
+			{
+				app_create_normal_node(info, event->msg->m_nd_info.addr);
+			}
+			else if (event->evt_sub_type == EVT_APP_SUB_SEQ_NODE)
+			{
+				app_create_seq_node(info, event->msg->m_snd_info.addr);
+			}
 			break;
-		case EVT_APP_NODE_UPDATE:				
+		case EVT_APP_NODE_UPDATE:	
+			if (event->evt_sub_type == EVT_APP_SUB_NORMAL_NODE)
+			{
+				
+			}
 			break;		/*信息点变化*/
 		case EVT_APP_RECV_DATA: /*被动收到LINK至ASDU数据*/
 			if (event->msg->m_app_recv_info.funcode==APP_FUN_FIRST)	/*请求一类数据 检测一类任务缓存*/

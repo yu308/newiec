@@ -75,6 +75,9 @@
     <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">newiec</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">.lib</TargetExt>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IncludePath>$(SolutionDir)\Iec;$(IncludePath)</IncludePath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <AdditionalIncludeDirectories>G:\newiec\OS;G:\newiec\Core;G:\newiec\Layer\App;G:\newiec\Layer\Link;G:\newiec\Api;G:\newiec\api_src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -210,10 +213,14 @@
     <ClCompile Include="Core\iec_event.c" />
     <ClCompile Include="Core\iec_sys.c" />
     <ClCompile Include="G:\newiec\OS\cmsis_rtthread.c" />
+    <ClCompile Include="Iec\arraylist.c" />
+    <ClCompile Include="Iec\hashtable.c" />
     <ClCompile Include="Iec\iec_asdu.c" />
     <ClCompile Include="Iec\iec_asdu_table.c" />
+    <ClCompile Include="Iec\iec_element.c" />
     <ClCompile Include="Iec\iec_node.c" />
     <ClCompile Include="Layer\App\app.c" />
+    <ClCompile Include="Layer\App\app_task.c" />
     <ClCompile Include="Layer\Link\serial_link.c" />
   </ItemGroup>
   <ItemGroup>
@@ -225,11 +232,14 @@
     <ClInclude Include="Core\iec_cfg.h" />
     <ClInclude Include="Core\iec_event.h" />
     <ClInclude Include="Core\iec_sys.h" />
+    <ClInclude Include="Iec\arraylist.h" />
+    <ClInclude Include="Iec\hashtable.h" />
     <ClInclude Include="Iec\iec_asdu.h" />
     <ClInclude Include="Iec\iec_asdu_table.h" />
     <ClInclude Include="Iec\iec_element.h" />
     <ClInclude Include="Iec\iec_node.h" />
     <ClInclude Include="Layer\App\app.h" />
+    <ClInclude Include="Layer\App\app_task.h" />
     <ClInclude Include="Layer\Link\serial_link.h" />
   </ItemGroup>
   <ItemGroup>

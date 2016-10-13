@@ -5,6 +5,8 @@
 #include "iec_element.h"
 #include "iec_asdu.h"
 #include "iec_node.h"
+#include "arraylist.h"
+#include "hashtable.h"
 
 
 /// <summary>
@@ -53,10 +55,14 @@ struct app_info
 	int bro_applayer_id[CFG_APP_MAX];	/*中转机混合模式下 关联的APP*/
 #endif
 
-	struct asdu_task *first_task;	/*一级数据 即传输优先级最高的数据*/
-	struct asdu_task *second_task;	/*二级数据 次之*/
+	arraylist *n_node_list;	/*普通信息点组记录*/
+	arraylist *s_node_list;/*序列化信息点组记录*/
+	
 
-	struct buffered_data *buffered;	
+	hashtable *first_task;	/*一级数据 即传输优先级最高的数据*/
+	hashtable *second_task;	/*二级数据 次之*/
+
+	arraylist *buffered;
 
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
 	osMessageQId app_event;

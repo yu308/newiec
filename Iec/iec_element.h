@@ -576,4 +576,6 @@ enum Element_Ident
 
 /************** END ÐÅÏ¢ÔªËØ  END*********************/
 
+extern const unsigned char element_len_cfg[41];
+
 #endif

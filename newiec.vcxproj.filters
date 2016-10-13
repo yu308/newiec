@@ -19,6 +19,12 @@
     <ClCompile Include="Iec\iec_asdu.c" />
     <ClCompile Include="Iec\iec_asdu_table.c" />
     <ClCompile Include="Iec\iec_node.c" />
+    <ClCompile Include="Iec\iec_element.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Iec\arraylist.c" />
+    <ClCompile Include="Layer\App\app_task.c" />
+    <ClCompile Include="Iec\hashtable.c" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Files">
@@ -45,6 +51,9 @@
     <ClInclude Include="Iec\iec_asdu_table.h" />
     <ClInclude Include="Iec\iec_element.h" />
     <ClInclude Include="Iec\iec_node.h" />
+    <ClInclude Include="Iec\arraylist.h" />
+    <ClInclude Include="Layer\App\app_task.h" />
+    <ClInclude Include="Iec\hashtable.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="READ.org" />
