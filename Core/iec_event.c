@@ -31,32 +31,9 @@ struct iec_msg *iec_recv_event(osMessageQId queue_id, int millisec)
 	return temp;
 }
 
-/// <summary>
-/// 初始化已有的msg.
-/// </summary>
-/// <param name="msg">The MSG.</param>
-/// <param name="sender">The sender.</param>
-/// <param name="recver">The recver.</param>
-/// <param name="evt_type">The evt_type.</param>
-/// <param name="data">The data.</param>
-void iec_init_event(struct iec_event *evt, int sender, int recver, int evt_type, int *data,int data_auto)
-{
-	evt->sender = sender;
-	evt->recver = recver;
-	evt->evt_type = evt_type;
-	evt->msg = data;
-}
 
-
-/// <summary>
-/// 创建一个新消息.
-/// </summary>
-/// <param name="sender">The sender.</param>
-/// <param name="recver">The recver.</param>
-/// <param name="evt_type">The evt_type.</param>
-/// <param name="data">The data.</param>
-/// <returns></returns>
-struct iec_event *iec_create_event(int sender, int recver, int evt_type, int *data,int data_auto)
+struct iec_event *iec_create_event(int sender, int recver, int evt_type, 
+	int *main_msg,int auto_free)
 {
 	struct iec_event *evt = (struct iec_event *)XMALLOC(sizeof(struct iec_event));
 	if (evt == 0)
@@ -66,10 +43,20 @@ struct iec_event *iec_create_event(int sender, int recver, int evt_type, int *da
 	}
 	XMEMSET(evt, 0, sizeof(struct iec_event));
 
-	evt->event_mem_auto = 1;
-	iec_init_msg(evt, sender, recver, evt_type, data,data_auto);
-
+	evt->sender = sender;
+	evt->recver = recver;
+	evt->evt_type = evt_type;
+	evt->main_msg = main_msg;
+	evt->main_msg_free = auto_free;
+	
 	return evt;
+}
+
+void iec_set_event_sub(struct iec_event *evt, int evt_sub_type,int *sub_msg, int auto_free)
+{
+	evt->evt_sub_type = evt_sub_type;
+	evt->sub_msg = sub_msg;
+	evt->sub_msg_free = auto_free;
 }
 
 /// <summary>
@@ -78,13 +65,18 @@ struct iec_event *iec_create_event(int sender, int recver, int evt_type, int *da
 /// <param name="msg">The MSG.</param>
 void iec_free_event(struct iec_event *evt)
 {
-	if (evt->msg_mem_auto == 1)
+	if (evt->sub_msg_free == 1)
 	{
-		XFREE(evt->msg);
+		if (evt->sub_msg)
+			XFREE(evt->sub_msg);
 	}
 
-	if (evt->event_mem_auto == 1)
+	if (evt->main_msg_free == 1)
 	{
-		XFREE(evt);
+		if (evt->main_msg)
+			XFREE(evt->main_msg);
 	}
+
+	if (evt)
+		XFREE(evt);
 }

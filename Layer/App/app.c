@@ -1,5 +1,6 @@
 #include "app.h"
 #include "iec_event.h"
+#include "app_task.h"
 
 
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
@@ -59,16 +60,14 @@ int app_check_data()
 }
 
 
-void app_create_normal_node(struct app_info *info,unsigned int node_addr)
+void app_create_normal_node(struct app_info *info,int *normal_node)
 {
-	struct normal_node *nd=iec_create_normal_node(node_addr);
-	arraylist_add(info->n_node_list, nd);
+	arraylist_add(info->n_node_list, normal_node);
 }
 
-void app_create_seq_node(struct app_info *info, unsigned int node_start_addr)
+void app_create_seq_node(struct app_info *info, int *seq_node)
 {
-	struct seq_node *snd = iec_create_seq_node(node_start_addr);
-	arraylist_add(info->s_node_list, snd);
+	arraylist_add(info->s_node_list, seq_node);
 }
 
 
@@ -77,43 +76,46 @@ void app_thread_entry(void *param)
 {
 	struct app_info *info = (struct app_info *)param;
 
-	struct iec_event *event = 0;
+	struct iec_event *evt = 0;
 
 	while (1)
 	{
-		event = iec_recv_event(info->app_event, osWaitForever);
+		evt = iec_recv_event(info->app_event, osWaitForever);
 
-		if (event == 0)
+		if (evt == 0)
 			continue;
 
-		switch (event->evt_type)
+		switch (evt->evt_type)
 		{
 		case EVT_APP_ADD_NODE:
-			if (event->evt_sub_type == EVT_APP_SUB_NORMAL_NODE)
+			if (evt->evt_sub_type == EVT_APP_SUB_NORMAL_NODE)
 			{
-				app_create_normal_node(info, event->msg->m_nd_info.addr);
+				app_create_normal_node(info, evt->sub_msg);
 			}
-			else if (event->evt_sub_type == EVT_APP_SUB_SEQ_NODE)
+			else if (evt->evt_sub_type == EVT_APP_SUB_SEQ_NODE)
 			{
-				app_create_seq_node(info, event->msg->m_snd_info.addr);
+				app_create_seq_node(info, evt->sub_msg);
 			}
 			break;
 		case EVT_APP_NODE_UPDATE:	
-			if (event->evt_sub_type == EVT_APP_SUB_NORMAL_NODE)
+			if (evt->evt_sub_type == EVT_APP_SUB_NORMAL_NODE)
 			{
-				
+				struct normal_node_update_info *nd_info = (struct normal_node_update_info *)evt->main_msg;
+				if (nd_info->level == 0)
+					app_task_add_normal(info->first_task, nd_info->asdu_ident, nd_info->cause, nd_info->seq,
+						evt->sub_msg);
 			}
 			break;		/*信息点变化*/
 		case EVT_APP_RECV_DATA: /*被动收到LINK至ASDU数据*/
-			if (event->msg->m_app_recv_info.funcode==APP_FUN_FIRST)	/*请求一类数据 检测一类任务缓存*/
+			if (evt->msg->m_app_recv_info.funcode==APP_FUN_FIRST)	/*请求一类数据 检测一类任务缓存*/
 			{
 				/*若有任务,配置消息信息*/
 			}
-			else if (event->msg->m_app_recv_info.funcode == APP_FUN_SECOND) /*请求二类数据 检测二类任务缓存*/
+			else if (evt->msg->m_app_recv_info.funcode == APP_FUN_SECOND) /*请求二类数据 检测二类任务缓存*/
 			{
 				/*若有任务,配置消息信息*/
 			}
-			else if (event->msg->m_app_recv_info.funcode == APP_FUN_USER) /*用户应用数据*/
+			else if (evt->msg->m_app_recv_info.funcode == APP_FUN_USER) /*用户应用数据*/
 			{
 				/*控制、文件、参数设置*/
 			}
@@ -129,6 +131,8 @@ void app_thread_entry(void *param)
 		case EVT_APP_FILE_OP:					
 			break;		/*文件操作*/
 		}
+
+		iec_free_event(evt);
 	}
 }
 

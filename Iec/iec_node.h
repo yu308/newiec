@@ -11,7 +11,7 @@ union node_val
 
 
 /// <summary>
-/// 信息点
+/// 信息点 用于APP模块标记支持的信息点
 /// </summary>
 struct normal_node
 {
@@ -20,11 +20,10 @@ struct normal_node
 
 	//int buffered;		/*是否缓存数据*/
 	//int asdu_ident;		/*发送数据时采用ASDU类型*/
-	struct normal_node *next;
 };
 
 /// <summary>
-/// 序列化信息点组
+/// 序列化信息点组 用于APP模块标记支持的信息点
 /// </summary>
 struct seq_node
 {
@@ -39,21 +38,25 @@ struct seq_node
 
 //struct file_node 文件操作
 
+/// <summary>
+/// EVENT中信息点的表现形式
+/// </summary>
 struct node_frame_info
 {
+	unsigned int addr;
 	int val;
 	int qual;
 	unsigned int utc_time;
+	int buffered;
 
 };
 
 
-extern struct seq_node *iec_create_seq_node(int node_start_addr);
+extern struct seq_node *iec_create_seq_node(int node_start_addr,int count);
 extern void iec_del_seq_node(struct seq_node *node);
 extern unsigned int iec_pack_node_addr(char *buff, unsigned int node_addr, int addr_len);
 extern unsigned int iec_pack_node_element(char *buff, int element_val, int element_ident);
 extern struct normal_node *iec_create_normal_node(int node_addr);
-extern void iec_del_normal_node(struct normal_node *node);
-
-
+void iec_api_update_normal_node(int appid, unsigned int asdu_ident,
+	unsigned int cause, int seq, struct node_frame_info *f_node);
 #endif

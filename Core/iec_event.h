@@ -8,12 +8,12 @@
 
 
 /***************************系统层事件定义*****************************************/
-#define		EVT_SYS_CREATE_LINK		(1)		/*创建链路链接层*/
-#define		EVT_SYS_CREATE_APP		(2)		/*创建APP层*/
-#define		EVT_SYS_BIND_APP_LINK	(3)		/*绑定APP层与链路层*/
-#define		EVT_SYS_START			(4)		/*系统启动服务*/
-#define		EVT_SYS_DEL_APP			(5)		/*删除一个APP层*/
-#define		EVT_SYS_DEL_LINK		(6)		/*删除一个链路层*/
+#define		EVT_SYS_CREATE_LINK		(1)		/*创建链路链接层  MSG--链路地址,链路地址长度*/
+#define		EVT_SYS_CREATE_APP		(2)		/*创建APP层 MSG--ASDU地址,ASDU地址长度,传输原因长度,启用SM2,信息点地址长度*/
+#define		EVT_SYS_BIND_APP_LINK	(3)		/*绑定APP层与链路层 MSG---链路模块ID,APP模块ID*/
+#define		EVT_SYS_START			(4)		/*系统启动服务 MSG--启动*/
+#define		EVT_SYS_DEL_APP			(5)		/*删除一个APP层 MSG---APP模块ID*/
+#define		EVT_SYS_DEL_LINK		(6)		/*删除一个链路层 MSG---LINK模块ID*/
 #define		EVT_SYS_EDIT_PROFILE	(7)		/*修改某个对象配置*/
 
 
@@ -24,13 +24,13 @@
 #define		EVT_LINK_SEND_DATA				(0x14)		/*需发送链路数据*/
 
 /******************************APP系统应用层事件定义*****************************************/
-#define		EVT_APP_ADD_NODE				(0x21)		/*添加信息点*/
-#define		EVT_APP_NODE_UPDATE				(0x22)		/*信息点变化*/
-#define		EVT_APP_RECV_DATA				(0x23)		/*收到ASDU数据*/
-#define		EVT_APP_SEND_DATA				(0x24)		/*需发送ASDU数据*/
+#define		EVT_APP_ADD_NODE				(0x21)		/*添加信息点 MSG--NODE地址,NODE类型 SUBMSG--SEQ数量*/
+#define		EVT_APP_NODE_UPDATE				(0x22)		/*信息点变化 MSG--ASDU IDENT,传输原因 SUB MSG--NODE地址,NODE值,品质描述,UTC时间,是否缓存*/
+#define		EVT_APP_RECV_DATA				(0x23)		/*收到ASDU数据  MSG--ASDU 数据串、数据串长度*/
+#define		EVT_APP_SEND_DATA				(0x24)		/*需发送ASDU数据 MSG---ASDU 数据串、数据串长度*/
 
 
-#define		EVT_APP_SUB_NORMAL_NODE		(1)
+#define		EVT_APP_SUB_NORMAL_NODE		(1) 
 #define		EVT_APP_SUB_SEQ_NODE		(2)
 
 /******************************APP用户应用层事件定义*************************************/
@@ -43,24 +43,7 @@
 #define		SYS_OBJ				(0x0)		/*使用单任务模式时 系统对象编号*/
 #endif
 
-/// <summary>
-/// 创建添加通用信息点信息
-/// </summary>
-struct normal_node_create_info
-{
-	unsigned int addr; /* 信息点地址 */
-	unsigned int appid;/* 所属app实例id */
-};
 
-/// <summary>
-/// 创建序列化信息点信息
-/// </summary>
-struct seq_node_create_info
-{
-	unsigned int addr; /*信息点组起始地址*/
-	unsigned int appid;/*所属app实例id*/
-	unsigned int count;/*序列化信息点组数量*/
-};
 
 /// <summary>
 /// 更新通用信息点时信息
@@ -68,12 +51,10 @@ struct seq_node_create_info
 struct normal_node_update_info
 {
 	unsigned int appid; /*所属APP*/
-	unsigned int node_addr;	/*信息点地址*/
+	unsigned int level; /*刷新优先级*/
 	unsigned int asdu_ident;/*asdu标识*/
 	unsigned int cause; /*传送原因*/
-	int buffered;/*缓存数据*/
-	
-	struct node_frame_info f_info;/* node 帧格式数据*/
+	unsigned int seq; /*序列化传输*/
 };
 
 /// <summary>
@@ -140,23 +121,7 @@ struct app_recv_info
 	char *app_data;
 };
 
-union event_msg
-{
-	struct link_param m_link_param;
-	struct link_send_info m_link_send_info;
-	struct link_recv_info m_link_recv_info;
 
-
-	struct app_param	m_app_param;
-	struct app_recv_info	m_app_recv_info;
-
-
-	struct normal_node_create_info m_nd_info;
-	struct seq_node_create_info m_snd_info;
-
-	struct normal_node_update_info m_nd_up_info;
-	struct seq_node_update_info m_snd_up_info;
-};
 
 /// <summary>
 /// 事件
@@ -165,20 +130,23 @@ struct iec_event
 {
 	int sender;		/*事件发送者*/
 	int recver;		/*事件接收者*/
-	int event_mem_auto;	/*event是否自动回收*/
-	int msg_mem_auto;
+	int main_msg_free;	/*事件主消息是否自动回收*/
+	int sub_msg_free;		/*事件子消息是否自动回收*/
 	
 	int evt_type;		/*事件类型*/
 	int evt_sub_type;   /*事件细分*/
-	union event_msg *msg;			/*事件数据*/
+	void *main_msg;			/*主事件数据*/
+	void *sub_msg			/*子事件数据*/
 };
 
 
 extern osStatus iec_post_event(osMessageQId q_id, struct iec_event *msg, int millisec);
 extern struct iec_event *iec_recv_event(osMessageQId queue_id, int millisec);
-extern void iec_init_event(struct iec_event *msg, int sender, int recver, int evt_type, int *data);
-extern struct iec_event *iec_create_event(int sender, int recver, int evt_type, int *data,int data_auto);
-extern void iec_free_event(struct iec_event *msg);
+extern struct iec_event *iec_create_event(int sender, int recver, int evt_type,
+	int *main_msg, int auto_free);
+extern void iec_free_event(struct iec_event *evt);
+
+void iec_set_event_sub(struct iec_event *evt, int evt_sub_type, int *sub_msg, int auto_free);
 
 
 #endif
