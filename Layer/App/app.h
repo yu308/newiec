@@ -1,12 +1,11 @@
 #ifndef _app_h_
 #define _app_h_
 
-#include "iec_cfg.h"
-#include "iec_element.h"
-#include "iec_asdu.h"
-#include "iec_node.h"
-#include "arraylist.h"
-#include "hashtable.h"
+#include "../../Core/iec_cfg.h"
+#include "../../Iec/iec_element.h"
+#include "../../Iec/iec_asdu.h"
+#include "../../Iec/iec_node.h"
+#include "../../Iec/arraylist.h"
 
 
 /// <summary>
@@ -50,7 +49,7 @@ struct app_info
 	struct app_cfg *cfg;
 
 	int linklayer_id[CFG_LINK_MAX];		/*绑定的link链路*/
-
+ 
 #if(CFG_ROLE_MODE==SYS_ROLE_MIXED)
 	int bro_applayer_id[CFG_APP_MAX];	/*中转机混合模式下 关联的APP*/
 #endif
@@ -59,8 +58,8 @@ struct app_info
 	arraylist *s_node_list;/*序列化信息点组记录*/
 	
 
-	hashtable *first_task;	/*一级数据 即传输优先级最高的数据*/
-	hashtable *second_task;	/*二级数据 次之*/
+	arraylist *first_task;	/*一级数据 即传输优先级最高的数据*/
+	arraylist *second_task;	/*二级数据 次之*/
 
 	arraylist *buffered;
 

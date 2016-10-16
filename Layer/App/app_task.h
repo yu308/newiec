@@ -2,7 +2,6 @@
 #define _app_task_h_
 
 #include "arraylist.h"
-#include "hashtable.h"
 #include "iec_node.h"
 
 struct app_task
@@ -23,5 +22,5 @@ struct app_node_frame_cfg
 
 
 
-extern void app_task_add_normal(hashtable *ht, unsigned int asdu_ident, int cause, int seq, struct node_frame_info *f_node);
+extern int app_task_add_normal(arraylist *al, unsigned int asdu_ident, int cause, int seq, struct node_frame_info *f_node);
 #endif

@@ -1,5 +1,5 @@
 #include "app.h"
-#include "iec_event.h"
+#include "../../Core/iec_event.h"
 #include "app_task.h"
 
 
@@ -56,7 +56,6 @@ struct app_info *app_create(int asdu_addr, int asdu_addr_len, int cause_len, int
 
 int app_check_data()
 {
-
 }
 
 
@@ -77,6 +76,8 @@ void app_thread_entry(void *param)
 	struct app_info *info = (struct app_info *)param;
 
 	struct iec_event *evt = 0;
+
+  int res=0;
 
 	while (1)
 	{
@@ -102,9 +103,12 @@ void app_thread_entry(void *param)
 			{
 				struct normal_node_update_info *nd_info = (struct normal_node_update_info *)evt->main_msg;
 				if (nd_info->level == 0)
-					app_task_add_normal(info->first_task, nd_info->asdu_ident, nd_info->cause, nd_info->seq,
+					res=app_task_add_normal(info->first_task, nd_info->asdu_ident, nd_info->cause, nd_info->seq,
 						evt->sub_msg);
-			}
+        if(res==-1)
+          XFREE(evt->sub_msg);
+
+      }
 			break;		/*信息点变化*/
 		case EVT_APP_RECV_DATA: /*被动收到LINK至ASDU数据*/
 			if (evt->msg->m_app_recv_info.funcode==APP_FUN_FIRST)	/*请求一类数据 检测一类任务缓存*/
