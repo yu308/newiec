@@ -30,8 +30,13 @@
 #define		EVT_APP_SEND_DATA				(0x24)		/*需发送ASDU数据 MSG---ASDU 数据串、数据串长度*/
 
 
-#define		EVT_APP_SUB_NORMAL_NODE		(1) 
-#define		EVT_APP_SUB_SEQ_NODE		(2)
+#define		EVT_APP_SUB_NORMAL_NODE		(1) /*通用信息点事件*/ 
+#define		EVT_APP_SUB_SEQ_NODE		(2) /*序列化信息点事件*/
+
+#define   EVT_APP_TO_LINK          (0x25)  /*APP内部事件通知link处理*/
+#define   EVT_APP_SUB_DAT_LEVEL_1    (1) /*APP产生1类数据事件标识*/
+#define   EVT_APP_SUB_DAT_LEVEL_2    (2)/*APP产生2类数据事件标识*/
+
 
 /******************************APP用户应用层事件定义*************************************/
 #define		EVT_APP_CTRL_OP					(0x31)		/*控制操作*/

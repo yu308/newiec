@@ -70,6 +70,19 @@ void app_create_seq_node(struct app_info *info, int *seq_node)
 }
 
 
+void app_send_evt_to_link(struct app_info *info,int level)
+{
+  int i=0;
+  struct iec_event *evt=iec_create_event(info->app_tid, info->linklayer_id[i], EVT_APP_SEND_DATA, 0, 0);  
+  for(i=0;i<CFG_LINK_MAX;i++)
+    {
+      evt=iec_create_event(info->app_tid, info->linklayer_id[i],EVT_APP_TO_LINK, 0, 0);
+      iec_set_event_sub(evt,level,0,0);
+      iec_post_event(info->linklayer_id, 0, 20);
+    }
+}
+
+
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
 void app_thread_entry(void *param)
 {
