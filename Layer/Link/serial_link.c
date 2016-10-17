@@ -1,7 +1,5 @@
-#include	"serial_link.h"
-#include	"serial_linkdef.h"
-#include	"iec_event.h"
-#include	"../App/app.h"
+
+#include "../Helper/layer_helper.h"
 
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
 void serial_link_thread_entry(void *param);
@@ -283,7 +281,7 @@ static int serial_link_dispatch(struct serial_link_info *info, struct serial_lin
 		break;
 	case FC_DW_RST_REMOTE:
 	case FC_DW_RST_USER:
-		serial_link_reinit(cfg);
+		serial_link_reinit(info);
 		return TO_LINK;
 		break;
 	case FC_DW_DATA_YES:
@@ -370,15 +368,7 @@ int serial_link_pack_unfixed_frame(struct serial_link_info *info, char funcode, 
 }
 
 
-void serial_link_send_evt_to_app(struct serial_link_info *info, int level)
-{
-	int i = 0;
-	struct iec_event *evt = 0;
 
-	evt = iec_create_event(info, info->applayer_id, EVT_APP_RECV_DATA, 0, 0);
-	iec_set_event_sub(evt, level, 0, 0);
-	iec_post_event(((struct app_info *)info->applayer_id)->app_event, 0, 20);
-}
 
 
 static void serial_link_phy_recv_handle(struct serial_link_info *info,struct iec_event *evt)
@@ -421,16 +411,16 @@ static void serial_link_phy_recv_handle(struct serial_link_info *info,struct iec
 	else if (dispatch_res == TO_APP_FIRST)
 	{
 		/*发送APP部分数据至APP层*/
-		serial_link_send_evt_to_app(info, EVT_SUB_DAT_LEVEL_1);
+		serial_link_send_req_evt_to_app(info, EVT_SUB_DAT_LEVEL_1);
 	}
 	else if (dispatch_res == TO_APP_SECOND)
 	{
-		serial_link_send_evt_to_app(info, EVT_SUB_DAT_LEVEL_2);
+		serial_link_send_req_evt_to_app(info, EVT_SUB_DAT_LEVEL_2);
 	}
 	else if (dispatch_res == TO_APP_USER)
 	{
 		/*控制类帧解析*/
-		serial_link_send_evt_to_app(info, EVT_SUB_DAT_USER);
+		serial_link_send_asdu_evt_to_app(info,&(info->cfg->recv_buff[5+info->cfg->link_addr_len]));
 	}
 }
 
@@ -438,7 +428,7 @@ static void serial_link_app_recv_handle(struct serial_link_info *info, struct ie
 {
 	if (serial_link_get_dir(info->cfg) == 1)/*平衡模式*/
 	{
-		serial_link_send_evt_to_app(info, evt->evt_sub_type);
+		serial_link_send_req_evt_to_app(info, evt->evt_type);
 	}
 	else
 	{
@@ -475,7 +465,7 @@ void serial_link_thread_entry(void *param)
 
 	while (1)
 	{
-		evt =iec_recv_msg(info->serial_event, osWaitForever);
+		evt =iec_recv_event(info->serial_event, osWaitForever);
 		if (evt == 0)
 			continue;
 

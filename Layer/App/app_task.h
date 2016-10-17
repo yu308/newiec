@@ -1,8 +1,8 @@
 #ifndef _app_task_h_
 #define _app_task_h_
 
-#include "arraylist.h"
-#include "iec_node.h"
+#include "../Helper/arraylist.h"
+#include "../../Iec/iec_node.h"
 
 struct app_task
 {
@@ -23,4 +23,6 @@ struct app_node_frame_cfg
 
 
 extern int app_task_add_normal(arraylist *al, unsigned int asdu_ident, int cause, int seq, struct node_frame_info *f_node);
+extern struct app_task *app_task_get(arraylist *al);
+
 #endif

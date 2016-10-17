@@ -69,4 +69,11 @@ struct app_task *app_task_get(arraylist *al)
 
 }
 
+void app_task_covert_asdu_frame(struct app_task *task)
+{
+  char *asdu_frame=XMALLOC(200);
+  if(asdu_frame==0)
+    return;
 
+
+}

@@ -1,8 +1,4 @@
-#include "app.h"
-#include "../../Core/iec_event.h"
-#include "app_task.h"
-#include "../Link/serial_link.h"
-
+#include "../Helper/layer_helper.h"
 
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
 void app_thread_entry(void *param);
@@ -74,17 +70,33 @@ void app_create_seq_node(struct app_info *info, int *seq_node)
 }
 
 
-void app_send_evt_to_link(struct app_info *info,int level)
+static void app_evt_dispatch_recv_asdu(struct app_info *info,int *asdu_data)
 {
-  int i=0;
-  struct iec_event *evt = 0;
-  for(i=0;i<CFG_LINK_MAX;i++)
-    {
-      evt=iec_create_event(info, info->linklayer_id[i],EVT_LINK_RECV_DATA, 0, 0);
-      iec_set_event_sub(evt,level,0,0);
-      iec_post_event(((struct serial_link_info *)info->linklayer_id[i])->serial_event, evt, 20);
-    }
+  
 }
+
+
+static void app_evt_recv_data_handle(struct app_info *info,struct iec_event *evt)
+{
+  int sub_evt=evt->evt_sub_type;
+
+  struct app_task *task_temp=0;
+
+  switch(sub_evt)
+    {
+    case EVT_SUB_DAT_LEVEL_1:
+      task_temp=app_task_get(info->first_task);
+      break;
+    case EVT_SUB_DAT_LEVEL_2:
+      task_temp=app_task_get(info->second_task);
+      break;
+    case EVT_SUB_DAT_USER:
+      app_evt_dispatch_recv_asdu(info, evt->sub_msg);
+      break;
+    }
+
+}
+
 
 
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
@@ -128,13 +140,13 @@ void app_thread_entry(void *param)
 				{
 					task_list = info->second_task;
 				}
-				res = app_task_add_norml(task_list, nd_info->asdu_ident, nd_info->cause, nd_info->seq,
+				res = app_task_add_normal(task_list, nd_info->asdu_ident, nd_info->cause, nd_info->seq,
 					evt->sub_msg);
 				if (res == -1)
 					XFREE(evt->sub_msg);
 				else
 				{
-					app_send_evt_to_link(info, nd_info->level);
+					app_send_update_evt_to_link(info, nd_info->level);
 				}
       }
 			break;		/*信息点变化*/

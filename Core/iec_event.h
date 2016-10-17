@@ -2,7 +2,7 @@
 #ifndef _iec_event_h_
 #define _iec_event_h_
 
-#include "cmsis_os.h"
+#include "../OS/cmsis_os.h"
 #include "iec_cfg.h"
 #include "iec_node.h"
 
@@ -151,8 +151,7 @@ struct iec_event
 
 extern osStatus iec_post_event(osMessageQId q_id, struct iec_event *msg, int millisec);
 extern struct iec_event *iec_recv_event(osMessageQId queue_id, int millisec);
-extern struct iec_event *iec_create_event(int sender, int recver, int evt_type,
-	int *main_msg, int auto_free);
+extern struct iec_event *iec_create_event(int sender, int recver, int evt_type,int *main_msg, int auto_free);
 extern void iec_free_event(struct iec_event *evt);
 
 void iec_set_event_sub(struct iec_event *evt, int evt_sub_type, int *sub_msg, int auto_free);

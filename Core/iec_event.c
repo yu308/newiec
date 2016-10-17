@@ -9,6 +9,9 @@
 /// <returns></returns>
 osStatus iec_post_event(osMessageQId q_id, struct iec_event *evt, int millisec)
 {
+  if(evt==0)
+    return osErrorValue;
+
 	return osMessagePut(q_id, (int)evt, millisec);
 }
 
@@ -18,9 +21,9 @@ osStatus iec_post_event(osMessageQId q_id, struct iec_event *evt, int millisec)
 /// <param name="queue_id">The queue_id.</param>
 /// <param name="millisec">The millisec.</param>
 /// <returns></returns>
-struct iec_msg *iec_recv_event(osMessageQId queue_id, int millisec)
+struct iec_event *iec_recv_event(osMessageQId queue_id, int millisec)
 {
-	struct iec_msg *temp = 0;
+	struct iec_event *temp = 0;
 	osEvent	event=osMessageGet(queue_id,millisec);
 
 	if (event.status == osEventMessage)
@@ -54,6 +57,9 @@ struct iec_event *iec_create_event(int sender, int recver, int evt_type,
 
 void iec_set_event_sub(struct iec_event *evt, int evt_sub_type,int *sub_msg, int auto_free)
 {
+  if(evt==0)
+    return;
+
 	evt->evt_sub_type = evt_sub_type;
 	evt->sub_msg = sub_msg;
 	evt->sub_msg_free = auto_free;
@@ -65,6 +71,9 @@ void iec_set_event_sub(struct iec_event *evt, int evt_sub_type,int *sub_msg, int
 /// <param name="msg">The MSG.</param>
 void iec_free_event(struct iec_event *evt)
 {
+  if(evt==0)
+    return;
+
 	if (evt->sub_msg_free == 1)
 	{
 		if (evt->sub_msg)
@@ -77,6 +86,5 @@ void iec_free_event(struct iec_event *evt)
 			XFREE(evt->main_msg);
 	}
 
-	if (evt)
 		XFREE(evt);
 }
