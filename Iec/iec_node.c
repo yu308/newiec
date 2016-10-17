@@ -68,7 +68,7 @@ void iec_api_create_normal_node(int appid, int node_addr)
 	struct normal_node *node=iec_create_normal_node(node_addr);
 
 	struct iec_event *evt=iec_create_event(0, appid, EVT_APP_ADD_NODE, 0,1);
-	iec_set_event_sub(evt, EVT_APP_SUB_NORMAL_NODE, (int *)node, 0);
+	iec_set_event_sub(evt, EVT_SUB_NORMAL_NODE, (int *)node, 0);
 	iec_post_event(((struct app_info *)appid)->app_event, evt, 20);
 
 }
@@ -84,7 +84,7 @@ void iec_api_create_seq_node(int appid, int node_addr, int count)
 	struct seq_node *node = iec_create_seq_node(node_addr, count);
 
 	struct iec_event *evt = iec_create_event(0, appid, EVT_APP_ADD_NODE, 0, 1);
-	iec_set_event_sub(evt, EVT_APP_SUB_SEQ_NODE, (int *)node, 0);
+	iec_set_event_sub(evt, EVT_SUB_SEQ_NODE, (int *)node, 0);
 	iec_post_event(((struct app_info *)appid)->app_event, evt, 20);
 
 }
@@ -126,7 +126,7 @@ void iec_api_update_normal_node(int appid,int level, unsigned int asdu_ident,
 	info->level = level;
 
 	struct iec_event *evt = iec_create_event(0, appid, EVT_APP_NODE_UPDATE, (int*)info, 1);
-	iec_set_event_sub(evt, EVT_APP_SUB_NORMAL_NODE, (int *)f_node, 0);
+	iec_set_event_sub(evt, EVT_SUB_NORMAL_NODE, (int *)f_node, 0);
 	iec_post_event(((struct app_info *)appid)->app_event, evt, 20);
 
 }

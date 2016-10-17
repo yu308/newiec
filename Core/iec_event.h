@@ -20,22 +20,26 @@
 /*******************************链路层事件定义***************************************/
 #define		EVT_LINK_PHY_CONNECT			(0x11)		/*通信物理通道链接*/
 #define		EVT_LINK_PHY_DISCONNECT			(0x12)		/*通信物理通道断开*/
-#define		EVT_LINK_RECV_DATA				(0x13)		/*收到链路数据*/
-#define		EVT_LINK_SEND_DATA				(0x14)		/*需发送链路数据*/
+#define		EVT_LINK_RECV_DATA				(0x13)		/*链路收到数据*/
+#define		EVT_LINK_SEND_DATA				(0x14)		/*链路需发送数据*/
+
+
+#define		EVT_SUB_DAT_LINK_PHY			(0) /*接口收发数据*/
+#define		EVT_SUB_DAT_LEVEL_1		(1) /*一类数据*/
+#define		EVT_SUB_DAT_LEVEL_2		(2) /*二类数据*/
+#define		EVT_SUB_DAT_USER		(3) /*用户数据*/
 
 /******************************APP系统应用层事件定义*****************************************/
 #define		EVT_APP_ADD_NODE				(0x21)		/*添加信息点 MSG--NODE地址,NODE类型 SUBMSG--SEQ数量*/
 #define		EVT_APP_NODE_UPDATE				(0x22)		/*信息点变化 MSG--ASDU IDENT,传输原因 SUB MSG--NODE地址,NODE值,品质描述,UTC时间,是否缓存*/
-#define		EVT_APP_RECV_DATA				(0x23)		/*收到ASDU数据  MSG--ASDU 数据串、数据串长度*/
-#define		EVT_APP_SEND_DATA				(0x24)		/*需发送ASDU数据 MSG---ASDU 数据串、数据串长度*/
+#define		EVT_APP_RECV_DATA				(0x23)		/*APP收到数据  MSG--ASDU 数据串、数据串长度*/
+#define		EVT_APP_SEND_DATA				(0x24)		/*需发送数据 MSG---ASDU 数据串、数据串长度*/
 
 
-#define		EVT_APP_SUB_NORMAL_NODE		(1) /*通用信息点事件*/ 
-#define		EVT_APP_SUB_SEQ_NODE		(2) /*序列化信息点事件*/
+#define		EVT_SUB_NORMAL_NODE		(1) /*通用信息点事件*/ 
+#define		EVT_SUB_SEQ_NODE		(2) /*序列化信息点事件*/
 
-#define   EVT_APP_TO_LINK          (0x25)  /*APP内部事件通知link处理*/
-#define   EVT_APP_SUB_DAT_LEVEL_1    (1) /*APP产生1类数据事件标识*/
-#define   EVT_APP_SUB_DAT_LEVEL_2    (2)/*APP产生2类数据事件标识*/
+
 
 
 /******************************APP用户应用层事件定义*************************************/

@@ -1,23 +1,24 @@
 #include	"serial_link.h"
 #include	"serial_linkdef.h"
 #include	"iec_event.h"
+#include	"../App/app.h"
 
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
 void serial_link_thread_entry(void *param);
 #define SERIAL_THREAD_TICK		(50)
 #define MAX_EVENT_COUNT			(5)
 /// <summary>
-/// Á´Â·ÈÎÎñÅäÖÃ
+/// é“¾è·¯ä»»åŠ¡é…ç½®
 /// </summary>
 osThreadDef(serial, serial_link_thread_entry, LINK_TASK_PROI, SERIAL_THREAD_TICK, 2048);
 /// <summary>
-/// Á´Â·ÈÎÎñÏûÏ¢¶ÓÁĞ
+/// é“¾è·¯ä»»åŠ¡æ¶ˆæ¯é˜Ÿåˆ—
 /// </summary>
 osMessageQDef(serialevent, MAX_EVENT_COUNT, 4);
 #endif
 
 /// <summary>
-/// ³õÊ¼»¯ÒÑÓĞÁ´Â·
+/// åˆå§‹åŒ–å·²æœ‰é“¾è·¯
 /// </summary>
 /// <param name="cfg">The CFG.</param>
 /// <param name="addr">The addr.</param>
@@ -47,7 +48,7 @@ void serial_link_init(struct serial_link_info *info, int addr, int addr_len, int
 }
 
 /// <summary>
-/// ´´½¨Ò»¸öÁ´Â·
+/// åˆ›å»ºä¸€ä¸ªé“¾è·¯
 /// </summary>
 /// <param name="addr">The addr.</param>
 /// <param name="addr_len">The addr_len.</param>
@@ -67,7 +68,7 @@ struct serial_link_info *serial_link_create(int addr, int addr_len, int dir)
 }
 
 /// <summary>
-/// Çå³ıÁ´Â·ÅäÖÃĞÅÏ¢.
+/// æ¸…é™¤é“¾è·¯é…ç½®ä¿¡æ¯.
 /// </summary>
 /// <param name="cfg">The CFG.</param>
 void serial_link_del(struct serial_link_info *info)
@@ -80,7 +81,7 @@ void serial_link_del(struct serial_link_info *info)
 
 
 /// <summary>
-/// ÖØĞÂ³õÊ¼»¯,»Ö¸´³õÊ¼×´Ì¬
+/// é‡æ–°åˆå§‹åŒ–,æ¢å¤åˆå§‹çŠ¶æ€
 /// </summary>
 /// <param name="cfg">The CFG.</param>
 void serial_link_reinit(struct serial_link_info *info)
@@ -91,7 +92,7 @@ void serial_link_reinit(struct serial_link_info *info)
 }
 
 /// <summary>
-/// ´®ĞĞ·½Ê½ÏÂÉèÖÃÁ´Â·µØÖ·
+/// ä¸²è¡Œæ–¹å¼ä¸‹è®¾ç½®é“¾è·¯åœ°å€
 /// </summary>
 /// <param name="addr">The addr.</param>
 void serial_link_set_addr(struct serial_link_cfg *cfg, int addr)
@@ -101,7 +102,7 @@ void serial_link_set_addr(struct serial_link_cfg *cfg, int addr)
 
 
 /// <summary>
-/// ´®ĞĞ·½Ê½ÏÂÉèÖÃÁ´Â·µØÖ·³¤¶È.
+/// ä¸²è¡Œæ–¹å¼ä¸‹è®¾ç½®é“¾è·¯åœ°å€é•¿åº¦.
 /// </summary>
 /// <param name="len">The length.</param>
 void serial_link_set_addr_len(struct serial_link_cfg *cfg, int len)
@@ -110,27 +111,32 @@ void serial_link_set_addr_len(struct serial_link_cfg *cfg, int len)
 }
 
 /// <summary>
-/// ÉèÖÃ´«ÊäÄ£Ê½
+/// è®¾ç½®ä¼ è¾“æ¨¡å¼
 /// </summary>
-/// <param name="dir">The dir. =0 ·ÇÆ½ºâ´«ÊäÄ£Ê½  =1 Æ½ºâ´«ÊäÄ£Ê½</param>
+/// <param name="dir">The dir. =0 éå¹³è¡¡ä¼ è¾“æ¨¡å¼  =1 å¹³è¡¡ä¼ è¾“æ¨¡å¼</param>
 void serial_link_set_dir(struct serial_link_cfg *cfg, int dir)
 {
 	cfg->double_dir = dir;
 }
 
+int serial_link_get_dir(struct serial_link_cfg *cfg)
+{
+	return cfg->double_dir;
+}
+
 /// <summary>
-/// »ñÈ¡Á´Â·µØÖ·.
+/// è·å–é“¾è·¯åœ°å€.
 /// </summary>
-/// <returns>Á´Â·µØÖ·</returns>
+/// <returns>é“¾è·¯åœ°å€</returns>
 int serial_link_get_addr(struct serial_link_cfg *cfg)
 {
 	return cfg->link_addr;
 }
 
 /// <summary>
-/// »ñÈ¡Á´Â·µØÖ·³¤¶È
+/// è·å–é“¾è·¯åœ°å€é•¿åº¦
 /// </summary>
-/// <returns>Á´Â·µØÖ·³¤¶È</returns>
+/// <returns>é“¾è·¯åœ°å€é•¿åº¦</returns>
 int serial_link_get_addr_len(struct serial_link_cfg *cfg)
 {
 	return cfg->link_addr_len;
@@ -143,10 +149,10 @@ void serial_link_set_write_handle(struct serial_link_cfg *cfg, int *handle)
 }
 
 /// <summary>
-/// »ñÈ¡Ò»¶ÎÊı¾İµÄĞ£ÑéºÍ
+/// è·å–ä¸€æ®µæ•°æ®çš„æ ¡éªŒå’Œ
 /// </summary>
 /// <param name="buff">The buff.</param>
-/// <param name="check_len">Ğ£ÑéµÄ³¤¶È</param>
+/// <param name="check_len">æ ¡éªŒçš„é•¿åº¦</param>
 /// <returns></returns>
 static char serial_link_get_cs(char *buff, int check_len)
 {
@@ -160,7 +166,7 @@ static char serial_link_get_cs(char *buff, int check_len)
 }
 
 /// <summary>
-/// ¹Ì¶¨Ö¡Ğ£Ñé
+/// å›ºå®šå¸§æ ¡éªŒ
 /// </summary>
 /// <param name="cfg">The CFG.</param>
 /// <param name="recv_buff">The recv_buff.</param>
@@ -188,7 +194,7 @@ static int serial_link_fixed_check(struct serial_link_cfg *cfg, char *recv_buff)
 }
 
 /// <summary>
-/// ·Ç¹Ì¶¨Ö¡Ğ£Ñé
+/// éå›ºå®šå¸§æ ¡éªŒ
 /// </summary>
 /// <param name="cfg">The CFG.</param>
 /// <param name="recv_buff">The recv_buff.</param>
@@ -218,12 +224,12 @@ static int serial_link_unfixed_check(struct serial_link_cfg *cfg, char *recv_buf
 
 
 /// <summary>
-/// Ğ£ÑéÊı¾İ
+/// æ ¡éªŒæ•°æ®
 /// </summary>
 /// <param name="cfg">The CFG.</param>
 /// <param name="recv_size">The recv_size.</param>
-/// <returns>·µ»Ø¿ØÖÆÓò×Ö½Ú ÈôÎª0x0 ÔòÊı¾İĞ£Ñé³ö´í </returns>
-char serial_link_recv_check_data(struct serial_link_cfg *cfg, int recv_size)
+/// <returns>è¿”å›æ§åˆ¶åŸŸå­—èŠ‚ è‹¥ä¸º0x0 åˆ™æ•°æ®æ ¡éªŒå‡ºé”™ </returns>
+static char serial_link_recv_check_data(struct serial_link_cfg *cfg, int recv_size)
 {
 	char *recv_buff = cfg->recv_buff;
 
@@ -244,13 +250,13 @@ char serial_link_recv_check_data(struct serial_link_cfg *cfg, int recv_size)
 
 
 /// <summary>
-/// Á´Â·Êı¾İ´¦Àí£¬¸ù¾İ¹¦ÄÜÂë·Ö·¢´¦Àí.
+/// é“¾è·¯æ•°æ®å¤„ç†ï¼Œæ ¹æ®åŠŸèƒ½ç åˆ†å‘å¤„ç†.
 /// </summary>
 /// <param name="info">The information.</param>
 /// <param name="cfg">The CFG.</param>
 /// <param name="domain">The domain.</param>
 /// <returns></returns>
-int serial_link_dispatch(struct serial_link_info *info, struct serial_link_cfg *cfg, char domain)
+static int serial_link_dispatch(struct serial_link_info *info, struct serial_link_cfg *cfg, char domain)
 {
 	union ctrl_domain dw_domain;
 	dw_domain.domain = domain;
@@ -270,10 +276,10 @@ int serial_link_dispatch(struct serial_link_info *info, struct serial_link_cfg *
 	case FC_DW_LINK:
 		return TO_LINK_REQ;
 	case FC_DW_REQ:
-		return TO_LINK; // Á´Â·²ã--¹Ì¶¨Ö¡¸ñÊ½Ö±½Ó´¦Àí
+		return TO_LINK; // é“¾è·¯å±‚--å›ºå®šå¸§æ ¼å¼ç›´æ¥å¤„ç†
 		break;
 	case FC_DW_DATA_NO:
-		return NO_AWS; //ÎŞĞè»Ø´ğ
+		return NO_AWS; //æ— éœ€å›ç­”
 		break;
 	case FC_DW_RST_REMOTE:
 	case FC_DW_RST_USER:
@@ -282,10 +288,10 @@ int serial_link_dispatch(struct serial_link_info *info, struct serial_link_cfg *
 		break;
 	case FC_DW_DATA_YES:
 		return TO_APP_USER;
-	case FC_DW_FIRST_DATA:	/**< Ò»¼¶Êı¾İ */
+	case FC_DW_FIRST_DATA:	/**< ä¸€çº§æ•°æ® */
 		return TO_APP_FIRST;
 	case FC_DW_SEC_DATA:
-		return TO_APP_SECOND; //Ó¦ÓÃ²ã---´¦Àí
+		return TO_APP_SECOND; //åº”ç”¨å±‚---å¤„ç†
 		break;
 	default:
 		break;
@@ -296,11 +302,11 @@ int serial_link_dispatch(struct serial_link_info *info, struct serial_link_cfg *
 }
 
 /// <summary>
-/// Á´Â·²ã·â×°¹Ì¶¨Êı¾İ°ü
+/// é“¾è·¯å±‚å°è£…å›ºå®šæ•°æ®åŒ…
 /// </summary>
 /// <param name="info">The information.</param>
-/// <param name="funcode">The funcode. ¹¦ÄÜÂë</param>
-/// <returns>Êı¾İ°ü³¤¶È</returns>
+/// <param name="funcode">The funcode. åŠŸèƒ½ç </param>
+/// <returns>æ•°æ®åŒ…é•¿åº¦</returns>
 int serial_link_pack_fixed_frame(struct serial_link_info *info, char funcode)
 {
 	union ctrl_domain up_domain;
@@ -326,13 +332,13 @@ int serial_link_pack_fixed_frame(struct serial_link_info *info, char funcode)
 }
 
 /// <summary>
-/// Á´Â·²ã·â×°·Ç¹Ì¶¨Êı¾İ°ü
+/// é“¾è·¯å±‚å°è£…éå›ºå®šæ•°æ®åŒ…
 /// </summary>
 /// <param name="info">The information.</param>
 /// <param name="funcode">The funcode.</param>
 /// <param name="app_data">The app_data.</param>
 /// <param name="app_data_len">The app_data_len.</param>
-/// <returns>Êı¾İ°ü³¤¶È</returns>
+/// <returns>æ•°æ®åŒ…é•¿åº¦</returns>
 int serial_link_pack_unfixed_frame(struct serial_link_info *info, char funcode, char *app_data, int app_data_len)
 {
 	union ctrl_domain up_domain;
@@ -364,68 +370,131 @@ int serial_link_pack_unfixed_frame(struct serial_link_info *info, char funcode, 
 }
 
 
+void serial_link_send_evt_to_app(struct serial_link_info *info, int level)
+{
+	int i = 0;
+	struct iec_event *evt = 0;
+
+	evt = iec_create_event(info, info->applayer_id, EVT_APP_RECV_DATA, 0, 0);
+	iec_set_event_sub(evt, level, 0, 0);
+	iec_post_event(((struct app_info *)info->applayer_id)->app_event, 0, 20);
+}
+
+
+static void serial_link_phy_recv_handle(struct serial_link_info *info,struct iec_event *evt)
+{
+	char *data = 0;
+	int data_len = 0;
+	char domain_byte = 0;
+	int dispatch_res = 0;
+	struct link_recv_info *phy_recv_info = (struct link_recv_info *)evt->main_msg;
+
+	data_len = phy_recv_info->recv_len;
+	data = phy_recv_info->recv_data;
+
+	XMEMSET(info->cfg->recv_buff, 0, data_len);
+	XMEMCPY(info->cfg->recv_buff, data, data_len);
+
+	domain_byte = serial_link_recv_check_data(info->cfg, data_len);
+	if (domain_byte == 0)
+		return;
+
+	dispatch_res = serial_link_dispatch(info, info->cfg, domain_byte);
+
+	if (dispatch_res == NO_AWS)
+		return;
+
+	if (dispatch_res == INVAILD_FCB)
+		info->cfg->serial_write(info->cfg->prev_sent_buff, info->cfg->prev_sent_len);
+	else if (dispatch_res == TO_LINK)
+	{
+		data_len = serial_link_pack_fixed_frame(info, FC_UP_YES);
+		info->cfg->serial_write(info->cfg->send_buff, data_len);
+		XMEMCPY(info->cfg->prev_sent_buff, info->cfg->send_buff, data_len);
+	}
+	else if (dispatch_res == TO_LINK_REQ)
+	{
+		data_len = serial_link_pack_fixed_frame(info, FC_UP_LINK);
+		info->cfg->serial_write(info->cfg->send_buff, data_len);
+		XMEMCPY(info->cfg->prev_sent_buff, info->cfg->send_buff, data_len);
+	}
+	else if (dispatch_res == TO_APP_FIRST)
+	{
+		/*å‘é€APPéƒ¨åˆ†æ•°æ®è‡³APPå±‚*/
+		serial_link_send_evt_to_app(info, EVT_SUB_DAT_LEVEL_1);
+	}
+	else if (dispatch_res == TO_APP_SECOND)
+	{
+		serial_link_send_evt_to_app(info, EVT_SUB_DAT_LEVEL_2);
+	}
+	else if (dispatch_res == TO_APP_USER)
+	{
+		/*æ§åˆ¶ç±»å¸§è§£æ*/
+		serial_link_send_evt_to_app(info, EVT_SUB_DAT_USER);
+	}
+}
+
+static void serial_link_app_recv_handle(struct serial_link_info *info, struct iec_event *evt)
+{
+	if (serial_link_get_dir(info->cfg) == 1)/*å¹³è¡¡æ¨¡å¼*/
+	{
+		serial_link_send_evt_to_app(info, evt->evt_sub_type);
+	}
+	else
+	{
+		if (evt->evt_sub_type == EVT_SUB_DAT_LEVEL_1)
+			info->acd_tag++;
+		else
+			info->app_tag++;
+	}
+}
+
+static void serial_link_recv_event(struct serial_link_info *info,struct iec_event *evt)
+{
+	int sub_evt = evt->evt_sub_type;
+
+	switch (sub_evt)
+	{
+	case EVT_SUB_DAT_LINK_PHY:
+		serial_link_phy_recv_handle(info, evt);
+		break;
+	case EVT_SUB_DAT_LEVEL_1:
+	case EVT_SUB_DAT_LEVEL_2:
+		serial_link_app_recv_handle(info, evt);
+		break;
+	}
+}
+
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
 void serial_link_thread_entry(void *param)
 {
 	struct serial_link_info *info = (struct serial_link_info*)param;
 
-	struct iec_event *event = 0;
-	char *data = 0;
-	int data_len = 0;
-	char domain_byte = 0;
-	int dispatch_res = 0;
-
+	struct iec_event *evt = 0;
 	XPRINTF("IEC:SERIAL LINK: %d link is running.\n", info->serial_tid);
 
 	while (1)
 	{
-		event =iec_recv_msg(info->serial_event, osWaitForever);
-		if (event == 0)
+		evt =iec_recv_msg(info->serial_event, osWaitForever);
+		if (evt == 0)
 			continue;
 
-		switch (event->evt_type)
+		switch (evt->evt_type)
 		{
 		case EVT_LINK_PHY_CONNECT:
 			break;
 		case EVT_LINK_PHY_DISCONNECT:
 			break;
 		case EVT_LINK_RECV_DATA:
-			data = event->msg->m_link_recv_info.recv_data;
-			data_len = event->msg->m_link_recv_info.recv_len;
-			XMEMSET(info->cfg->recv_buff, 0, data_len);
-			XMEMCPY(info->cfg->recv_buff, data, data_len);
-
-			domain_byte = serial_link_recv_check_data(info->cfg, data_len);
-			if (domain_byte == 0)
-				continue;
-
-			dispatch_res=serial_link_dispatch(info, info->cfg, domain_byte);
-			if (dispatch_res == NO_AWS)
-				continue;
-			if (dispatch_res == INVAILD_FCB)
-				info->cfg->serial_write(info->cfg->prev_sent_buff, info->cfg->prev_sent_len);
-			else if (dispatch_res == TO_LINK)
-			{
-				data_len = serial_link_pack_fixed_frame(info, FC_UP_YES);
-				info->cfg->serial_write(info->cfg->send_buff, data_len);
-				XMEMCPY(info->cfg->prev_sent_buff, info->cfg->send_buff, data_len);
-			}
-			else if (dispatch_res == TO_LINK_REQ)
-			{
-				data_len = serial_link_pack_fixed_frame(info, FC_UP_LINK);
-				info->cfg->serial_write(info->cfg->send_buff, data_len);
-				XMEMCPY(info->cfg->prev_sent_buff, info->cfg->send_buff, data_len);
-			}
-			else 
-			{
-				/*·¢ËÍAPP²¿·ÖÊı¾İÖÁAPP²ã*/
-			}
+			serial_link_recv_event(info, evt);
 			break;
 		case EVT_LINK_SEND_DATA:
 			break;
 		default:
 			break;
 		}
+
+		iec_free_event(evt);
 	}
 }
 

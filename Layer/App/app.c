@@ -1,6 +1,7 @@
 #include "app.h"
 #include "../../Core/iec_event.h"
 #include "app_task.h"
+#include "../Link/serial_link.h"
 
 
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
@@ -17,6 +18,7 @@ osThreadDef(app, app_thread_entry, APP_TASK_PROI, APP_THREAD_TICK, 2048);
 osMessageQDef(appevent, MAX_EVENT_COUNT, 4);
 #endif
 
+
 void app_init(struct app_info *info, int asdu_addr, int asdu_addr_len,int cause_len,int node_addr_len,int sm2_enable)
 {
 	XMEMSET(info, 0, sizeof(struct app_info));
@@ -29,6 +31,7 @@ void app_init(struct app_info *info, int asdu_addr, int asdu_addr_len,int cause_
 	cfg->sm2_enable = sm2_enable;
 
 	info->cfg = cfg;
+
 
 	info->n_node_list = arraylist_create();
 	info->s_node_list = arraylist_create();
@@ -56,6 +59,7 @@ struct app_info *app_create(int asdu_addr, int asdu_addr_len, int cause_len, int
 
 int app_check_data()
 {
+  
 }
 
 
@@ -73,12 +77,12 @@ void app_create_seq_node(struct app_info *info, int *seq_node)
 void app_send_evt_to_link(struct app_info *info,int level)
 {
   int i=0;
-  struct iec_event *evt=iec_create_event(info->app_tid, info->linklayer_id[i], EVT_APP_SEND_DATA, 0, 0);  
+  struct iec_event *evt = 0;
   for(i=0;i<CFG_LINK_MAX;i++)
     {
-      evt=iec_create_event(info->app_tid, info->linklayer_id[i],EVT_APP_TO_LINK, 0, 0);
+      evt=iec_create_event(info, info->linklayer_id[i],EVT_LINK_RECV_DATA, 0, 0);
       iec_set_event_sub(evt,level,0,0);
-      iec_post_event(info->linklayer_id, 0, 20);
+      iec_post_event(((struct serial_link_info *)info->linklayer_id[i])->serial_event, evt, 20);
     }
 }
 
@@ -102,25 +106,36 @@ void app_thread_entry(void *param)
 		switch (evt->evt_type)
 		{
 		case EVT_APP_ADD_NODE:
-			if (evt->evt_sub_type == EVT_APP_SUB_NORMAL_NODE)
+			if (evt->evt_sub_type == EVT_SUB_NORMAL_NODE)
 			{
 				app_create_normal_node(info, evt->sub_msg);
 			}
-			else if (evt->evt_sub_type == EVT_APP_SUB_SEQ_NODE)
+			else if (evt->evt_sub_type == EVT_SUB_SEQ_NODE)
 			{
 				app_create_seq_node(info, evt->sub_msg);
 			}
 			break;
 		case EVT_APP_NODE_UPDATE:	
-			if (evt->evt_sub_type == EVT_APP_SUB_NORMAL_NODE)
+			if (evt->evt_sub_type == EVT_SUB_NORMAL_NODE)
 			{
 				struct normal_node_update_info *nd_info = (struct normal_node_update_info *)evt->main_msg;
-				if (nd_info->level == 0)
-					res=app_task_add_normal(info->first_task, nd_info->asdu_ident, nd_info->cause, nd_info->seq,
-						evt->sub_msg);
-        if(res==-1)
-          XFREE(evt->sub_msg);
-
+				arraylist *task_list = 0;
+				if (nd_info->level == EVT_SUB_DAT_LEVEL_1)
+				{
+					task_list = info->first_task;
+				}
+				else if (nd_info->level == EVT_SUB_DAT_LEVEL_2)
+				{
+					task_list = info->second_task;
+				}
+				res = app_task_add_norml(task_list, nd_info->asdu_ident, nd_info->cause, nd_info->seq,
+					evt->sub_msg);
+				if (res == -1)
+					XFREE(evt->sub_msg);
+				else
+				{
+					app_send_evt_to_link(info, nd_info->level);
+				}
       }
 			break;		/*信息点变化*/
 		case EVT_APP_RECV_DATA: /*被动收到LINK至ASDU数据*/
