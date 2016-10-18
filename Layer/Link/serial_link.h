@@ -11,7 +11,7 @@ struct serial_link_cfg
 {
 	int link_addr;			/*链路地址*/
 	int link_addr_len;		/*链路地址长度*/
-
+  int active;           /*是否激活*/
 	int double_dir;			/*平衡或非平衡*/
 		
 	char *recv_buff;		/*接收缓存*/

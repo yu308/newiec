@@ -90,6 +90,7 @@ struct link_recv_info
 /// </summary>
 struct app_send_info
 {
+  int link_id;
 	char *app_data;
 	int app_data_len;
 };

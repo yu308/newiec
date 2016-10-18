@@ -146,6 +146,17 @@ void serial_link_set_write_handle(struct serial_link_cfg *cfg, int *handle)
 	cfg->serial_write = (serial_write_handle)handle;
 }
 
+
+int serial_link_get_active_state(struct serial_link_cfg *cfg)
+{
+  return cfg->active;
+}
+
+int serial_link_set_active_state(struct serial_link_cfg *cfg,int state)
+{
+  cfg->active=state;
+}
+
 /// <summary>
 /// 获取一段数据的校验和
 /// </summary>

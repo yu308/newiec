@@ -17,7 +17,7 @@ extern void serial_link_send_req_evt_to_app(struct serial_link_info *info,int su
 
 extern void serial_link_send_asdu_evt_to_app(struct serial_link_info *info,int *asdu_data);
 
-extern void app_send_update_evt_to_link(struct app_info *info,int sub_evt);
+extern void app_send_update_evt_to_link(struct app_info *info,struct serial_link_info *link_info, int sub_evt);
   
 
 

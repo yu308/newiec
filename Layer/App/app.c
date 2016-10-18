@@ -100,11 +100,15 @@ static void app_evt_recv_data_handle(struct app_info *info,struct iec_event *evt
 
 }
 
+
+
 static void app_evt_update_node_handle(struct app_info *info, struct iec_event *evt)
 {
-	int res = 0;
-	struct node_update_info *nd_info = (struct normal_node_update_info *)evt->main_msg;
-	arraylist *task_list = 0;
+	int res = 0,i=0;
+	struct node_update_info *nd_info = (struct node_update_info *)evt->main_msg;
+
+  struct serial_link_info *link_info=0;
+  arraylist *task_list = 0;
 
 	if (nd_info->level == EVT_SUB_DAT_LEVEL_1)
 	{
@@ -115,22 +119,33 @@ static void app_evt_update_node_handle(struct app_info *info, struct iec_event *
 		task_list = info->second_task;
 	}
 
-	if (evt->evt_sub_type == EVT_SUB_NORMAL_NODE)
-	{
-		res = app_task_add_normal(task_list, nd_info->asdu_ident, nd_info->cause,
-			evt->sub_msg);
-	}
-	else if (evt->evt_sub_type == EVT_SUB_SEQ_NODE)
-	{
-		res = app_task_add_seq(task_list, nd_info->asdu_ident, nd_info->cause, evt->sub_msg);
-	}
+  for(i=0;i<CFG_LINK_MAX;i++)
+    {
+      if(info->linklayer_id[i]==0)
+        continue;
 
-	if (res == -1)
-		XFREE(evt->sub_msg);
-	else
-	{
-		app_send_update_evt_to_link(info, nd_info->level);
-	}
+      link_info=(struct serial_link_info *)info->linklayer_id[i];
+
+      if(serial_link_get_active_state(link_info)==0)
+        continue;
+
+      if (evt->evt_sub_type == EVT_SUB_NORMAL_NODE)
+        {
+          res = app_task_add_normal(task_list,info->linklayer_id[i], nd_info->asdu_ident, nd_info->cause,
+                                    evt->sub_msg);
+        }
+      else if (evt->evt_sub_type == EVT_SUB_SEQ_NODE)
+        {
+          res = app_task_add_seq(task_list,info->linklayer_id[i], nd_info->asdu_ident, nd_info->cause, evt->sub_msg);
+        }
+
+      if (res == -1)
+        XFREE(evt->sub_msg);
+      else
+        {
+          app_send_update_evt_to_link(info, link_info,nd_info->level);
+        }
+    }
 }
 
 

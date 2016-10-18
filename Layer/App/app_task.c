@@ -7,15 +7,15 @@
 #include <stdio.h>
 #include <string.h>
 
-#define TASK_IDENT_NAME_FORMAT		"%02X-%02X-%02X"			/*ASDU-CAUSE-SEQ*/
+#define TASK_IDENT_NAME_FORMAT		"%08X-%02X-%02X-%02X"			/*LINKID-ASDU-CAUSE-SEQ*/
 
-int app_task_add_normal(arraylist *al,unsigned int asdu_ident, int cause, struct node_frame_info *f_node)
+int app_task_add_normal(arraylist *al,unsigned int link_id,unsigned int asdu_ident, int cause, struct node_frame_info *f_node)
 {
-	char name[16];
+	char name[24];
 	struct node_frame_info *f_node_temp = 0;
 	int i = 0,j=0;
 	XMEMSET(name, 0, 16);
-  sprintf(name,TASK_IDENT_NAME_FORMAT,asdu_ident,cause,0);
+  sprintf(name,TASK_IDENT_NAME_FORMAT,link_id,asdu_ident,cause,0);
   struct app_task *temp=0;
 
   /*查找是否已有同类任务*/
@@ -50,6 +50,7 @@ int app_task_add_normal(arraylist *al,unsigned int asdu_ident, int cause, struct
   temp->asdu_ident = asdu_ident;
   temp->cause = cause;
   temp->seq = 0;
+  temp->link_id=link_id;
   XMEMCPY(temp->task_name, name, 16);
 
   temp->node_data_list = arraylist_create();
@@ -59,13 +60,13 @@ int app_task_add_normal(arraylist *al,unsigned int asdu_ident, int cause, struct
   return 0;
 }
 
-int app_task_add_seq(arraylist *al, unsigned int asdu_ident, int cause, struct seq_node_frame_info *f_s_node)
+int app_task_add_seq(arraylist *al,unsigned int link_id, unsigned int asdu_ident, int cause, struct seq_node_frame_info *f_s_node)
 {
 	char name[16];
 	struct seq_node_frame_info *f_s_node_temp = 0;
 	int i = 0, j = 0;
 	XMEMSET(name, 0, 16);
-	sprintf(name, TASK_IDENT_NAME_FORMAT, asdu_ident, cause, 1);
+	sprintf(name, TASK_IDENT_NAME_FORMAT,link_id, asdu_ident, cause, 1);
 	struct app_task *temp = 0;
 
 	arraylist_iterate(al, i, temp)
@@ -103,6 +104,7 @@ int app_task_add_seq(arraylist *al, unsigned int asdu_ident, int cause, struct s
 	temp->asdu_ident = asdu_ident;
 	temp->cause = cause;
 	temp->seq = 1;
+  temp->link_id=link_id;
 	XMEMCPY(temp->task_name, name, 16);
 
 	temp->node_data_list = arraylist_create();
@@ -185,7 +187,7 @@ struct app_send_info *app_task_covert_to_asdu_frame(struct app_info *info,struct
   char *asdu_frame=XMALLOC(CFG_ASDU_DATA_BUFF_MAX);
   struct app_send_info *send_info = XMALLOC(sizeof(struct app_send_info));
   if(asdu_frame==0)
-    return;
+    return 0;
 
   XMEMSET(asdu_frame, 0, CFG_ASDU_DATA_BUFF_MAX);
 
@@ -196,7 +198,7 @@ struct app_send_info *app_task_covert_to_asdu_frame(struct app_info *info,struct
   XMEMCPY(&asdu_frame[idx], &task->cause, info->cfg->cause_len);
   idx += info->cfg->cause_len;
 
-  XMEMCPY(&asdu_frame[idx], info->cfg->asdu_addr, info->cfg->asdu_addr_len);
+  XMEMCPY(&asdu_frame[idx], &info->cfg->asdu_addr, info->cfg->asdu_addr_len);
   idx += info->cfg->asdu_addr_len;
 
   if (task->seq == 0)
@@ -212,6 +214,8 @@ struct app_send_info *app_task_covert_to_asdu_frame(struct app_info *info,struct
 
   asdu_frame[1] |= node_count;
 
+  send_info->link_id=task->link_id;
   send_info->app_data = asdu_frame;
   send_info->app_data_len = idx;
+  return send_info;
 }

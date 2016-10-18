@@ -34,15 +34,15 @@ void serial_link_send_asdu_evt_to_app(struct serial_link_info *info,int *asdu_da
  * @param info App信息
  * @param sub_evt  信息点数据优先类别
  */
-void app_send_update_evt_to_link(struct app_info *info,int sub_evt)
+void app_send_update_evt_to_link(struct app_info *info,struct serial_link_info *link_info,int sub_evt)
 {
-  int i=0;
   struct iec_event *evt = 0;
-  for(i=0;i<CFG_LINK_MAX;i++)
-    {
-      evt=iec_create_event(info, info->linklayer_id[i],EVT_LINK_RECV_DATA, 0, 0);
-      iec_set_event_sub(evt,sub_evt,0,0);
-      iec_post_event(((struct serial_link_info *)info->linklayer_id[i])->serial_event, evt, 20);
-    } 
+  evt=iec_create_event((unsigned int)info,(unsigned int)link_info, EVT_LINK_RECV_DATA, 0, 0);
+  iec_set_event_sub(evt,sub_evt,0,0);
+  iec_post_event(link_info->serial_event, evt, 20);
 }
 
+void app_send_asdu_evt_to_link(struct app_info *info,struct app_send_info *send_asdu)
+{
+  struct iec_event *evt=0;
+}
