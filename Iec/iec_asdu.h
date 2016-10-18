@@ -154,4 +154,8 @@ struct asdu_cfg
 	int ext_tm_ident; /*信息点扩展时间标签标识 用于继电保护事件信息点*/
 };
 
+
+extern unsigned int iec_asdu_pack_node(char *buff, struct asdu_cfg *cfg, int node_addr, int node_addr_len, int val, int qual, int utc_time,
+	int millsecond);
+extern struct asdu_cfg* iec_get_asdu_cfg(int ident);
 #endif

@@ -92,7 +92,7 @@ extern void XPRINTF();
 #define	CFG_SOCKET_MAX			(5)		/*网络模式下SOCKET最大连接数*/
 
 
-#define	CFG_ASDU_NODE_MAX       (10)		/*ASDU包含信息点数*/
+#define	CFG_ASDU_DATA_BUFF_MAX       (200)		/*ASDU包含信息点数*/
 
 
 /******************************ASDU 表格配置******************************/

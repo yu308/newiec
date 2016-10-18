@@ -1,24 +1,11 @@
 #ifndef _app_h_
 #define _app_h_
 
-#include "../../Core/iec_cfg.h"
-#include "../../Iec/iec_element.h"
-#include "../../Iec/iec_asdu.h"
-#include "../../Iec/iec_node.h"
-#include "../../Iec/arraylist.h"
+
+#include "../Helper/layer_helper.h"
 
 
-/// <summary>
-/// ASDU传输数据任务
-/// </summary>
-struct asdu_task
-{
-	int asdu_ident;		/*ASDU标识*/
-	int seq_en;			/*启用顺序队列*/
-	int node_count;		/*包含信息点个数*/
-	int cause;			/* 传送原因*/
-	int node_addr[CFG_ASDU_NODE_MAX];		/*信息点组*/
-};
+
 
 struct buffered_data
 {

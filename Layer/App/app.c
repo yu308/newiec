@@ -81,20 +81,56 @@ static void app_evt_recv_data_handle(struct app_info *info,struct iec_event *evt
   int sub_evt=evt->evt_sub_type;
 
   struct app_task *task_temp=0;
+  struct app_send_info *send_info = 0;
 
-  switch(sub_evt)
-    {
-    case EVT_SUB_DAT_LEVEL_1:
-      task_temp=app_task_get(info->first_task);
-      break;
-    case EVT_SUB_DAT_LEVEL_2:
-      task_temp=app_task_get(info->second_task);
-      break;
-    case EVT_SUB_DAT_USER:
-      app_evt_dispatch_recv_asdu(info, evt->sub_msg);
-      break;
-    }
+  switch (sub_evt)
+  {
+  case EVT_SUB_DAT_LEVEL_1:
+	  task_temp = app_task_get(info->first_task);
+	  send_info = app_task_covert_to_asdu_frame(info, task_temp);
+	  break;
+  case EVT_SUB_DAT_LEVEL_2:
+	  task_temp = app_task_get(info->second_task);
+	  send_info = app_task_covert_to_asdu_frame(info, task_temp);
+	  break;
+  case EVT_SUB_DAT_USER:
+	  app_evt_dispatch_recv_asdu(info, evt->sub_msg);
+	  break;
+  }
 
+}
+
+static void app_evt_update_node_handle(struct app_info *info, struct iec_event *evt)
+{
+	int res = 0;
+	struct node_update_info *nd_info = (struct normal_node_update_info *)evt->main_msg;
+	arraylist *task_list = 0;
+
+	if (nd_info->level == EVT_SUB_DAT_LEVEL_1)
+	{
+		task_list = info->first_task;
+	}
+	else if (nd_info->level == EVT_SUB_DAT_LEVEL_2)
+	{
+		task_list = info->second_task;
+	}
+
+	if (evt->evt_sub_type == EVT_SUB_NORMAL_NODE)
+	{
+		res = app_task_add_normal(task_list, nd_info->asdu_ident, nd_info->cause,
+			evt->sub_msg);
+	}
+	else if (evt->evt_sub_type == EVT_SUB_SEQ_NODE)
+	{
+		res = app_task_add_seq(task_list, nd_info->asdu_ident, nd_info->cause, evt->sub_msg);
+	}
+
+	if (res == -1)
+		XFREE(evt->sub_msg);
+	else
+	{
+		app_send_update_evt_to_link(info, nd_info->level);
+	}
 }
 
 
@@ -128,41 +164,10 @@ void app_thread_entry(void *param)
 			}
 			break;
 		case EVT_APP_NODE_UPDATE:	
-			if (evt->evt_sub_type == EVT_SUB_NORMAL_NODE)
-			{
-				struct normal_node_update_info *nd_info = (struct normal_node_update_info *)evt->main_msg;
-				arraylist *task_list = 0;
-				if (nd_info->level == EVT_SUB_DAT_LEVEL_1)
-				{
-					task_list = info->first_task;
-				}
-				else if (nd_info->level == EVT_SUB_DAT_LEVEL_2)
-				{
-					task_list = info->second_task;
-				}
-				res = app_task_add_normal(task_list, nd_info->asdu_ident, nd_info->cause, nd_info->seq,
-					evt->sub_msg);
-				if (res == -1)
-					XFREE(evt->sub_msg);
-				else
-				{
-					app_send_update_evt_to_link(info, nd_info->level);
-				}
-      }
+			app_evt_update_node_handle(info, evt);
 			break;		/*信息点变化*/
 		case EVT_APP_RECV_DATA: /*被动收到LINK至ASDU数据*/
-			if (evt->msg->m_app_recv_info.funcode==APP_FUN_FIRST)	/*请求一类数据 检测一类任务缓存*/
-			{
-				/*若有任务,配置消息信息*/
-			}
-			else if (evt->msg->m_app_recv_info.funcode == APP_FUN_SECOND) /*请求二类数据 检测二类任务缓存*/
-			{
-				/*若有任务,配置消息信息*/
-			}
-			else if (evt->msg->m_app_recv_info.funcode == APP_FUN_USER) /*用户应用数据*/
-			{
-				/*控制、文件、参数设置*/
-			}
+			app_evt_recv_data_handle(info, evt);
 			break;		
 		case EVT_APP_SEND_DATA:	/*主动发送ASDU数据,ASDU数据由用户应用产生*/			
 			break;		

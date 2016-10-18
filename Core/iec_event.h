@@ -57,28 +57,14 @@
 /// <summary>
 /// 更新通用信息点时信息
 /// </summary>
-struct normal_node_update_info
+struct node_update_info
 {
 	unsigned int appid; /*所属APP*/
 	unsigned int level; /*刷新优先级*/
 	unsigned int asdu_ident;/*asdu标识*/
 	unsigned int cause; /*传送原因*/
-	unsigned int seq; /*序列化传输*/
 };
 
-/// <summary>
-/// 序列化信息点更新时信息
-/// </summary>
-struct seq_node_update_info
-{
-	unsigned int appid;
-	unsigned int node_start_addr;
-	unsigned int count;
-	unsigned int asdu_ident;
-	unsigned int cause;
-
-	struct node_frame_info *f_seq_info;/*对应count数量的 node 帧格式数据,*/
-};
 
 /// <summary>
 /// 创建Link时参数
@@ -102,10 +88,10 @@ struct link_recv_info
 /// <summary>
 /// LINK实例收到APP实例需发送数据信息
 /// </summary>
-struct link_send_info
+struct app_send_info
 {
 	char *app_data;
-	char app_data_len;
+	int app_data_len;
 };
 
 /// <summary>

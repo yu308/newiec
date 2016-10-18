@@ -47,10 +47,19 @@ struct node_frame_info
 	int val;
 	int qual;
 	unsigned int utc_time;
+	int millsecond;
 	int buffered;
 
 };
 
+struct seq_node_frame_info
+{
+	unsigned int addr;
+	int count;
+	int *val;
+	int *qual;
+	int buffered;
+};
 
 extern struct seq_node *iec_create_seq_node(int node_start_addr,int count);
 extern void iec_del_seq_node(struct seq_node *node);
@@ -59,4 +68,7 @@ extern unsigned int iec_pack_node_element(char *buff, int element_val, int eleme
 extern struct normal_node *iec_create_normal_node(int node_addr);
 void iec_api_update_normal_node(int appid, unsigned int asdu_ident,
 	unsigned int cause, int seq, struct node_frame_info *f_node);
+
+extern unsigned int iec_pack_tm_node_element(char *buff, int utc_time, int millsecond, int tm_ident);
+
 #endif

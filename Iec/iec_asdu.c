@@ -18,38 +18,52 @@ struct asdu_cfg* iec_get_asdu_cfg(int ident)
 	return 0;
 }
 
-static unsigned int asdu_pack_node(char *buff, struct asdu_cfg *cfg, int node_addr,int node_addr_len,int seq_flag)
+unsigned int iec_asdu_pack_node(char *buff, struct asdu_cfg *cfg,int node_addr,int node_addr_len,int val,int qual,int utc_time,
+	int millsecond)
 {
 	int idx = 0;
 
-	if (seq_flag == 0)
-	{
-		XMEMCPY(&buff[idx], &node_addr, node_addr_len);//信息点地址
-		idx += node_addr_len;
-	}
+	idx += iec_pack_node_addr(buff, node_addr, node_addr_len);
 
 	if (cfg->val_ident != 0)
 	{
-		
+		idx+=iec_pack_node_element(&buff[idx], val, cfg->val_ident);
+	}
+	if (cfg->qual_ident != 0)
+	{
+		idx += iec_pack_node_element(&buff[idx], qual, cfg->qual_ident);
+	}
+	if (cfg->tm_ident != 0)
+	{
+		idx += iec_pack_tm_node_element(&buff[idx], utc_time, millsecond, cfg->tm_ident);
+	}
+	if (cfg->ext_tm_ident != 0)
+	{
+		idx += iec_pack_tm_node_element(&buff[idx], utc_time, millsecond, cfg->ext_tm_ident);
 	}
 
+	return idx;
 }
 
-/// <summary>
-/// 封装ASDU数据
-/// </summary>
-/// <param name="buff">缓存区</param>
-/// <param name="asdu_ident">ASDU标识</param>
-/// <param name="node_array">信息点地址组</param>
-/// <param name="node_count">信息点组中的数量</param>
-/// <returns>封装的数据长度</returns>
-unsigned int iec_asdu_pack_node_data(char *buff, int asdu_ident, int node_array, int node_count)
+unsigned int iec_asdu_pack_seq_node(char *buff, struct asdu_cfg *cfg, int node_addr, int node_addr_len,int count,int *val, int *qual)
 {
-	struct asdu_cfg *cfg = iec_get_asdu_cfg(asdu_ident);
-	int i = 0;
+	int idx = 0,i=0;
 
-	for (i = 0; i < node_count; i++)
+	idx += iec_pack_node_addr(buff, node_addr, node_addr_len);
+
+	while (count--)
 	{
+		if (cfg->val_ident != 0)
+		{
+			idx += iec_pack_node_element(&buff[idx], val[i], cfg->val_ident);
+		}
+		if (cfg->qual_ident != 0)
+		{
+			idx += iec_pack_node_element(&buff[idx], qual[i], cfg->qual_ident);
+		}
 
+		i++;
 	}
+
+	return idx;
 }
