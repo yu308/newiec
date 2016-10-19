@@ -1,8 +1,8 @@
 #ifndef _asdu_h_
 #define _asdu_h_
 
-#define NO_SEQ		(0)		/*ÎŞSEQ*/
-#define SEQ			(1)		/*Ö§³ÖSEQ*/
+#define NO_SEQ		(0)		/*æ— SEQ*/
+#define SEQ			(1)		/*æ”¯æŒSEQ*/
 
 #define NO_QUAL_WORD	(0)
 
@@ -10,7 +10,7 @@
 
 #define NO_EXT_TIME	(0)
 /// <summary>
-/// Ó¦ÓÃµ¥Ôª±êÊ¶
+/// åº”ç”¨å•å…ƒæ ‡è¯†
 /// </summary>
 enum Asdu_Ident
 {
@@ -88,7 +88,7 @@ enum Asdu_Ident
 };
 
 /// <summary>
-/// ´«ËÍÔ­Òò
+/// ä¼ é€åŸå› 
 /// </summary>
 enum Cause
 {
@@ -142,16 +142,16 @@ enum Cause
 
 
 /// <summary>
-/// ASDUÅäÖÃĞÅÏ¢ ÓÃÓÚ½âÎö»ò·â×°ĞÅÏ¢µãÊı¾İ
+/// ASDUé…ç½®ä¿¡æ¯ ç”¨äºè§£ææˆ–å°è£…ä¿¡æ¯ç‚¹æ•°æ®
 /// </summary>
 struct asdu_cfg
 {	
 	int asdu_ident;
-	/*int seq_tag;*/ /*ÔËĞĞÊ±¾ö¶¨*/
-	int val_ident;	/* ĞÅÏ¢µãÖµÀàĞÍ±êÊ¶*/
-	int qual_ident;	/* ĞÅÏ¢µãÆ·ÖÊÃèÊöÀàĞÍ±êÊ¶*/
-	int tm_ident;	/* ĞÅÏ¢µãÊ±¼ä±êÇ©±êÊ¶*/
-	int ext_tm_ident; /*ĞÅÏ¢µãÀ©Õ¹Ê±¼ä±êÇ©±êÊ¶ ÓÃÓÚ¼Ìµç±£»¤ÊÂ¼şĞÅÏ¢µã*/
+	/*int seq_tag;*/ /*è¿è¡Œæ—¶å†³å®š*/
+	int val_ident;	/* ä¿¡æ¯ç‚¹å€¼ç±»å‹æ ‡è¯†*/
+	int qual_ident;	/* ä¿¡æ¯ç‚¹å“è´¨æè¿°ç±»å‹æ ‡è¯†*/
+	int tm_ident;	/* ä¿¡æ¯ç‚¹æ—¶é—´æ ‡ç­¾æ ‡è¯†*/
+	int ext_tm_ident; /*ä¿¡æ¯ç‚¹æ‰©å±•æ—¶é—´æ ‡ç­¾æ ‡è¯† ç”¨äºç»§ç”µä¿æŠ¤äº‹ä»¶ä¿¡æ¯ç‚¹*/
 };
 
 

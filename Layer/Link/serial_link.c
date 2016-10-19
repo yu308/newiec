@@ -1,18 +1,12 @@
-
+#include "../../OS/os_helper.h"
 #include "../Helper/layer_helper.h"
 
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
 void serial_link_thread_entry(void *param);
+#define SERIAL_THREAD_PROI      (14)
+#define SERIAL_THREAD_STACK_SIZE  (1024)
 #define SERIAL_THREAD_TICK		(50)
 #define MAX_EVENT_COUNT			(5)
-/// <summary>
-/// 链路任务配置
-/// </summary>
-osThreadDef(serial, serial_link_thread_entry, LINK_TASK_PROI, SERIAL_THREAD_TICK, 2048);
-/// <summary>
-/// 链路任务消息队列
-/// </summary>
-osMessageQDef(serialevent, MAX_EVENT_COUNT, 4);
 #endif
 
 /// <summary>
@@ -25,14 +19,14 @@ osMessageQDef(serialevent, MAX_EVENT_COUNT, 4);
 void serial_link_init(struct serial_link_info *info, int addr, int addr_len, int dir)
 {
 	XMEMSET(info, 0, sizeof(struct serial_link_info));
-	struct serial_link_cfg *cfg= (struct serial_link_cfg *)XMALLOC(sizeof(struct serial_link_cfg));
+	struct serial_link_cfg *cfg= (struct serial_link_cfg *)rt_malloc(sizeof(struct serial_link_cfg));
 
 	cfg->double_dir = dir;
 	cfg->link_addr_len = addr_len;
 	cfg->link_addr = addr;
-	cfg->recv_buff = XMALLOC(256);
-	cfg->send_buff = XMALLOC(256);
-	cfg->prev_sent_buff = XMALLOC(256);
+	cfg->recv_buff = rt_malloc(256);
+	cfg->send_buff = rt_malloc(256);
+	cfg->prev_sent_buff = rt_malloc(256);
 	cfg->prev_sent_len = 0;
 
 	info->cfg = cfg;
@@ -41,7 +35,7 @@ void serial_link_init(struct serial_link_info *info, int addr, int addr_len, int
 	info->fcb = 0;
 
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
-	info->serial_event = osMessageCreate(osMessageQ(serialevent), 0);
+	info->serial_event = rt_mb_create("serialmb", MAX_EVENT_COUNT, RT_IPC_FLAG_FIFO);
 #endif
 }
 
@@ -54,10 +48,10 @@ void serial_link_init(struct serial_link_info *info, int addr, int addr_len, int
 /// <returns></returns>
 struct serial_link_info *serial_link_create(int addr, int addr_len, int dir)
 {
-	struct serial_link_info *info = (struct serial_link_info *)XMALLOC(sizeof(struct serial_link_info));
+	struct serial_link_info *info = (struct serial_link_info *)rt_malloc(sizeof(struct serial_link_info));
 	if (info == 0)
 	{
-		XPRINTF("serial linklayer configure malloc fail.\n");
+		rt_kprintf("serial linklayer configure malloc fail.\n");
 		return 0;
 	}
 	
@@ -71,10 +65,10 @@ struct serial_link_info *serial_link_create(int addr, int addr_len, int dir)
 /// <param name="cfg">The CFG.</param>
 void serial_link_del(struct serial_link_info *info)
 {
-	XFREE(info->cfg->recv_buff);
-	XFREE(info->cfg->send_buff);
-	XFREE(info->cfg->prev_sent_buff);
-	XFREE(info->cfg);
+	rt_free(info->cfg->recv_buff);
+	rt_free(info->cfg->send_buff);
+	rt_free(info->cfg->prev_sent_buff);
+	rt_free(info->cfg);
 }
 
 
@@ -193,7 +187,7 @@ static int serial_link_fixed_check(struct serial_link_cfg *cfg, char *recv_buff)
 	if (recv_buff[cfg->link_addr_len + 2] != serial_link_get_cs(&recv_buff[1], cfg->link_addr_len + 1))
 		return 0;
 
-	XMEMCPY(link_addr, &recv_buff[5], cfg->link_addr_len);
+	rt_memcpy(&link_addr, &recv_buff[5], cfg->link_addr_len);
 
 	if (link_addr != cfg->link_addr)
 		return 0;
@@ -221,7 +215,7 @@ static int serial_link_unfixed_check(struct serial_link_cfg *cfg, char *recv_buf
 	if (recv_buff[cfg->link_addr_len + 2] != serial_linklayer_get_cs(&recv_buff[4], recv_buff[1]))
 		return 0;
 
-	XMEMCPY(link_addr, &recv_buff[5], cfg->link_addr_len);
+	rt_memcpy(&link_addr, &recv_buff[5], cfg->link_addr_len);
 
 	if (link_addr != cfg->link_addr)
 		return 0;
@@ -331,7 +325,7 @@ int serial_link_pack_fixed_frame(struct serial_link_info *info, char funcode)
 	{
 		info->cfg->send_buff[0] = FIXED_HEAD_TAG;
 		info->cfg->send_buff[1] = up_domain.domain;
-		XMEMCPY(&info->cfg->send_buff[2], &info->cfg->link_addr, info->cfg->link_addr_len);
+		rt_memcpy(&info->cfg->send_buff[2], &info->cfg->link_addr, info->cfg->link_addr_len);
 		info->cfg->send_buff[1 + info->cfg->link_addr_len] = serial_linklayer_get_cs(&info->cfg->send_buff[1], 1 + info->cfg->link_addr_len);
 		info->cfg->send_buff[2 + info->cfg->link_addr_len] = FRAME_END_TAG;
 
@@ -393,8 +387,8 @@ static void serial_link_phy_recv_handle(struct serial_link_info *info,struct iec
 	data_len = phy_recv_info->recv_len;
 	data = phy_recv_info->recv_data;
 
-	XMEMSET(info->cfg->recv_buff, 0, data_len);
-	XMEMCPY(info->cfg->recv_buff, data, data_len);
+	rt_memset(info->cfg->recv_buff, 0, data_len);
+	rt_memcpy(info->cfg->recv_buff, data, data_len);
 
 	domain_byte = serial_link_recv_check_data(info->cfg, data_len);
 	if (domain_byte == 0)
@@ -411,13 +405,13 @@ static void serial_link_phy_recv_handle(struct serial_link_info *info,struct iec
 	{
 		data_len = serial_link_pack_fixed_frame(info, FC_UP_YES);
 		info->cfg->serial_write(info->cfg->send_buff, data_len);
-		XMEMCPY(info->cfg->prev_sent_buff, info->cfg->send_buff, data_len);
+		rt_memcpy(info->cfg->prev_sent_buff, info->cfg->send_buff, data_len);
 	}
 	else if (dispatch_res == TO_LINK_REQ)
 	{
 		data_len = serial_link_pack_fixed_frame(info, FC_UP_LINK);
 		info->cfg->serial_write(info->cfg->send_buff, data_len);
-		XMEMCPY(info->cfg->prev_sent_buff, info->cfg->send_buff, data_len);
+		rt_memcpy(info->cfg->prev_sent_buff, info->cfg->send_buff, data_len);
 	}
 	else if (dispatch_res == TO_APP_FIRST)
 	{
@@ -431,7 +425,7 @@ static void serial_link_phy_recv_handle(struct serial_link_info *info,struct iec
 	else if (dispatch_res == TO_APP_USER)
 	{
 		/*控制类帧解析*/
-		serial_link_send_asdu_evt_to_app(info,&(info->cfg->recv_buff[5+info->cfg->link_addr_len]));
+		serial_link_send_asdu_evt_to_app(info,&info->cfg->recv_buff[5+info->cfg->link_addr_len]);
 	}
 }
 
@@ -450,7 +444,7 @@ static void serial_link_app_recv_handle(struct serial_link_info *info, struct ie
 	}
 }
 
-static void serial_link_recv_event(struct serial_link_info *info,struct iec_event *evt)
+static void serial_link_recv_event_handle(struct serial_link_info *info,struct iec_event *evt)
 {
 	int sub_evt = evt->evt_sub_type;
 
@@ -466,17 +460,37 @@ static void serial_link_recv_event(struct serial_link_info *info,struct iec_even
 	}
 }
 
+static void serial_link_asdu_send_evt_handle(struct serial_link_info *info ,struct iec_event *evt)
+{
+  int sub_evt=evt->evt_sub_type;
+  struct app_send_info *send_info=evt->sub_msg;
+  int count =0;
+  switch(sub_evt)
+    {
+    case EVT_SUB_DAT_USER:
+      if(app_task_check_empty(((struct app_info*)(info->applayer_id))->first_task, (int)info)>0)
+        {
+          info->acd_tag=1;
+        }
+      count=serial_link_pack_unfixed_frame(info,FC_UP_USER_DATA ,send_info->app_data, send_info->app_data_len);
+      rt_free(send_info->app_data);
+      break;
+    }
+
+  info->cfg->serial_write(info->cfg->send_buff,count);
+}
+
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
 void serial_link_thread_entry(void *param)
 {
 	struct serial_link_info *info = (struct serial_link_info*)param;
 
 	struct iec_event *evt = 0;
-	XPRINTF("IEC:SERIAL LINK: %d link is running.\n", info->serial_tid);
+	rt_kprintf("IEC:SERIAL LINK: %d link is running.\n", info->serial_tid);
 
 	while (1)
 	{
-		evt =iec_recv_event(info->serial_event, osWaitForever);
+		evt =iec_recv_event(info->serial_event, RT_WAITING_FOREVER);
 		if (evt == 0)
 			continue;
 
@@ -487,9 +501,10 @@ void serial_link_thread_entry(void *param)
 		case EVT_LINK_PHY_DISCONNECT:
 			break;
 		case EVT_LINK_RECV_DATA:
-			serial_link_recv_event(info, evt);
+			serial_link_recv_event_handle(info, evt);
 			break;
 		case EVT_LINK_SEND_DATA:
+      serial_link_asdu_send_evt_handle(info, evt);
 			break;
 		default:
 			break;
@@ -502,7 +517,8 @@ void serial_link_thread_entry(void *param)
 void serial_link_thread_start(int plink_info)
 {
 	struct serial_link_info *info = (struct serial_link_info *)plink_info;
-	info->serial_tid=osThreadCreate(osThread(serial), info);
+	info->serial_tid=rt_thread_create("serial", serial_link_thread_entry, info, SERIAL_THREAD_STACK_SIZE, SERIAL_THREAD_PROI, SERIAL_THREAD_TICK);
+  rt_thread_startup(info->serial_tid);
 }
 #endif
 

@@ -1,7 +1,7 @@
 #ifndef _app_h_
 #define _app_h_
 
-
+#include "../../OS/os_helper.h"
 #include "../Helper/layer_helper.h"
 
 
@@ -11,7 +11,6 @@ struct buffered_data
 {
 	int node_addr;		/*信息点地址*/
 	int asdu_ident;		/*ASDU标识*/
-	union node_val val;	/*信息点值*/
 	int utc_node_time;	/*信息点扩展时间*/
 	int utc_time;		/*发生时间*/
 };
@@ -51,8 +50,8 @@ struct app_info
 	arraylist *buffered;
 
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
-	osMessageQId app_event;
-	osThreadId app_tid;
+	rt_mailbox_t app_event;
+	rt_thread_t app_tid;
 #endif
 };
 

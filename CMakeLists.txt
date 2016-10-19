@@ -7,7 +7,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/Layer/Link)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/Api)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/Iec)
 
-aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/OS os_src)
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/Core core_src)
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/Layer/App app_src)
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/Layer/Link link_src)

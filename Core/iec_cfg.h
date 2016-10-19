@@ -1,26 +1,27 @@
 #ifndef _iec_cfg_h_
 #define _iec_cfg_h_
 
-#include	"cmsis_os.h"
+#include	"../OS/os_helper.h"
 
 /************************************************
-ÃüÃû¹æÔòËµÃ÷
-	È«¾Ö±äÁ¿	      gXxx_Yyy					g¿ªÍ· Ê××ÖÄ¸´óĞ´  µ¥´Ê_Á¬½Ó
-	ºê            MMMM						È«´óĞ´
-	¾²Ì¬±äÁ¿	      gxxx_yyy					g¿ªÍ· È«Ğ¡Ğ´    µ¥´Ê_Á¬½Ó
-	º¯Êı			 level_action_object		level ²ã  action ²Ù×÷  object ¶ÔÏó
-	ÉùÃ÷			 xxxxx						È«Ğ¡Ğ´
+å‘½åè§„åˆ™è¯´æ˜
+	å…¨å±€å˜é‡	      gXxx_Yyy					gå¼€å¤´ é¦–å­—æ¯å¤§å†™  å•è¯_è¿æ¥
+	å®            MMMM						å…¨å¤§å†™
+	é™æ€å˜é‡	      gxxx_yyy					gå¼€å¤´ å…¨å°å†™    å•è¯_è¿æ¥
+	å‡½æ•°			 level_action_object		level å±‚  action æ“ä½œ  object å¯¹è±¡
+	å£°æ˜			 xxxxx						å…¨å°å†™
 **************************************************/
 
 /********************* Memory *********************/
 #ifndef EXTMALLOC
-#define XMALLOC  malloc
-#define XFREE    free
-#define XREALLOC realloc
-#define XCALLOC  calloc
-#define XPRINTF	 printf
-#define XMEMSET	 memset
-#define XMEMCPY	 memcpy
+#define XMALLOC  rt_malloc
+#define XFREE    rt_free
+#define XREALLOC rt_realloc
+#define XCALLOC  rt_calloc
+#define XPRINTF	 rt_kprintf
+#define XMEMSET	 rt_memset
+#define XMEMCPY	 rt_memcpy
+#define XMEMMOVE	 rt_memmove
 #else
 extern void *XMALLOC(size_t n);
 extern void *XREALLOC(void *p, size_t n);
@@ -31,9 +32,9 @@ extern void XPRINTF();
 /************************************************/
 
 
-/********************ÔËĞĞ¹¤×÷Ä£Ê½ÅäÖÃ***************************/
-#define SINGLE_MODE			(1)			/*µ¥ÈÎÎñÄ£Ê½*/
-#define MUTLI_MODE			(2)			/*¶àÈÎÎñÄ£Ê½*/
+/********************è¿è¡Œå·¥ä½œæ¨¡å¼é…ç½®***************************/
+#define SINGLE_MODE			(1)			/*å•ä»»åŠ¡æ¨¡å¼*/
+#define MUTLI_MODE			(2)			/*å¤šä»»åŠ¡æ¨¡å¼*/
 
 #define CFG_RUNNING_MODE		MUTLI_MODE
 
@@ -46,56 +47,56 @@ extern void XPRINTF();
 #endif
 
 
-#define SYS_ROLE_CLIENT			(1<<0)		/*½öÖ§³Ö½ÇÉ«Îª¿Í»§¶Ë ÍøÂç·½Ê½Ê±Á´Â·²ãÎªsocket·şÎñÆ÷¶Ë */
-#define SYS_ROLE_SERVER			(1<<1)		/*½öÖ§³Ö½ÇÉ«Îª·şÎñ¶Ë	ÍøÂç·½Ê½Á´Â·²ãÎªsocket¿Í»§¶Ë*/
-#define SYS_ROLE_MIXED			(1<<2)		/*Á½ÕßÖ§³Ö*/
+#define SYS_ROLE_CLIENT			(1<<0)		/*ä»…æ”¯æŒè§’è‰²ä¸ºå®¢æˆ·ç«¯ ç½‘ç»œæ–¹å¼æ—¶é“¾è·¯å±‚ä¸ºsocketæœåŠ¡å™¨ç«¯ */
+#define SYS_ROLE_SERVER			(1<<1)		/*ä»…æ”¯æŒè§’è‰²ä¸ºæœåŠ¡ç«¯	ç½‘ç»œæ–¹å¼é“¾è·¯å±‚ä¸ºsocketå®¢æˆ·ç«¯*/
+#define SYS_ROLE_MIXED			(1<<2)		/*ä¸¤è€…æ”¯æŒ*/
 
 #define CFG_ROLE_MODE			SYS_ROLE_CLIENT
 
 
 /*
--¿Í»§¶ËÄ£Ê½
-	--½ö´®ĞĞÍ¨ĞÅ·½Ê½
-		LINK ¸ù¾İÊµ¼Ê´®ĞĞ½Ó¿ÚÊıÁ¿M1ÉèÖÃ
+-å®¢æˆ·ç«¯æ¨¡å¼
+	--ä»…ä¸²è¡Œé€šä¿¡æ–¹å¼
+		LINK æ ¹æ®å®é™…ä¸²è¡Œæ¥å£æ•°é‡M1è®¾ç½®
 		APP	 1
-	--½öÍøÂçÍ¨ĞÅ·½Ê½
-		LINK ¸ù¾İÊµ¼ÊÍøÂç½Ó¿ÚÊıÁ¿M2ÉèÖÃ
+	--ä»…ç½‘ç»œé€šä¿¡æ–¹å¼
+		LINK æ ¹æ®å®é™…ç½‘ç»œæ¥å£æ•°é‡M2è®¾ç½®
 		APP   1
-	--Ë«Í¨µÀÖ§³Ö
-		LINK ½Ó¿ÚÊıÁ¿ºÍM1+M2
+	--åŒé€šé“æ”¯æŒ
+		LINK æ¥å£æ•°é‡å’ŒM1+M2
 		APP	 1
-	¶ÔÓ¦¹ØÏµ: 1¡¢µ¥¸öAPPÖ»¶ÔÓ¦µ¥¸öLINKÍ¨µÀ  2¡¢µ¥¸öAPP¿ÉÍ¬Ê±¶ÔÓ¦¶à¸öLINKÍ¨µÀ
+	å¯¹åº”å…³ç³»: 1ã€å•ä¸ªAPPåªå¯¹åº”å•ä¸ªLINKé€šé“  2ã€å•ä¸ªAPPå¯åŒæ—¶å¯¹åº”å¤šä¸ªLINKé€šé“
 
--·şÎñ¶ËÄ£Ê½
-	--½ö´®ĞĞÍ¨ĞÅ·½Ê½
-		LINK ¸ù¾İÊµ¼Ê´®ĞĞ½Ó¿ÚÊıÁ¿M1ÉèÖÃ
+-æœåŠ¡ç«¯æ¨¡å¼
+	--ä»…ä¸²è¡Œé€šä¿¡æ–¹å¼
+		LINK æ ¹æ®å®é™…ä¸²è¡Œæ¥å£æ•°é‡M1è®¾ç½®
 		APP	 >=1 <=M1
-	--½öÍøÂçÍ¨ĞÅ·½Ê½
-		LINK ¸ù¾İÊµ¼ÊÍøÂç½Ó¿ÚÊıÁ¿M2ÉèÖÃ
+	--ä»…ç½‘ç»œé€šä¿¡æ–¹å¼
+		LINK æ ¹æ®å®é™…ç½‘ç»œæ¥å£æ•°é‡M2è®¾ç½®
 		APP   >=1 <=M2
-	--Ë«Í¨µÀÖ§³Ö
-		LINK ½Ó¿ÚÊıÁ¿ºÍM1+M2
+	--åŒé€šé“æ”¯æŒ
+		LINK æ¥å£æ•°é‡å’ŒM1+M2
 		APP	 >=2 <=M1+M2
-	¶ÔÓ¦¹ØÏµ: 1¡¢µ¥¸öAPPÖ»¶ÔÓ¦µ¥¸öLINKÍ¨µÀ  2¡¢µ¥¸öAPP¿ÉÍ¬Ê±¶ÔÓ¦¶à¸öLINKÍ¨µÀ
+	å¯¹åº”å…³ç³»: 1ã€å•ä¸ªAPPåªå¯¹åº”å•ä¸ªLINKé€šé“  2ã€å•ä¸ªAPPå¯åŒæ—¶å¯¹åº”å¤šä¸ªLINKé€šé“
 
--»ìºÏÄ£Ê½
-	¿Í»§¶ËÓë·şÎñÆ÷¶Ë¹²´æ²¢ÓĞ½»»¥Êı¾İ£¬¼´Êı¾İÖĞ×ª»ú¡£APP·ÖÎª·şÎñ¶ËÓë¿Í»§¶Ë2ÖÖ¡£Ã¿¸öLINKÍ¨µÀÖ»¿É¶ÔÓ¦Ò»¸öAPP£¬APP¿ÉÏàÍ¬
-	¶ÔÓ¦¹ØÏµ: 1¡¢µ¥±ßµ¥¸öAPPÖ»¶ÔÓ¦µ¥¸öLINKÍ¨µÀ  2¡¢µ¥±ßµ¥¸öAPP¿ÉÍ¬Ê±¶ÔÓ¦¶à¸öLINKÍ¨µÀ 3¡¢²»Í¬±ß2¸öAPPÖ®¼ä¿É½øĞĞÊı¾İ½»»¥
+-æ··åˆæ¨¡å¼
+	å®¢æˆ·ç«¯ä¸æœåŠ¡å™¨ç«¯å…±å­˜å¹¶æœ‰äº¤äº’æ•°æ®ï¼Œå³æ•°æ®ä¸­è½¬æœºã€‚APPåˆ†ä¸ºæœåŠ¡ç«¯ä¸å®¢æˆ·ç«¯2ç§ã€‚æ¯ä¸ªLINKé€šé“åªå¯å¯¹åº”ä¸€ä¸ªAPPï¼ŒAPPå¯ç›¸åŒ
+	å¯¹åº”å…³ç³»: 1ã€å•è¾¹å•ä¸ªAPPåªå¯¹åº”å•ä¸ªLINKé€šé“  2ã€å•è¾¹å•ä¸ªAPPå¯åŒæ—¶å¯¹åº”å¤šä¸ªLINKé€šé“ 3ã€ä¸åŒè¾¹2ä¸ªAPPä¹‹é—´å¯è¿›è¡Œæ•°æ®äº¤äº’
 
-×ÛÉÏ,APPÓëLINKÖ®¼äÓĞ1¡¢2Á½ÖÖ¹ØÏµ,ÔÚ×öÎªÊı¾İÖĞ×ª»úÊ±£¬¾ßÓĞ3
+ç»¼ä¸Š,APPä¸LINKä¹‹é—´æœ‰1ã€2ä¸¤ç§å…³ç³»,åœ¨åšä¸ºæ•°æ®ä¸­è½¬æœºæ—¶ï¼Œå…·æœ‰3
 
 
 */
 
-#define CFG_LINK_MAX			(4)		/*Ö§³ÖµÄÁ´Â·ÊıÁ¿ */
-#define CFG_APP_MAX				(1)		/*APPÊıÁ¿ */
-#define	CFG_SOCKET_MAX			(5)		/*ÍøÂçÄ£Ê½ÏÂSOCKET×î´óÁ¬½ÓÊı*/
+#define CFG_LINK_MAX			(4)		/*æ”¯æŒçš„é“¾è·¯æ•°é‡ */
+#define CFG_APP_MAX				(1)		/*APPæ•°é‡ */
+#define	CFG_SOCKET_MAX			(5)		/*ç½‘ç»œæ¨¡å¼ä¸‹SOCKETæœ€å¤§è¿æ¥æ•°*/
 
 
-#define	CFG_ASDU_DATA_BUFF_MAX       (200)		/*ASDU°üº¬ĞÅÏ¢µãÊı*/
+#define	CFG_ASDU_DATA_BUFF_MAX       (200)		/*ASDUåŒ…å«ä¿¡æ¯ç‚¹æ•°*/
 
 
-/******************************ASDU ±í¸ñÅäÖÃ******************************/
+/******************************ASDU è¡¨æ ¼é…ç½®******************************/
 
 #define CFG_ASDU_M_SP_NA			(1)
 #define CFG_ASDU_M_SP_NA			(1)

@@ -45,4 +45,7 @@ void app_send_update_evt_to_link(struct app_info *info,struct serial_link_info *
 void app_send_asdu_evt_to_link(struct app_info *info,struct app_send_info *send_asdu)
 {
   struct iec_event *evt=0;
+  evt=iec_create_event((unsigned int)info,(unsigned int)send_asdu->link_id,EVT_LINK_SEND_DATA,0,0);
+  iec_set_event_sub(evt,EVT_SUB_DAT_USER,send_asdu,1);
+  iec_post_event(((struct serial_link_info*)send_asdu->link_id)->serial_event,evt,20);
 }

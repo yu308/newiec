@@ -3,16 +3,16 @@
 #include "iec_cfg.h"
 
 /// <summary>
-/// 系统信息
+/// 绯荤粺淇℃伅
 /// </summary>
 struct sys_info
 {
-	int communicate_role;	/*系统通信角色*/
+	int communicate_role;	/*绯荤粺閫氫俊瑙掕壊*/
 
-	int link_obj[CFG_LINK_MAX];	 /*当前链路*/
-	int app_obj[CFG_APP_MAX];	/*当前APP*/
+	int link_obj[CFG_LINK_MAX];	 /*褰撳墠閾捐矾*/
+	int app_obj[CFG_APP_MAX];	/*褰撳墠APP*/
 
-	osMessageQId sys_event;	/*系统事件*/
+	rt_mailbox_t sys_event;	/*绯荤粺浜嬩欢*/
 };
 
 

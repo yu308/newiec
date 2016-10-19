@@ -2,23 +2,17 @@
 
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
 void app_thread_entry(void *param);
+#define APP_THREAD_PROI         (14)
+#define APP_THREAD_STACK_SIZE   (1024)
 #define APP_THREAD_TICK		(50)
 #define MAX_EVENT_COUNT			(5)
-/// <summary>
-/// Á´Â·ÈÎÎñÅäÖÃ
-/// </summary>
-osThreadDef(app, app_thread_entry, APP_TASK_PROI, APP_THREAD_TICK, 2048);
-/// <summary>
-/// Á´Â·ÈÎÎñÏûÏ¢¶ÓÁĞ
-/// </summary>
-osMessageQDef(appevent, MAX_EVENT_COUNT, 4);
 #endif
 
 
 void app_init(struct app_info *info, int asdu_addr, int asdu_addr_len,int cause_len,int node_addr_len,int sm2_enable)
 {
-	XMEMSET(info, 0, sizeof(struct app_info));
-	struct app_cfg *cfg = (struct app_cfg *)XMALLOC(sizeof(struct app_cfg));
+	rt_memset(info, 0, sizeof(struct app_info));
+	struct app_cfg *cfg = (struct app_cfg *)rt_malloc(sizeof(struct app_cfg));
 
 	cfg->asdu_addr = asdu_addr;
 	cfg->asdu_addr_len = asdu_addr_len;
@@ -37,16 +31,16 @@ void app_init(struct app_info *info, int asdu_addr, int asdu_addr_len,int cause_
 	info->buffered = arraylist_create();
 
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
-	info->app_event = osMessageCreate(osMessageQ(appevent), 0);
+	info->app_event =rt_mb_create("appmb", MAX_EVENT_COUNT, RT_IPC_FLAG_FIFO); 
 #endif
 }
 
 struct app_info *app_create(int asdu_addr, int asdu_addr_len, int cause_len, int node_addr_len, int sm2_enable)
 {
-	struct app_info *info = (struct app_info *)XMALLOC(sizeof(struct app_info));
+	struct app_info *info = (struct app_info *)rt_malloc(sizeof(struct app_info));
 	if (info == 0)
 	{
-		XPRINTF("applayer configure malloc fail.\n");
+		rt_kprintf("applayer configure malloc fail.\n");
 		return 0;
 	}
 
@@ -88,11 +82,13 @@ static void app_evt_recv_data_handle(struct app_info *info,struct iec_event *evt
   case EVT_SUB_DAT_LEVEL_1:
 	  task_temp = app_task_get(info->first_task);
 	  send_info = app_task_covert_to_asdu_frame(info, task_temp);
-	  break;
+    app_send_asdu_evt_to_link(info,send_info);
+    break;
   case EVT_SUB_DAT_LEVEL_2:
 	  task_temp = app_task_get(info->second_task);
 	  send_info = app_task_covert_to_asdu_frame(info, task_temp);
-	  break;
+    app_send_asdu_evt_to_link(info, send_info);
+    break;
   case EVT_SUB_DAT_USER:
 	  app_evt_dispatch_recv_asdu(info, evt->sub_msg);
 	  break;
@@ -107,8 +103,12 @@ static void app_evt_update_node_handle(struct app_info *info, struct iec_event *
 	int res = 0,i=0;
 	struct node_update_info *nd_info = (struct node_update_info *)evt->main_msg;
 
+  struct node_frame_info  *n_nd_frame_info=0;
+  struct seq_node_frame_info *s_nd_frame_info=0;
   struct serial_link_info *link_info=0;
   arraylist *task_list = 0;
+
+  int *temp=0;
 
 	if (nd_info->level == EVT_SUB_DAT_LEVEL_1)
 	{
@@ -131,20 +131,44 @@ static void app_evt_update_node_handle(struct app_info *info, struct iec_event *
 
       if (evt->evt_sub_type == EVT_SUB_NORMAL_NODE)
         {
+          n_nd_frame_info=rt_malloc(sizeof(struct node_frame_info));
+          rt_memcpy(n_nd_frame_info,evt->sub_msg,sizeof(struct node_frame_info));
           res = app_task_add_normal(task_list,info->linklayer_id[i], nd_info->asdu_ident, nd_info->cause,
-                                    evt->sub_msg);
+                                    n_nd_frame_info);
+
+          if(res==-1)
+            {
+              rt_free(n_nd_frame_info);
+            }
         }
       else if (evt->evt_sub_type == EVT_SUB_SEQ_NODE)
         {
-          res = app_task_add_seq(task_list,info->linklayer_id[i], nd_info->asdu_ident, nd_info->cause, evt->sub_msg);
+          s_nd_frame_info=rt_malloc(sizeof(struct seq_node_frame_info));
+          rt_memcpy(s_nd_frame_info,evt->sub_msg,sizeof(struct seq_node_frame_info));
+          temp=rt_malloc(s_nd_frame_info->count*sizeof(int));
+          rt_memcpy(temp,s_nd_frame_info->val,s_nd_frame_info->count*sizeof(int));
+          s_nd_frame_info->val=temp;
+          temp=rt_malloc(s_nd_frame_info->count*sizeof(int));
+          rt_memcpy(temp,s_nd_frame_info->qual,s_nd_frame_info->count*sizeof(int));
+          s_nd_frame_info->qual=temp;
+          res = app_task_add_seq(task_list,info->linklayer_id[i], nd_info->asdu_ident, nd_info->cause, s_nd_frame_info);
+          if(res==-1)
+            {
+              /*å†…éƒ¨æ•°æ®è¢«åŸæœ‰çš„ç‚¹ä½¿ç”¨,ä¸é‡Šæ”¾*/
+              rt_free(s_nd_frame_info);
+            }
         }
 
-      if (res == -1)
-        XFREE(evt->sub_msg);
-      else
+      if(res==0)
         {
           app_send_update_evt_to_link(info, link_info,nd_info->level);
         }
+    }
+
+  if(evt->evt_sub_type==EVT_SUB_SEQ_NODE)
+    {
+      rt_free(((struct seq_node_frame_info*)evt->sub_msg)->qual);
+      rt_free(((struct seq_node_frame_info*)evt->sub_msg)->val);
     }
 }
 
@@ -161,10 +185,8 @@ void app_thread_entry(void *param)
 
 	while (1)
 	{
-		evt = iec_recv_event(info->app_event, osWaitForever);
-
-		if (evt == 0)
-			continue;
+		evt = iec_recv_event(info->app_event, RT_WAITING_FOREVER);
+    
 
 		switch (evt->evt_type)
 		{
@@ -180,20 +202,20 @@ void app_thread_entry(void *param)
 			break;
 		case EVT_APP_NODE_UPDATE:	
 			app_evt_update_node_handle(info, evt);
-			break;		/*ĞÅÏ¢µã±ä»¯*/
-		case EVT_APP_RECV_DATA: /*±»¶¯ÊÕµ½LINKÖÁASDUÊı¾İ*/
+			break;		/*ÃÃ…ÃÂ¢ÂµÃ£Â±Ã¤Â»Â¯*/
+		case EVT_APP_RECV_DATA: /*Â±Â»Â¶Â¯ÃŠÃ•ÂµÂ½LINKÃ–ÃASDUÃŠÃ½Â¾Ã*/
 			app_evt_recv_data_handle(info, evt);
 			break;		
-		case EVT_APP_SEND_DATA:	/*Ö÷¶¯·¢ËÍASDUÊı¾İ,ASDUÊı¾İÓÉÓÃ»§Ó¦ÓÃ²úÉú*/			
+		case EVT_APP_SEND_DATA:	/*Ã–Ã·Â¶Â¯Â·Â¢Ã‹ÃASDUÃŠÃ½Â¾Ã,ASDUÃŠÃ½Â¾ÃÃ“Ã‰Ã“ÃƒÂ»Â§Ã“Â¦Ã“ÃƒÂ²ÃºÃ‰Ãº*/			
 			break;		
 		case EVT_APP_CTRL_OP:					
-			break;		/*¿ØÖÆ²Ù×÷*/
+			break;		/*Â¿Ã˜Ã–Ã†Â²Ã™Ã—Ã·*/
 		case EVT_APP_SET_OP:					
-			break;		/*ÉèÖÃĞŞ¸Ä²Ù×÷*/
+			break;		/*Ã‰Ã¨Ã–ÃƒÃÃÂ¸Ã„Â²Ã™Ã—Ã·*/
 		case EVT_APP_READ_OP:					
-			break;		/*¶ÁÈ¡²Ù×÷*/
+			break;		/*Â¶ÃÃˆÂ¡Â²Ã™Ã—Ã·*/
 		case EVT_APP_FILE_OP:					
-			break;		/*ÎÄ¼ş²Ù×÷*/
+			break;		/*ÃÃ„Â¼Ã¾Â²Ã™Ã—Ã·*/
 		}
 
 		iec_free_event(evt);
@@ -203,6 +225,7 @@ void app_thread_entry(void *param)
 void app_start(int papp_info)
 {
 	struct app_info *info = (struct app_info *)papp_info;
-	info->app_tid = osThreadCreate(osThread(app), info);
+	info->app_tid =rt_thread_create("app", app_thread_entry, info, APP_THREAD_STACK_SIZE, APP_THREAD_PROI, APP_THREAD_TICK);
+  rt_thread_startup(info->app_tid);
 }
 #endif

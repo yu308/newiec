@@ -1,50 +1,54 @@
 #include "iec_event.h"
 
 /// <summary>
-/// ·¢ËÍÒ»¸öÏûÏ¢.
+/// å‘é€ä¸€ä¸ªæ¶ˆæ¯.
 /// </summary>
 /// <param name="q_id">The q_id.</param>
 /// <param name="msg">The MSG.</param>
 /// <param name="millisec">The millisec.</param>
 /// <returns></returns>
-osStatus iec_post_event(osMessageQId q_id, struct iec_event *evt, int millisec)
+rt_err_t iec_post_event(rt_mailbox_t q_id, struct iec_event *evt, int millisec)
 {
   if(evt==0)
-    return osErrorValue;
+    return RT_ERROR;
 
-	return osMessagePut(q_id, (int)evt, millisec);
+  rt_mb_send(q_id, (int)evt);
+
+  return RT_EOK;
 }
 
 /// <summary>
-/// ½ÓÊÕÒ»¸öÏûÏ¢
+/// æ¥æ”¶ä¸€ä¸ªæ¶ˆæ¯
 /// </summary>
 /// <param name="queue_id">The queue_id.</param>
 /// <param name="millisec">The millisec.</param>
 /// <returns></returns>
-struct iec_event *iec_recv_event(osMessageQId queue_id, int millisec)
+struct iec_event *iec_recv_event(rt_mailbox_t queue_id, int millisec)
 {
 	struct iec_event *temp = 0;
-	osEvent	event=osMessageGet(queue_id,millisec);
+  rt_err_t  res=0;
 
-	if (event.status == osEventMessage)
+  res=rt_mb_recv(queue_id, (rt_uint32_t *)temp, rt_tick_from_millisecond(millisec));
+
+	if (res == RT_EOK)
 	{
-		temp = event.value.p;
+		return temp;
 	}
 
-	return temp;
+	return 0;
 }
 
 
 struct iec_event *iec_create_event(int sender, int recver, int evt_type, 
 	int *main_msg,int auto_free)
 {
-	struct iec_event *evt = (struct iec_event *)XMALLOC(sizeof(struct iec_event));
+	struct iec_event *evt = (struct iec_event *)rt_malloc(sizeof(struct iec_event));
 	if (evt == 0)
 	{
-		XPRINTF("MSG:ERROR: no memory.\n");
+		rt_printf("MSG:ERROR: no memory.\n");
 		return 0;
 	}
-	XMEMSET(evt, 0, sizeof(struct iec_event));
+	rt_memset(evt, 0, sizeof(struct iec_event));
 
 	evt->sender = sender;
 	evt->recver = recver;
@@ -66,7 +70,7 @@ void iec_set_event_sub(struct iec_event *evt, int evt_sub_type,int *sub_msg, int
 }
 
 /// <summary>
-/// Çå³ıÒ»¸öÏûÏ¢
+/// æ¸…é™¤ä¸€ä¸ªæ¶ˆæ¯
 /// </summary>
 /// <param name="msg">The MSG.</param>
 void iec_free_event(struct iec_event *evt)
@@ -77,14 +81,14 @@ void iec_free_event(struct iec_event *evt)
 	if (evt->sub_msg_free == 1)
 	{
 		if (evt->sub_msg)
-			XFREE(evt->sub_msg);
+			rt_free(evt->sub_msg);
 	}
 
 	if (evt->main_msg_free == 1)
 	{
 		if (evt->main_msg)
-			XFREE(evt->main_msg);
+			rt_free(evt->main_msg);
 	}
 
-		XFREE(evt);
+		rt_free(evt);
 }

@@ -3,43 +3,34 @@
 #include	"iec_sys.h"
 
 /// <summary>
-/// È«¾ÖÏµÍ³ĞÅÏ¢
+/// å…¨å±€ç³»ç»Ÿä¿¡æ¯
 /// </summary>
 struct sys_info  gSys_Info;
 
 
 void iec_main_thread_entry(void *param);
+#define MAIN_THREAD_PROI    (15)
 #define MAIN_THREAD_TICK		(50)
+#define MAIN_THREAD_STACK_SIZE   (512)
 #define MAX_EVENT_COUNT			(5)
-/// <summary>
-/// Ö÷ÈÎÎñÅäÖÃ
-/// </summary>
-osThreadDef(main, iec_main_thread_entry, SYS_TASK_PROI, MAIN_THREAD_TICK, 2048);
-/// <summary>
-/// ÏµÍ³ÏûÏ¢¶ÓÁĞ
-/// </summary>
-osMessageQDef(sysevent, MAX_EVENT_COUNT, 4);
-
 
 /// <summary>
-/// Ö÷ÈÎÎñ
+/// ä¸»ä»»åŠ¡
 /// </summary>
 /// <param name="param">The parameter.</param>
 void iec_main_thread_entry(void *param)
 {
 	struct sys_info *info = (struct sys_info*)param;
 	
-	XPRINTF("IEC:SYS: system startup.\n");
+	rt_kprintf("IEC:SYS: system startup.\n");
 
-	struct iec_msg *msg = 0;
+	struct iec_event *evt = 0;
 
 	while (1)
 	{
-		iec_recv_msg(info->sys_event, osWaitForever);
-		if (msg == 0)
-			continue;
+		iec_recv_event(info->sys_event, RT_WAITING_FOREVER);
 
-		switch (msg->evt_type)
+		switch (evt->evt_type)
 		{
 		case EVT_SYS_CREATE_LINK:
 			break;
@@ -59,20 +50,21 @@ void iec_main_thread_entry(void *param)
 
 
 /// <summary>
-/// ÏµÍ³³õÊ¼»¯
+/// ç³»ç»Ÿåˆå§‹åŒ–
 /// </summary>
 void iec_init_sysinfo()
 {
 	gSys_Info.communicate_role = CFG_ROLE_MODE;
-	gSys_Info.sys_event = osMessageCreate(osMessageQ(sysevent), 0);
+	gSys_Info.sys_event = rt_mb_create("sysevt", MAX_EVENT_COUNT, RT_IPC_FLAG_FIFO);
 }
 
 /// <summary>
-/// ÏµÍ³Æô¶¯
+/// ç³»ç»Ÿå¯åŠ¨
 /// </summary>
 void iec_start_sys()
 {
-	osThreadCreate(osThread(main), &gSys_Info);
+  rt_thread_t tid=rt_thread_create("sys", iec_main_thread_entry,&gSys_Info,MAIN_THREAD_STACK_SIZE,MAIN_THREAD_PROI,MAIN_THREAD_TICK);
+  rt_thread_startup(tid);
 }
 
 

@@ -1,7 +1,7 @@
 #ifndef _link_h_
 #define _link_h_
 
-#include "iec_cfg.h"
+#include "../../Core/iec_cfg.h"
 
 typedef void(*serial_write_handle)(char *buff, int len);
 /// <summary>
@@ -35,8 +35,8 @@ struct serial_link_info
 	int applayer_id;
 
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
-	osThreadId	serial_tid;
-	osMessageQId serial_event;
+	rt_thread_t serial_tid;
+	rt_mailbox_t serial_event;
 #endif
 };
 

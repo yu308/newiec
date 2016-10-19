@@ -2,72 +2,72 @@
 #ifndef _iec_event_h_
 #define _iec_event_h_
 
-#include "../OS/cmsis_os.h"
+#include "../OS/os_helper.h"
 #include "iec_cfg.h"
 #include "iec_node.h"
 
 
-/***************************ÏµÍ³²ãÊÂ¼ş¶¨Òå*****************************************/
-#define		EVT_SYS_CREATE_LINK		(1)		/*´´½¨Á´Â·Á´½Ó²ã  MSG--Á´Â·µØÖ·,Á´Â·µØÖ·³¤¶È*/
-#define		EVT_SYS_CREATE_APP		(2)		/*´´½¨APP²ã MSG--ASDUµØÖ·,ASDUµØÖ·³¤¶È,´«ÊäÔ­Òò³¤¶È,ÆôÓÃSM2,ĞÅÏ¢µãµØÖ·³¤¶È*/
-#define		EVT_SYS_BIND_APP_LINK	(3)		/*°ó¶¨APP²ãÓëÁ´Â·²ã MSG---Á´Â·Ä£¿éID,APPÄ£¿éID*/
-#define		EVT_SYS_START			(4)		/*ÏµÍ³Æô¶¯·şÎñ MSG--Æô¶¯*/
-#define		EVT_SYS_DEL_APP			(5)		/*É¾³ıÒ»¸öAPP²ã MSG---APPÄ£¿éID*/
-#define		EVT_SYS_DEL_LINK		(6)		/*É¾³ıÒ»¸öÁ´Â·²ã MSG---LINKÄ£¿éID*/
-#define		EVT_SYS_EDIT_PROFILE	(7)		/*ĞŞ¸ÄÄ³¸ö¶ÔÏóÅäÖÃ*/
+/***************************ç³»ç»Ÿå±‚äº‹ä»¶å®šä¹‰*****************************************/
+#define		EVT_SYS_CREATE_LINK		(1)		/*åˆ›å»ºé“¾è·¯é“¾æ¥å±‚  MSG--é“¾è·¯åœ°å€,é“¾è·¯åœ°å€é•¿åº¦*/
+#define		EVT_SYS_CREATE_APP		(2)		/*åˆ›å»ºAPPå±‚ MSG--ASDUåœ°å€,ASDUåœ°å€é•¿åº¦,ä¼ è¾“åŸå› é•¿åº¦,å¯ç”¨SM2,ä¿¡æ¯ç‚¹åœ°å€é•¿åº¦*/
+#define		EVT_SYS_BIND_APP_LINK	(3)		/*ç»‘å®šAPPå±‚ä¸é“¾è·¯å±‚ MSG---é“¾è·¯æ¨¡å—ID,APPæ¨¡å—ID*/
+#define		EVT_SYS_START			(4)		/*ç³»ç»Ÿå¯åŠ¨æœåŠ¡ MSG--å¯åŠ¨*/
+#define		EVT_SYS_DEL_APP			(5)		/*åˆ é™¤ä¸€ä¸ªAPPå±‚ MSG---APPæ¨¡å—ID*/
+#define		EVT_SYS_DEL_LINK		(6)		/*åˆ é™¤ä¸€ä¸ªé“¾è·¯å±‚ MSG---LINKæ¨¡å—ID*/
+#define		EVT_SYS_EDIT_PROFILE	(7)		/*ä¿®æ”¹æŸä¸ªå¯¹è±¡é…ç½®*/
 
 
-/*******************************Á´Â·²ãÊÂ¼ş¶¨Òå***************************************/
-#define		EVT_LINK_PHY_CONNECT			(0x11)		/*Í¨ĞÅÎïÀíÍ¨µÀÁ´½Ó*/
-#define		EVT_LINK_PHY_DISCONNECT			(0x12)		/*Í¨ĞÅÎïÀíÍ¨µÀ¶Ï¿ª*/
-#define		EVT_LINK_RECV_DATA				(0x13)		/*Á´Â·ÊÕµ½Êı¾İ*/
-#define		EVT_LINK_SEND_DATA				(0x14)		/*Á´Â·Ğè·¢ËÍÊı¾İ*/
+/*******************************é“¾è·¯å±‚äº‹ä»¶å®šä¹‰***************************************/
+#define		EVT_LINK_PHY_CONNECT			(0x11)		/*é€šä¿¡ç‰©ç†é€šé“é“¾æ¥*/
+#define		EVT_LINK_PHY_DISCONNECT			(0x12)		/*é€šä¿¡ç‰©ç†é€šé“æ–­å¼€*/
+#define		EVT_LINK_RECV_DATA				(0x13)		/*é“¾è·¯æ”¶åˆ°æ•°æ®*/
+#define		EVT_LINK_SEND_DATA				(0x14)		/*é“¾è·¯éœ€å‘é€æ•°æ®*/
 
 
-#define		EVT_SUB_DAT_LINK_PHY			(0) /*½Ó¿ÚÊÕ·¢Êı¾İ*/
-#define		EVT_SUB_DAT_LEVEL_1		(1) /*Ò»ÀàÊı¾İ*/
-#define		EVT_SUB_DAT_LEVEL_2		(2) /*¶şÀàÊı¾İ*/
-#define		EVT_SUB_DAT_USER		(3) /*ÓÃ»§Êı¾İ*/
+#define		EVT_SUB_DAT_LINK_PHY			(0) /*æ¥å£æ”¶å‘æ•°æ®*/
+#define		EVT_SUB_DAT_LEVEL_1		(1) /*ä¸€ç±»æ•°æ®*/
+#define		EVT_SUB_DAT_LEVEL_2		(2) /*äºŒç±»æ•°æ®*/
+#define		EVT_SUB_DAT_USER		(3) /*ç”¨æˆ·æ•°æ®*/
 
-/******************************APPÏµÍ³Ó¦ÓÃ²ãÊÂ¼ş¶¨Òå*****************************************/
-#define		EVT_APP_ADD_NODE				(0x21)		/*Ìí¼ÓĞÅÏ¢µã MSG--NODEµØÖ·,NODEÀàĞÍ SUBMSG--SEQÊıÁ¿*/
-#define		EVT_APP_NODE_UPDATE				(0x22)		/*ĞÅÏ¢µã±ä»¯ MSG--ASDU IDENT,´«ÊäÔ­Òò SUB MSG--NODEµØÖ·,NODEÖµ,Æ·ÖÊÃèÊö,UTCÊ±¼ä,ÊÇ·ñ»º´æ*/
-#define		EVT_APP_RECV_DATA				(0x23)		/*APPÊÕµ½Êı¾İ  MSG--ASDU Êı¾İ´®¡¢Êı¾İ´®³¤¶È*/
-#define		EVT_APP_SEND_DATA				(0x24)		/*Ğè·¢ËÍÊı¾İ MSG---ASDU Êı¾İ´®¡¢Êı¾İ´®³¤¶È*/
-
-
-#define		EVT_SUB_NORMAL_NODE		(1) /*Í¨ÓÃĞÅÏ¢µãÊÂ¼ş*/ 
-#define		EVT_SUB_SEQ_NODE		(2) /*ĞòÁĞ»¯ĞÅÏ¢µãÊÂ¼ş*/
+/******************************APPç³»ç»Ÿåº”ç”¨å±‚äº‹ä»¶å®šä¹‰*****************************************/
+#define		EVT_APP_ADD_NODE				(0x21)		/*æ·»åŠ ä¿¡æ¯ç‚¹ MSG--NODEåœ°å€,NODEç±»å‹ SUBMSG--SEQæ•°é‡*/
+#define		EVT_APP_NODE_UPDATE				(0x22)		/*ä¿¡æ¯ç‚¹å˜åŒ– MSG--ASDU IDENT,ä¼ è¾“åŸå›  SUB MSG--NODEåœ°å€,NODEå€¼,å“è´¨æè¿°,UTCæ—¶é—´,æ˜¯å¦ç¼“å­˜*/
+#define		EVT_APP_RECV_DATA				(0x23)		/*APPæ”¶åˆ°æ•°æ®  MSG--ASDU æ•°æ®ä¸²ã€æ•°æ®ä¸²é•¿åº¦*/
+#define		EVT_APP_SEND_DATA				(0x24)		/*éœ€å‘é€æ•°æ® MSG---ASDU æ•°æ®ä¸²ã€æ•°æ®ä¸²é•¿åº¦*/
 
 
+#define		EVT_SUB_NORMAL_NODE		(1) /*é€šç”¨ä¿¡æ¯ç‚¹äº‹ä»¶*/ 
+#define		EVT_SUB_SEQ_NODE		(2) /*åºåˆ—åŒ–ä¿¡æ¯ç‚¹äº‹ä»¶*/
 
 
-/******************************APPÓÃ»§Ó¦ÓÃ²ãÊÂ¼ş¶¨Òå*************************************/
-#define		EVT_APP_CTRL_OP					(0x31)		/*¿ØÖÆ²Ù×÷*/
-#define		EVT_APP_SET_OP					(0x32)		/*ÉèÖÃĞŞ¸Ä²Ù×÷*/
-#define		EVT_APP_READ_OP					(0x33)		/*¶ÁÈ¡²Ù×÷*/
-#define		EVT_APP_FILE_OP					(0x34)		/*ÎÄ¼ş²Ù×÷*/
+
+
+/******************************APPç”¨æˆ·åº”ç”¨å±‚äº‹ä»¶å®šä¹‰*************************************/
+#define		EVT_APP_CTRL_OP					(0x31)		/*æ§åˆ¶æ“ä½œ*/
+#define		EVT_APP_SET_OP					(0x32)		/*è®¾ç½®ä¿®æ”¹æ“ä½œ*/
+#define		EVT_APP_READ_OP					(0x33)		/*è¯»å–æ“ä½œ*/
+#define		EVT_APP_FILE_OP					(0x34)		/*æ–‡ä»¶æ“ä½œ*/
 
 #if(CFG_RUNNING_MODE==SINGLE_MODE)
-#define		SYS_OBJ				(0x0)		/*Ê¹ÓÃµ¥ÈÎÎñÄ£Ê½Ê± ÏµÍ³¶ÔÏó±àºÅ*/
+#define		SYS_OBJ				(0x0)		/*ä½¿ç”¨å•ä»»åŠ¡æ¨¡å¼æ—¶ ç³»ç»Ÿå¯¹è±¡ç¼–å·*/
 #endif
 
 
 
 /// <summary>
-/// ¸üĞÂÍ¨ÓÃĞÅÏ¢µãÊ±ĞÅÏ¢
+/// æ›´æ–°é€šç”¨ä¿¡æ¯ç‚¹æ—¶ä¿¡æ¯
 /// </summary>
 struct node_update_info
 {
-	unsigned int appid; /*ËùÊôAPP*/
-	unsigned int level; /*Ë¢ĞÂÓÅÏÈ¼¶*/
-	unsigned int asdu_ident;/*asdu±êÊ¶*/
-	unsigned int cause; /*´«ËÍÔ­Òò*/
+	unsigned int appid; /*æ‰€å±APP*/
+	unsigned int level; /*åˆ·æ–°ä¼˜å…ˆçº§*/
+	unsigned int asdu_ident;/*asduæ ‡è¯†*/
+	unsigned int cause; /*ä¼ é€åŸå› */
 };
 
 
 /// <summary>
-/// ´´½¨LinkÊ±²ÎÊı
+/// åˆ›å»ºLinkæ—¶å‚æ•°
 /// </summary>
 struct link_param
 {
@@ -77,7 +77,7 @@ struct link_param
 };
 
 /// <summary>
-/// LinkÊµÀıÊÕµ½µÄÊı¾İĞÅÏ¢
+/// Linkå®ä¾‹æ”¶åˆ°çš„æ•°æ®ä¿¡æ¯
 /// </summary>
 struct link_recv_info
 {
@@ -86,7 +86,7 @@ struct link_recv_info
 };
 
 /// <summary>
-/// LINKÊµÀıÊÕµ½APPÊµÀıĞè·¢ËÍÊı¾İĞÅÏ¢
+/// LINKå®ä¾‹æ”¶åˆ°APPå®ä¾‹éœ€å‘é€æ•°æ®ä¿¡æ¯
 /// </summary>
 struct app_send_info
 {
@@ -96,7 +96,7 @@ struct app_send_info
 };
 
 /// <summary>
-/// ´´½¨APPÊµÀıÊ±µÄ²ÎÊı
+/// åˆ›å»ºAPPå®ä¾‹æ—¶çš„å‚æ•°
 /// </summary>
 struct app_param
 {
@@ -109,7 +109,7 @@ struct app_param
 
 
 /// <summary>
-/// APPÊµÀıÊÕµ½LINKÊµÀıµÄÊı¾İĞÅÏ¢
+/// APPå®ä¾‹æ”¶åˆ°LINKå®ä¾‹çš„æ•°æ®ä¿¡æ¯
 /// </summary>
 struct app_recv_info
 {
@@ -120,24 +120,24 @@ struct app_recv_info
 
 
 /// <summary>
-/// ÊÂ¼ş
+/// äº‹ä»¶
 /// </summary>
 struct iec_event
 {
-	int sender;		/*ÊÂ¼ş·¢ËÍÕß*/
-	int recver;		/*ÊÂ¼ş½ÓÊÕÕß*/
-	int main_msg_free;	/*ÊÂ¼şÖ÷ÏûÏ¢ÊÇ·ñ×Ô¶¯»ØÊÕ*/
-	int sub_msg_free;		/*ÊÂ¼ş×ÓÏûÏ¢ÊÇ·ñ×Ô¶¯»ØÊÕ*/
+	int sender;		/*äº‹ä»¶å‘é€è€…*/
+	int recver;		/*äº‹ä»¶æ¥æ”¶è€…*/
+	int main_msg_free;	/*äº‹ä»¶ä¸»æ¶ˆæ¯æ˜¯å¦è‡ªåŠ¨å›æ”¶*/
+	int sub_msg_free;		/*äº‹ä»¶å­æ¶ˆæ¯æ˜¯å¦è‡ªåŠ¨å›æ”¶*/
 	
-	int evt_type;		/*ÊÂ¼şÀàĞÍ*/
-	int evt_sub_type;   /*ÊÂ¼şÏ¸·Ö*/
-	void *main_msg;			/*Ö÷ÊÂ¼şÊı¾İ*/
-	void *sub_msg			/*×ÓÊÂ¼şÊı¾İ*/
+	int evt_type;		/*äº‹ä»¶ç±»å‹*/
+	int evt_sub_type;   /*äº‹ä»¶ç»†åˆ†*/
+	void *main_msg;			/*ä¸»äº‹ä»¶æ•°æ®*/
+	void *sub_msg;			/*å­äº‹ä»¶æ•°æ®*/
 };
 
 
-extern osStatus iec_post_event(osMessageQId q_id, struct iec_event *msg, int millisec);
-extern struct iec_event *iec_recv_event(osMessageQId queue_id, int millisec);
+extern rt_err_t iec_post_event(rt_mailbox_t q_id, struct iec_event *msg, int millisec);
+extern struct iec_event *iec_recv_event(rt_mailbox_t queue_id, int millisec);
 extern struct iec_event *iec_create_event(int sender, int recver, int evt_type,int *main_msg, int auto_free);
 extern void iec_free_event(struct iec_event *evt);
 

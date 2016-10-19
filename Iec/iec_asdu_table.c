@@ -1,6 +1,6 @@
 #include "iec_cfg.h"
-#include "asdu.h"
-#include "element.h"
+#include "iec_asdu.h"
+#include "iec_element.h"
 
 
 const struct asdu_cfg g_SysASDU_Table[] =
