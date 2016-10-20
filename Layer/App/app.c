@@ -60,8 +60,9 @@ void app_create_seq_node(struct app_info *info, int *seq_node)
 }
 
 
-static void app_evt_dispatch_recv_asdu(struct app_info *info,int *asdu_data)
+static void app_evt_dispatch_recv_asdu(struct app_info *info,char *asdu_data)
 {
+  int asdu_ident=asdu_data[0];
   
 }
 
@@ -72,6 +73,7 @@ static void app_evt_recv_data_handle(struct app_info *info,struct iec_event *evt
 
   struct app_task *task_temp=0;
   struct app_send_info *send_info = 0;
+  int *recv=0;
 
   switch (sub_evt)
   {
@@ -92,8 +94,11 @@ static void app_evt_recv_data_handle(struct app_info *info,struct iec_event *evt
       }
     break;
   case EVT_SUB_DAT_USER:
-	  app_evt_dispatch_recv_asdu(info, evt->sub_msg);
-	  break;
+    recv=evt->sub_msg;
+	  app_evt_dispatch_recv_asdu(info, (char *)recv[1]);
+    /*发送事件至Link 确认用户数据*/
+    app_send_userdata_ack_evt_to_link(info,(struct serial_link_info*)recv[0]);
+    break;
   }
 
 }

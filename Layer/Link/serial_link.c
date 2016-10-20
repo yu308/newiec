@@ -56,7 +56,7 @@ struct serial_link_info *serial_link_create(char *name,int addr, int addr_len, i
 		return 0;
 	}
 	
-	serial_link_init(char *name,info, addr, addr_len, dir);
+	serial_link_init(info,name, addr, addr_len, dir);
 
   return info;
 }
@@ -376,7 +376,7 @@ int serial_link_pack_unfixed_frame(struct serial_link_info *info, char funcode, 
 			rt_memcpy(&info->cfg->send_buff[count], app_data, app_data_len);
       count+=app_data_len;
       info->cfg->send_buff[count++] = serial_link_get_cs(&info->cfg->send_buff[4], 1 + info->cfg->link_addr_len + app_data_len);
-			info->cfg->send_buff[cout++] = FRAME_END_TAG;
+			info->cfg->send_buff[count++] = FRAME_END_TAG;
 
 		}
 
@@ -444,17 +444,27 @@ static void serial_link_phy_recv_handle(struct serial_link_info *info,struct iec
 
 static void serial_link_app_recv_handle(struct serial_link_info *info, struct iec_event *evt)
 {
-	if (serial_link_get_dir(info->cfg) == 1)/*平衡模式*/
-	{
-		serial_link_send_req_evt_to_app(info, evt->evt_type);
-	}
-	else
-	{
-		if (evt->evt_sub_type == EVT_SUB_DAT_LEVEL_1)
-			info->acd_tag++;
-		else
-			info->app_tag++;
-	}
+  if(evt->evt_sub_type!=EVT_SUB_DAT_USER)
+    {
+      if (serial_link_get_dir(info->cfg) == 1)/*平衡模式*/
+        {
+          serial_link_send_req_evt_to_app(info, evt->evt_type);
+        }
+      else
+        {
+          if (evt->evt_sub_type == EVT_SUB_DAT_LEVEL_1)
+            info->acd_tag++;
+          else
+            info->app_tag++;
+        }
+    }
+  else
+    {
+      info->acd_tag=1;
+     int data_len = serial_link_pack_fixed_frame(info, FC_UP_YES);
+      info->cfg->serial_write(info->cfg->send_buff, data_len);
+      rt_memcpy(info->cfg->prev_sent_buff, info->cfg->send_buff, data_len);
+    }
 }
 
 static void serial_link_recv_event_handle(struct serial_link_info *info,struct iec_event *evt)

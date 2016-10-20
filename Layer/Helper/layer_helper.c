@@ -20,11 +20,14 @@ void serial_link_send_req_evt_to_app(struct serial_link_info *info,int sub_evt)
  * @param info 链路信息
  * @param asdu_data 收到的asdu数据缓存地址
  */
-void serial_link_send_asdu_evt_to_app(struct serial_link_info *info,int *asdu_data)
+void serial_link_send_asdu_evt_to_app(struct serial_link_info *info,char *asdu_data)
 {
   struct iec_event *evt=0;
+  int *recv=(int *)rt_malloc(sizeof(int)*2);
+  recv[0]=(int)info;
+  recv[1]=(int)asdu_data;
   evt=iec_create_event(info, info->applayer_id, EVT_APP_RECV_DATA, 0, 0);
-  iec_set_event_sub(evt, EVT_SUB_DAT_USER, asdu_data, 0);
+  iec_set_event_sub(evt, EVT_SUB_DAT_USER, recv, 1);
   iec_post_event(((struct app_info *)info->applayer_id)->app_event, evt, 20);
 }
 
@@ -40,6 +43,18 @@ void app_send_update_evt_to_link(struct app_info *info,struct serial_link_info *
   evt=iec_create_event((unsigned int)info,(unsigned int)link_info, EVT_LINK_RECV_DATA, 0, 0);
   iec_set_event_sub(evt,sub_evt,0,0);
   iec_post_event(link_info->serial_event, evt, 20);
+}
+
+/** 
+ * 用于向link确认用户数据 确认数据系统内部有更新信息点操作
+ * 此处直接调用update事件通知函数
+ * 
+ * @param info  App信息
+ * @param link_info 链路信息
+ */
+void app_send_userdata_ack_evt_to_link(struct app_info *info,struct serial_link_info *link_info)
+{
+  app_send_update_evt_to_link(info, link_info, EVT_SUB_DAT_USER);
 }
 
 void app_send_asdu_evt_to_link(struct app_info *info,struct app_send_info *send_asdu)

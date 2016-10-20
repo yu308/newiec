@@ -16,10 +16,10 @@
 #define		EVT_SYS_DEL_LINK		(6)		/*删除一个链路层 MSG---LINK模块ID*/
 #define		EVT_SYS_EDIT_PROFILE	(7)		/*修改某个对象配置*/
 
-
-#define   EVT_SYS_LINK_SERIAL    (1)
-#define   EVT_SYS_LINK_SOCKET    (2)
-
+#define   EVT_SUB_SYS                (1)
+#define   EVT_SUB_SYS_LINK_SERIAL    (2)
+#define   EVT_SUB_SYS_LINK_SOCKET    (3)
+#define   EVT_SUB_SYS_APP            (4)
 
 /*******************************链路层事件定义***************************************/
 #define		EVT_LINK_PHY_CONNECT			(0x11)		/*通信物理通道链接*/
