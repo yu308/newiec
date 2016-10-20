@@ -23,12 +23,12 @@ rt_err_t iec_post_event(rt_mailbox_t q_id, struct iec_event *evt, int millisec)
 /// <param name="queue_id">The queue_id.</param>
 /// <param name="millisec">The millisec.</param>
 /// <returns></returns>
-struct iec_event *iec_recv_event(rt_mailbox_t queue_id, int millisec)
+struct iec_event *iec_recv_event(rt_mailbox_t queue_id, unsigned int millisec)
 {
 	struct iec_event *temp = 0;
   rt_err_t  res=0;
 
-  res=rt_mb_recv(queue_id, (rt_uint32_t *)temp, rt_tick_from_millisecond(millisec));
+  res=rt_mb_recv(queue_id, (rt_uint32_t *)&temp, rt_tick_from_millisecond(millisec));
 
 	if (res == RT_EOK)
 	{

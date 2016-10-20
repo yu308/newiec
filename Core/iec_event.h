@@ -17,6 +17,10 @@
 #define		EVT_SYS_EDIT_PROFILE	(7)		/*修改某个对象配置*/
 
 
+#define   EVT_SYS_LINK_SERIAL    (1)
+#define   EVT_SYS_LINK_SOCKET    (2)
+
+
 /*******************************链路层事件定义***************************************/
 #define		EVT_LINK_PHY_CONNECT			(0x11)		/*通信物理通道链接*/
 #define		EVT_LINK_PHY_DISCONNECT			(0x12)		/*通信物理通道断开*/
@@ -71,6 +75,7 @@ struct node_update_info
 /// </summary>
 struct link_param
 {
+  char name[16];
 	unsigned char link_addr;
 	unsigned char link_addr_len;
 	unsigned char link_dir;
@@ -137,7 +142,7 @@ struct iec_event
 
 
 extern rt_err_t iec_post_event(rt_mailbox_t q_id, struct iec_event *msg, int millisec);
-extern struct iec_event *iec_recv_event(rt_mailbox_t queue_id, int millisec);
+extern struct iec_event *iec_recv_event(rt_mailbox_t queue_id,unsigned int millisec);
 extern struct iec_event *iec_create_event(int sender, int recver, int evt_type,int *main_msg, int auto_free);
 extern void iec_free_event(struct iec_event *evt);
 

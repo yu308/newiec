@@ -16,7 +16,7 @@ void serial_link_thread_entry(void *param);
 /// <param name="addr">The addr.</param>
 /// <param name="addr_len">The addr_len.</param>
 /// <param name="dir">The dir.</param>
-void serial_link_init(struct serial_link_info *info, int addr, int addr_len, int dir)
+void serial_link_init(struct serial_link_info *info, char *name,int addr, int addr_len, int dir)
 {
 	XMEMSET(info, 0, sizeof(struct serial_link_info));
 	struct serial_link_cfg *cfg= (struct serial_link_cfg *)rt_malloc(sizeof(struct serial_link_cfg));
@@ -28,6 +28,7 @@ void serial_link_init(struct serial_link_info *info, int addr, int addr_len, int
 	cfg->send_buff = rt_malloc(256);
 	cfg->prev_sent_buff = rt_malloc(256);
 	cfg->prev_sent_len = 0;
+  rt_memcpy(cfg->name, name, rt_strlen(name)); 
 
 	info->cfg = cfg;
 	info->acd_tag = 0;
@@ -46,7 +47,7 @@ void serial_link_init(struct serial_link_info *info, int addr, int addr_len, int
 /// <param name="addr_len">The addr_len.</param>
 /// <param name="dir">The dir.</param>
 /// <returns></returns>
-struct serial_link_info *serial_link_create(int addr, int addr_len, int dir)
+struct serial_link_info *serial_link_create(char *name,int addr, int addr_len, int dir)
 {
 	struct serial_link_info *info = (struct serial_link_info *)rt_malloc(sizeof(struct serial_link_info));
 	if (info == 0)
@@ -55,8 +56,9 @@ struct serial_link_info *serial_link_create(int addr, int addr_len, int dir)
 		return 0;
 	}
 	
-	serial_link_init(info, addr, addr_len, dir);
+	serial_link_init(char *name,info, addr, addr_len, dir);
 
+  return info;
 }
 
 /// <summary>
@@ -151,6 +153,11 @@ int serial_link_set_active_state(struct serial_link_cfg *cfg,int state)
   cfg->active=state;
 }
 
+char *serial_link_get_name(struct serial_link_cfg *cfg)
+{
+  return cfg->name;
+}
+
 /// <summary>
 /// 获取一段数据的校验和
 /// </summary>
@@ -187,7 +194,7 @@ static int serial_link_fixed_check(struct serial_link_cfg *cfg, char *recv_buff)
 	if (recv_buff[cfg->link_addr_len + 2] != serial_link_get_cs(&recv_buff[1], cfg->link_addr_len + 1))
 		return 0;
 
-	rt_memcpy(&link_addr, &recv_buff[5], cfg->link_addr_len);
+	rt_memcpy(&link_addr, &recv_buff[2], cfg->link_addr_len);
 
 	if (link_addr != cfg->link_addr)
 		return 0;
@@ -212,7 +219,10 @@ static int serial_link_unfixed_check(struct serial_link_cfg *cfg, char *recv_buf
 	if (recv_buff[1] != recv_buff[2])
 		return 0;
 
-	if (recv_buff[cfg->link_addr_len + 2] != serial_linklayer_get_cs(&recv_buff[4], recv_buff[1]))
+  if(recv_buff[5+recv_buff[1]]!=FRAME_END_TAG)
+    return 0;
+
+	if (recv_buff[recv_buff[1]+4] != serial_link_get_cs(&recv_buff[4], recv_buff[1]))
 		return 0;
 
 	rt_memcpy(&link_addr, &recv_buff[5], cfg->link_addr_len);
@@ -323,13 +333,13 @@ int serial_link_pack_fixed_frame(struct serial_link_info *info, char funcode)
 	up_domain.up_ctrl_domain.FunCoed = funcode;
 
 	{
-		info->cfg->send_buff[0] = FIXED_HEAD_TAG;
-		info->cfg->send_buff[1] = up_domain.domain;
-		rt_memcpy(&info->cfg->send_buff[2], &info->cfg->link_addr, info->cfg->link_addr_len);
-		info->cfg->send_buff[1 + info->cfg->link_addr_len] = serial_linklayer_get_cs(&info->cfg->send_buff[1], 1 + info->cfg->link_addr_len);
-		info->cfg->send_buff[2 + info->cfg->link_addr_len] = FRAME_END_TAG;
+		info->cfg->send_buff[count++] = FIXED_HEAD_TAG;
+		info->cfg->send_buff[count++] = up_domain.domain;
+		rt_memcpy(&info->cfg->send_buff[count], &info->cfg->link_addr, info->cfg->link_addr_len);
+    count+=info->cfg->link_addr_len;
+		info->cfg->send_buff[count++] = serial_link_get_cs(&info->cfg->send_buff[1], 1 + info->cfg->link_addr_len);
+		info->cfg->send_buff[count++] = FRAME_END_TAG;
 
-		count = 3 + info->cfg->link_addr_len;
 	}
 	return count;
 }
@@ -358,13 +368,16 @@ int serial_link_pack_unfixed_frame(struct serial_link_info *info, char funcode, 
 		if (app_data != 0)
 		{
 			info->cfg->send_buff[0] = info->cfg->send_buff[3] = UNFIXED_HEAD_TAG;
-			info->cfg->send_buff[4] = up_domain.domain;
 			info->cfg->send_buff[1] = info->cfg->send_buff[2] = 1 + info->cfg->link_addr_len + app_data_len;
-			XMEMCPY(&info->cfg->send_buff[5], app_data, app_data_len);
-			info->cfg->send_buff[4 + info->cfg->link_addr_len + app_data_len] = serial_link_get_cs(&info->cfg->send_buff[4], 1 + info->cfg->link_addr_len + app_data_len);
-			info->cfg->send_buff[5 + info->cfg->link_addr_len + app_data_len] = FRAME_END_TAG;
+			info->cfg->send_buff[4] = up_domain.domain;
+      count=5;
+      rt_memcpy(&info->cfg->send_buff[count], &info->cfg->link_addr, info->cfg->link_addr_len);
+      count+=info->cfg->link_addr_len;
+			rt_memcpy(&info->cfg->send_buff[count], app_data, app_data_len);
+      count+=app_data_len;
+      info->cfg->send_buff[count++] = serial_link_get_cs(&info->cfg->send_buff[4], 1 + info->cfg->link_addr_len + app_data_len);
+			info->cfg->send_buff[cout++] = FRAME_END_TAG;
 
-			count = info->cfg->send_buff[2] + 6;
 		}
 
 	}
@@ -382,7 +395,7 @@ static void serial_link_phy_recv_handle(struct serial_link_info *info,struct iec
 	int data_len = 0;
 	char domain_byte = 0;
 	int dispatch_res = 0;
-	struct link_recv_info *phy_recv_info = (struct link_recv_info *)evt->main_msg;
+	struct link_recv_info *phy_recv_info = (struct link_recv_info *)evt->sub_msg;
 
 	data_len = phy_recv_info->recv_len;
 	data = phy_recv_info->recv_data;

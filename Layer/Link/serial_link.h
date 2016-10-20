@@ -9,11 +9,14 @@ typedef void(*serial_write_handle)(char *buff, int len);
 /// </summary>
 struct serial_link_cfg
 {
+  char name[16];   /*名称 放在首位*/
+
 	int link_addr;			/*链路地址*/
 	int link_addr_len;		/*链路地址长度*/
   int active;           /*是否激活*/
 	int double_dir;			/*平衡或非平衡*/
-		
+
+
 	char *recv_buff;		/*接收缓存*/
 	char *send_buff;		/*发送缓存*/
 	char *prev_sent_buff;	/*上一此发送数据缓存*/
@@ -61,4 +64,6 @@ struct net_link_cfg
 	int link_socket[CFG_SOCKET_MAX];
 };
 
+extern struct serial_link_info *serial_link_create(char *name,int addr_len,int dir);
+extern void serial_link_del(struct serial_link_info *info);
 #endif

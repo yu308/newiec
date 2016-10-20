@@ -45,13 +45,9 @@ struct app_info *app_create(int asdu_addr, int asdu_addr_len, int cause_len, int
 	}
 
 	app_init(info, asdu_addr, asdu_addr_len, cause_len, node_addr_len, sm2_enable);
-}
 
-int app_check_data()
-{
-  
+  return info;
 }
-
 
 void app_create_normal_node(struct app_info *info,int *normal_node)
 {
@@ -81,13 +77,19 @@ static void app_evt_recv_data_handle(struct app_info *info,struct iec_event *evt
   {
   case EVT_SUB_DAT_LEVEL_1:
 	  task_temp = app_task_get(info->first_task);
-	  send_info = app_task_covert_to_asdu_frame(info, task_temp);
-    app_send_asdu_evt_to_link(info,send_info);
+    if(task_temp!=0)
+      {
+        send_info = app_task_covert_to_asdu_frame(info, task_temp);
+        app_send_asdu_evt_to_link(info,send_info);
+      }
     break;
   case EVT_SUB_DAT_LEVEL_2:
 	  task_temp = app_task_get(info->second_task);
-	  send_info = app_task_covert_to_asdu_frame(info, task_temp);
-    app_send_asdu_evt_to_link(info, send_info);
+    if(task_temp!=0)
+      {
+        send_info = app_task_covert_to_asdu_frame(info, task_temp);
+        app_send_asdu_evt_to_link(info, send_info);
+      }
     break;
   case EVT_SUB_DAT_USER:
 	  app_evt_dispatch_recv_asdu(info, evt->sub_msg);
@@ -186,7 +188,9 @@ void app_thread_entry(void *param)
 	while (1)
 	{
 		evt = iec_recv_event(info->app_event, RT_WAITING_FOREVER);
-    
+
+    if(evt==0)
+      continue;
 
 		switch (evt->evt_type)
 		{
