@@ -4,6 +4,17 @@
 
 #define TASK_IDENT_NAME_FORMAT		"%08X-%02X-%02X-%02X"			/*LINKID-ASDU-CAUSE-SEQ*/
 
+/** 
+ * 添加通用信息点任务
+ * 
+ * @param al 任务链表
+ * @param link_id 任务所属链路id
+ * @param asdu_ident ASDU标识
+ * @param cause 传输原因
+ * @param f_node 信息点数据信息
+ * 
+ * @return 创建状态 0 成功  -1 已有数据 
+ */
 int app_task_add_normal(arraylist *al,unsigned int link_id,unsigned int asdu_ident, int cause, struct node_frame_info *f_node)
 {
 	char name[24];
@@ -54,6 +65,7 @@ int app_task_add_normal(arraylist *al,unsigned int link_id,unsigned int asdu_ide
   arraylist_add(al, temp);
   return 0;
 }
+
 
 int app_task_add_seq(arraylist *al,unsigned int link_id, unsigned int asdu_ident, int cause, struct seq_node_frame_info *f_s_node)
 {
@@ -109,6 +121,18 @@ int app_task_add_seq(arraylist *al,unsigned int link_id, unsigned int asdu_ident
 	return 0;
 }
 
+
+/** 
+ * ASDU封装信息点数据
+ * 
+ * @param buff 数据缓存
+ * @param asdu_ident ASDU标识
+ * @param node_addr_len 地址长度
+ * @param node_list ASDU信息点链表
+ * @param out_count 封装的信息点数量
+ * 
+ * @return ASDU字节数据
+ */
 int app_task_pack_normal_node(char *buff,unsigned int asdu_ident, int node_addr_len, arraylist *node_list,int *out_count)
 {
 	int len = 0,count=0;
@@ -116,6 +140,7 @@ int app_task_pack_normal_node(char *buff,unsigned int asdu_ident, int node_addr_
 	struct node_frame_info *f_node = 0;
 	
 
+  /*确保数据长度不超过协议规定长度*/
 	while (len < (CFG_ASDU_DATA_BUFF_MAX - 20))
 	{
 		if (arraylist_size(node_list) > 0)
@@ -163,6 +188,14 @@ int app_task_pack_seq_node(char *buff, unsigned int asdu_ident, int node_addr_le
 	return len;
 }
 
+
+/** 
+ * 获取任务
+ * 
+ * @param al 
+ * 
+ * @return 若无任务，则返回0
+ */
 struct app_task *app_task_get(arraylist *al)
 {
   struct app_task *task=0;
@@ -176,6 +209,14 @@ struct app_task *app_task_get(arraylist *al)
 
 }
 
+/** 
+ * 任务转为ASDU字节数据帧
+ * 
+ * @param info APP应用信息
+ * @param task 任务
+ * 
+ * @return ASDU字节数据帧
+ */
 struct app_send_info *app_task_covert_to_asdu_frame(struct app_info *info,struct app_task *task)
 {
 	int idx = 0, len = 0,node_count=0;
@@ -215,6 +256,14 @@ struct app_send_info *app_task_covert_to_asdu_frame(struct app_info *info,struct
   return send_info;
 }
 
+/** 
+ * 检测当前链路是否有数据传输任务
+ * 
+ * @param al 
+ * @param link_id 
+ * 
+ * @return 有返回1 无则返回0
+ */
 int app_task_check_empty(arraylist *al,int link_id)
 {
   int i=0;

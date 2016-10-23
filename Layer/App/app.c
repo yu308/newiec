@@ -8,7 +8,16 @@ void app_thread_entry(void *param);
 #define MAX_EVENT_COUNT			(5)
 #endif
 
-
+/** 
+ *  初始化某个APP实例信息
+ * 
+ * @param info APP实例
+ * @param asdu_addr ASDU地址
+ * @param asdu_addr_len ASDU地址长度
+ * @param cause_len 传送原因长度
+ * @param node_addr_len 地址长度
+ * @param sm2_enable SM2功能启用
+ */
 void app_init(struct app_info *info, int asdu_addr, int asdu_addr_len,int cause_len,int node_addr_len,int sm2_enable)
 {
 	rt_memset(info, 0, sizeof(struct app_info));
@@ -35,6 +44,17 @@ void app_init(struct app_info *info, int asdu_addr, int asdu_addr_len,int cause_
 #endif
 }
 
+/** 
+ * 生成一个APP
+ * 
+ * @param asdu_addr ASDU地址
+ * @param asdu_addr_len ASDU地址长度
+ * @param cause_len 传送原因长度
+ * @param node_addr_len 信息点地址长度
+ * @param sm2_enable SM2功能启用
+ * 
+ * @return APP
+ */
 struct app_info *app_create(int asdu_addr, int asdu_addr_len, int cause_len, int node_addr_len, int sm2_enable)
 {
 	struct app_info *info = (struct app_info *)rt_malloc(sizeof(struct app_info));
@@ -49,24 +69,40 @@ struct app_info *app_create(int asdu_addr, int asdu_addr_len, int cause_len, int
   return info;
 }
 
+
+/*添加信息点*/
 void app_create_normal_node(struct app_info *info,int *normal_node)
 {
 	arraylist_add(info->n_node_list, normal_node);
 }
 
+/*添加序列化信息点*/
 void app_create_seq_node(struct app_info *info, int *seq_node)
 {
 	arraylist_add(info->s_node_list, seq_node);
 }
 
 
+/** 
+ *  APP-接收端收到ASDU类数据处理函数
+ * 
+ * @param info APP
+ * @param asdu_data ASDU字节数据
+ */
 static void app_evt_dispatch_recv_asdu(struct app_info *info,char *asdu_data)
 {
+  /*ASDU地址检测 传输原因检测*/
   int asdu_ident=asdu_data[0];
-  
+  int cause=asdu_data[1];
 }
 
 
+/** 
+ * APP --接收link端数据处理
+ * 
+ * @param info APP实例
+ * @param evt 事件类型 包含 请求一类数据  请求二类数据   用户类数据
+ */
 static void app_evt_recv_data_handle(struct app_info *info,struct iec_event *evt)
 {
   int sub_evt=evt->evt_sub_type;
@@ -104,7 +140,12 @@ static void app_evt_recv_data_handle(struct app_info *info,struct iec_event *evt
 }
 
 
-
+/** 
+ * APP-- 更新信息点事件处理
+ * 
+ * @param info APP实例
+ * @param evt 事件 信息点更新信息及具体信息点数据
+ */
 static void app_evt_update_node_handle(struct app_info *info, struct iec_event *evt)
 {
 	int res = 0,i=0;
@@ -126,7 +167,13 @@ static void app_evt_update_node_handle(struct app_info *info, struct iec_event *
 		task_list = info->second_task;
 	}
 
-  for(i=0;i<CFG_LINK_MAX;i++)
+  /**
+   * 1、检测APP缓存的链路是否有效
+   * 2、获取link的激活状态,默认为总召后激活
+   * 3、注册任务
+   */
+
+  for(i=0;i<CFG_LINK_MAX;i++) 
     {
       if(info->linklayer_id[i]==0)
         continue;
@@ -143,7 +190,7 @@ static void app_evt_update_node_handle(struct app_info *info, struct iec_event *
           res = app_task_add_normal(task_list,info->linklayer_id[i], nd_info->asdu_ident, nd_info->cause,
                                     n_nd_frame_info);
 
-          if(res==-1)
+          if(res==-1)//已有同类任务
             {
               rt_free(n_nd_frame_info);
             }
@@ -172,11 +219,11 @@ static void app_evt_update_node_handle(struct app_info *info, struct iec_event *
         }
     }
 
-  if(evt->evt_sub_type==EVT_SUB_SEQ_NODE)
+  /*if(evt->evt_sub_type==EVT_SUB_SEQ_NODE)
     {
       rt_free(((struct seq_node_frame_info*)evt->sub_msg)->qual);
       rt_free(((struct seq_node_frame_info*)evt->sub_msg)->val);
-    }
+    }*/
 }
 
 

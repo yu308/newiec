@@ -1,4 +1,8 @@
 #include "iec_element.h"
+/**
+ *信息点元素的长度表 
+ * 
+ */
 
 const unsigned char element_len_cfg[]=
 {

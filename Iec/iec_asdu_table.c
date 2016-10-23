@@ -2,6 +2,10 @@
 #include "iec_asdu.h"
 #include "iec_element.h"
 
+/**
+ * ASDU配置信息表
+ * 
+ */
 
 const struct asdu_cfg g_SysASDU_Table[] =
 {

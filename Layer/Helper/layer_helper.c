@@ -57,6 +57,12 @@ void app_send_userdata_ack_evt_to_link(struct app_info *info,struct serial_link_
   app_send_update_evt_to_link(info, link_info, EVT_SUB_DAT_USER);
 }
 
+/** 
+ * 用于APP向Link通知需发送用户数据
+ * 
+ * @param info 
+ * @param send_asdu 
+ */
 void app_send_asdu_evt_to_link(struct app_info *info,struct app_send_info *send_asdu)
 {
   struct iec_event *evt=0;

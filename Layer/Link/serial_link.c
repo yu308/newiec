@@ -388,7 +388,12 @@ int serial_link_pack_unfixed_frame(struct serial_link_info *info, char funcode, 
 
 
 
-
+/** 
+ * 链路物理接收事件处理
+ * 
+ * @param info 
+ * @param evt 
+ */
 static void serial_link_phy_recv_handle(struct serial_link_info *info,struct iec_event *evt)
 {
 	char *data = 0;
@@ -442,6 +447,12 @@ static void serial_link_phy_recv_handle(struct serial_link_info *info,struct iec
 	}
 }
 
+/** 
+ *  app至Link的事件处理
+ * 
+ * @param info 
+ * @param evt 
+ */
 static void serial_link_app_recv_handle(struct serial_link_info *info, struct iec_event *evt)
 {
   if(evt->evt_sub_type!=EVT_SUB_DAT_USER)
@@ -467,6 +478,13 @@ static void serial_link_app_recv_handle(struct serial_link_info *info, struct ie
     }
 }
 
+
+/** 
+ * 链路处理接收数据事件
+ * 
+ * @param info 链路信息
+ * @param evt 事件  1 物理链路收到数据 2 app产生的信息点变化事件 
+ */
 static void serial_link_recv_event_handle(struct serial_link_info *info,struct iec_event *evt)
 {
 	int sub_evt = evt->evt_sub_type;
@@ -482,7 +500,12 @@ static void serial_link_recv_event_handle(struct serial_link_info *info,struct i
 		break;
 	}
 }
-
+/** 
+ * 链路处理发送的用户数据ASDU事件
+ * 
+ * @param info 链路信息
+ * @param evt 事件 ASDU数据信息
+ */
 static void serial_link_asdu_send_evt_handle(struct serial_link_info *info ,struct iec_event *evt)
 {
   int sub_evt=evt->evt_sub_type;

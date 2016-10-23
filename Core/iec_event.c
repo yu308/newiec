@@ -38,14 +38,24 @@ struct iec_event *iec_recv_event(rt_mailbox_t queue_id, unsigned int millisec)
 	return 0;
 }
 
-
+/** 
+ * 生成一个事件
+ * 
+ * @param sender  发送者
+ * @param recver  接收者
+ * @param evt_type  事件类型
+ * @param main_msg  事件消息
+ * @param auto_free 是否自动释放
+ * 
+ * @return 事件
+ */
 struct iec_event *iec_create_event(int sender, int recver, int evt_type, 
 	int *main_msg,int auto_free)
 {
 	struct iec_event *evt = (struct iec_event *)rt_malloc(sizeof(struct iec_event));
 	if (evt == 0)
 	{
-		rt_printf("MSG:ERROR: no memory.\n");
+		rt_kprintf("MSG:ERROR: no memory.\n");
 		return 0;
 	}
 	rt_memset(evt, 0, sizeof(struct iec_event));
@@ -59,6 +69,14 @@ struct iec_event *iec_create_event(int sender, int recver, int evt_type,
 	return evt;
 }
 
+/** 
+ * 设置某个事件的子事件信息
+ * 
+ * @param evt 事件
+ * @param evt_sub_type 子事件类型
+ * @param sub_msg 子事件消息
+ * @param auto_free 是否自动释放
+ */
 void iec_set_event_sub(struct iec_event *evt, int evt_sub_type,int *sub_msg, int auto_free)
 {
   if(evt==0)

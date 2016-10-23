@@ -100,6 +100,15 @@ struct app_send_info
 	int app_data_len;
 };
 
+struct app_recv_info
+{
+  int link_id;
+  int asdu_ident;
+  int cause;
+  char *app_data;
+  int app_len;
+};
+
 /// <summary>
 /// 创建APP实例时的参数
 /// </summary>
