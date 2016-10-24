@@ -102,7 +102,7 @@ static void app_evt_dispatch_recv_asdu(struct app_info *info,int link_id,char *a
     }
 
   int recv_asdu_addr=0;
-  rt_memcpy(&rec_asdu_addr, &asdu_data[3], info->cfg->asdu_addr_len);
+  rt_memcpy(&recv_asdu_addr, &asdu_data[3], info->cfg->asdu_addr_len);
 
   if(recv_asdu_addr!=info->cfg->asdu_addr)
     {
@@ -118,9 +118,12 @@ static void app_evt_dispatch_recv_asdu(struct app_info *info,int link_id,char *a
   rt_memcpy(&recv_info.asdu_sub_data,&asdu_data[2+info->cfg->cause_len+info->cfg->asdu_addr_len],
             recv_info.asdu_sub_len);
 
-  app_linkframe_convert_to_asdu(info, recv_info);
+  app_linkframe_convert_to_asdu(info, &recv_info);
+
+  app_task_insert_ack_asdu(info,link_id,&recv_info);
 
  
+
 }
 
 

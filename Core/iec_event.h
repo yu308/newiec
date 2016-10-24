@@ -100,6 +100,9 @@ struct app_send_info
 	int app_data_len;
 };
 
+/// <summary>
+/// APP实例收到LINK实例的数据信息
+/// </summary>
 struct app_recv_info
 {
   int asdu_ident;
@@ -123,15 +126,6 @@ struct app_param
 	unsigned char sm2_enable;
 };
 
-
-/// <summary>
-/// APP实例收到LINK实例的数据信息
-/// </summary>
-struct app_recv_info
-{
-	char funcode;
-	char *app_data;
-};
 
 
 

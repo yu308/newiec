@@ -32,4 +32,5 @@ extern int app_task_check_empty(arraylist *al,int link_id);
 extern void app_linkframe_convert_to_asdu(struct app_info *info,struct app_recv_info *recv_info);
 
 
+extern void app_task_insert_ack_asdu(struct app_info *info,int link_id,struct app_recv_info *recv_info);
 #endif

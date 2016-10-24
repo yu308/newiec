@@ -198,7 +198,7 @@ void arraylist_splice(arraylist* l, arraylist* source, unsigned int index)
 
 void arraylist_destroy(arraylist* l)
 {
-	XFREE(l->body);
-	XFREE(l);
+	rt_free(l->body);
+	rt_free(l);
 }
 

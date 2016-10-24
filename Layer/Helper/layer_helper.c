@@ -47,7 +47,7 @@ void app_send_update_evt_to_link(struct app_info *info,struct serial_link_info *
 }
 
 /** 
- * 用于向link确认用户数据 确认数据系统内部有更新信息点操作
+ * 用于向link确认用户数据 确认数据系统内部有更新信息点操作,已产生任务数据
  * 此处直接调用update事件通知函数
  * 
  * @param info  App信息

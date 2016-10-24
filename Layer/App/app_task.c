@@ -13,14 +13,14 @@
  * @param cause 传输原因
  * @param f_node 信息点数据信息
  * 
- * @return 创建状态 0 成功  -1 已有数据 
+ * @return 创建状态 >=0 当前任务索引 成功  -1 已有数据 
  */
 int app_task_add_normal(arraylist *al,unsigned int link_id,unsigned int asdu_ident, int cause, struct node_frame_info *f_node)
 {
 	char name[24];
 	struct node_frame_info *f_node_temp = 0;
 	int i = 0,j=0;
-	rt_memset(name, 0, 16);
+	rt_memset(name, 0, 24);
   rt_sprintf(name,TASK_IDENT_NAME_FORMAT,link_id,asdu_ident,cause,0);
   struct app_task *temp=0;
 
@@ -40,12 +40,15 @@ int app_task_add_normal(arraylist *al,unsigned int link_id,unsigned int asdu_ide
                           f_node_temp->qual = f_node->qual;
                           f_node_temp->utc_time = f_node->utc_time;
                           f_node_temp->val = f_node->val;
-                          return -1; 
+
+                          rt_free(f_node);
+                          return i;
+                          // return -1;
                         }
                     }
                 }
               arraylist_add(temp->node_data_list, f_node);
-              return 0;
+              return i;
             }
 
         } 
@@ -63,7 +66,7 @@ int app_task_add_normal(arraylist *al,unsigned int link_id,unsigned int asdu_ide
   arraylist_add(temp->node_data_list, f_node);
 
   arraylist_add(al, temp);
-  return 0;
+  return i;
 }
 
 
@@ -311,7 +314,7 @@ extern int app_frame_ctrl_cmd_user_callback(int asdu_ident,int node_addr,char *n
  * @param node_data 信息点数据
  * @param node_data_len 信息点数据长度 
  */
-static void app_frame_ctrl_cmd_proc(int asdu_ident,int node_addr,char *node_data,int node_data_len)
+static int app_frame_ctrl_cmd_proc(int asdu_ident,int node_addr,char *node_data,int node_data_len)
 {
   return app_frame_ctrl_cmd_user_callback(asdu_ident,node_addr,node_data,node_data_len);
 }
@@ -385,7 +388,7 @@ void app_linkframe_convert_to_asdu(struct app_info *info,struct app_recv_info *r
       if(recv_info->cause==Act)
         {
           state=app_frame_ctrl_cmd_proc(recv_info,node_addr,recv_info->asdu_sub_data[info->cfg->node_addr_len],
-                                        recv_info->app_sub_len-info->cfg->node_addr_len);
+                                        recv_info->asdu_sub_len-info->cfg->node_addr_len);
 
           if(state==1)
             {
@@ -421,4 +424,34 @@ void app_linkframe_convert_to_asdu(struct app_info *info,struct app_recv_info *r
 }
 
 
-void app_task_create_ack_asdu()
+void app_task_insert_ack_asdu(struct app_info *info,int link_id,struct app_recv_info *recv_info)
+{
+  arraylist *al=info->first_task;
+  int idx=0;
+  int res=0;
+  char *task_name=rt_malloc(24);
+  rt_sprintf(task_name, "%08X-%02X-%02X-%02X", link_id,recv_info->asdu_ident,recv_info->cause,recv_info->seq);
+
+  struct asdu_cfg *cfg=iec_get_asdu_cfg(recv_info->asdu_ident);
+
+  struct node_frame_info *n_node_info=rt_malloc(sizeof(struct node_frame_info));
+
+  int node_addr=0;
+  rt_memcpy(&node_addr, &recv_info->asdu_sub_data[0], info->cfg->node_addr_len);
+  idx+=info->cfg->node_addr_len;
+
+  n_node_info->addr=node_addr;
+  n_node_info->buffered=0;
+  if(cfg->val_ident!=0)
+    idx+=iec_pack_node_element(&n_node_info->val, &recv_info->asdu_sub_data[idx], cfg->val_ident);
+  if(cfg->qual_ident!=0)
+    idx+=iec_pack_node_element(&n_node_info->qual, &recv_info->asdu_sub_data[idx], cfg->val_ident);
+  //if(cfg->tm_ident!=0)
+  /* 转化为utc时间 时间标签*/
+  res=app_task_add_normal(al, link_id, recv_info->asdu_ident, recv_info->ack_cause, n_node_info);
+
+  /*将要发送的ACK ASDU任务移到首位,保证下次优先发送*/
+  void* item= arraylist_remove(al, res);
+  arraylist_insert(al, 0, item);
+  
+}
