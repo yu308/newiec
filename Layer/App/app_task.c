@@ -283,3 +283,142 @@ int app_task_check_empty(arraylist *al,int link_id)
 
   return 0;
 }
+
+/*用户实现的控制命令接口*/
+extern int app_frame_ctrl_cmd_user_callback(int asdu_ident,int node_addr,char *node_val,int node_data_len);
+
+/*{
+  if(node_addr==0x4001)//单点命令
+    {
+      Info_E_SCO *sco=(Info_E_SCO*)node_val;
+      if(sco->SE==CHOOSE)
+        {
+          //检测是否可以执行 可执行则返回1
+        }
+      else if(sco->SE==EXECUTE)
+        {
+          //执行动作 返回成功
+        }
+    }
+
+}*/
+
+/** 
+ * 控制命令处理,具体过程由用户提供的接口实现
+ * 
+ * @param asdu_ident ASDU标识
+ * @param node_addr 信息点地址
+ * @param node_data 信息点数据
+ * @param node_data_len 信息点数据长度 
+ */
+static void app_frame_ctrl_cmd_proc(int asdu_ident,int node_addr,char *node_data,int node_data_len)
+{
+  return app_frame_ctrl_cmd_user_callback(asdu_ident,node_addr,node_data,node_data_len);
+}
+
+/** 
+ * 检测当前APP是否支持对应信息点地址
+ * 
+ * @param info 
+ * @param seq 
+ * @param node_addr 
+ * 
+ * @return 1 支持 0 不支持
+ */
+static int app_check_node_list(struct app_info *info,int seq,int node_addr)
+{
+  arraylist *al_temp=0;
+  struct normal_node *n_node=0;
+  struct seq_node *seq_node=0;
+  int i=0;
+
+  if(seq==0)
+    {
+      al_temp=info->n_node_list;
+      arraylist_iterate(al_temp, i, n_node)
+        {
+          if(n_node->addr==node_addr)
+            return 1;
+        }
+    }
+  else if(seq==1)
+    {
+      al_temp=info->s_node_list;
+      arraylist_iterate(al_temp, i, seq_node)
+        {
+          if(seq_node->start_addr==node_addr)
+            return 1;
+        }
+    }
+
+  return 0;
+}
+
+/** 
+ * APP对链路送至的ASDU数据转换处理,准备创建发送信息,建立任务
+ * 
+ * @param info APP信息
+ * @param recv_info  收到的ASDU信息
+ */
+void app_linkframe_convert_to_asdu(struct app_info *info,struct app_recv_info *recv_info)
+{
+  int node_addr=0,i=0,state=0;
+
+  if(recv_info->node_count>1)
+    return;
+
+  rt_memcpy(&node_addr,&recv_info->asdu_sub_data[0],info->cfg->node_addr_len);
+
+  if(app_check_node_list(info, recv_info->seq, node_addr)==0)
+    {
+      recv_info->ack_cause=Unknowinfo;
+      return;
+    }
+
+  if((recv_info->asdu_ident>0)&&(recv_info->asdu_ident<41))
+    {
+      /*监视方向过程信息处理*/
+    }
+  else if((recv_info->asdu_ident>44)&&(recv_info->asdu_ident<52))
+    {
+      /*控制方向过程控制信息处理*/
+      if(recv_info->cause==Act)
+        {
+          state=app_frame_ctrl_cmd_proc(recv_info,node_addr,recv_info->asdu_sub_data[info->cfg->node_addr_len],
+                                        recv_info->app_sub_len-info->cfg->node_addr_len);
+
+          if(state==1)
+            {
+              recv_info->ack_cause=Actcon;
+            }
+          else
+            recv_info->ack_cause=Actterm;
+
+        }
+      else if(recv_info->cause==Deact)
+        {
+          recv_info->ack_cause=Deactcon;
+        }
+    }    
+  else if((recv_info->asdu_ident>69)&&(recv_info->asdu_ident<98))
+    {
+      /*监视方向过程控制信息处理*/
+    }
+  else if((recv_info->asdu_ident>99)&&(recv_info->asdu_ident<107))
+    {
+      /*控制方向的系统命令*/
+    }
+  else if((recv_info->asdu_ident>109)&&(recv_info->asdu_ident<114))
+    {
+      /*控制方向的参数命令*/
+    }
+  else if((recv_info->asdu_ident>119)&&(recv_info->asdu_ident<127))
+    {
+      /*文件传输*/
+    }
+
+
+}
+
+
+void app_task_create_ack_asdu()

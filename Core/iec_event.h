@@ -102,11 +102,13 @@ struct app_send_info
 
 struct app_recv_info
 {
-  int link_id;
   int asdu_ident;
   int cause;
-  char *app_data;
-  int app_len;
+  int ack_cause;
+  int seq;
+  int node_count;
+  char asdu_sub_data[CFG_ASDU_DATA_BUFF_MAX];
+  int asdu_sub_len;
 };
 
 /// <summary>

@@ -89,11 +89,38 @@ void app_create_seq_node(struct app_info *info, int *seq_node)
  * @param info APP
  * @param asdu_data ASDU字节数据
  */
-static void app_evt_dispatch_recv_asdu(struct app_info *info,char *asdu_data)
+static void app_evt_dispatch_recv_asdu(struct app_info *info,int link_id,char *asdu_data,int asdu_len)
 {
   /*ASDU地址检测 传输原因检测*/
-  int asdu_ident=asdu_data[0];
-  int cause=asdu_data[1];
+  struct app_recv_info recv_info;
+  rt_memset(&recv_info,0,sizeof(struct app_recv_info));
+
+  if(iec_get_asdu_cfg(asdu_data[0])==0)
+    {
+      recv_info.ack_cause=Unknowtype;
+      return ;
+    }
+
+  int recv_asdu_addr=0;
+  rt_memcpy(&rec_asdu_addr, &asdu_data[3], info->cfg->asdu_addr_len);
+
+  if(recv_asdu_addr!=info->cfg->asdu_addr)
+    {
+      recv_info.ack_cause=Unknowasdu;
+      return;
+    }
+
+  recv_info.asdu_ident=asdu_data[0];
+  rt_memcpy(&recv_info.cause,&asdu_data[2],info->cfg->cause_len);
+  recv_info.node_count=asdu_data[1]&0x7F;
+  recv_info.seq=(asdu_data[1]>>7)&0x1;
+  recv_info.asdu_sub_len=asdu_len-2-info->cfg->cause_len-info->cfg->asdu_addr_len;
+  rt_memcpy(&recv_info.asdu_sub_data,&asdu_data[2+info->cfg->cause_len+info->cfg->asdu_addr_len],
+            recv_info.asdu_sub_len);
+
+  app_linkframe_convert_to_asdu(info, recv_info);
+
+ 
 }
 
 
@@ -131,9 +158,9 @@ static void app_evt_recv_data_handle(struct app_info *info,struct iec_event *evt
     break;
   case EVT_SUB_DAT_USER:
     recv=evt->sub_msg;
-	  app_evt_dispatch_recv_asdu(info, (char *)recv[1]);
+	  app_evt_dispatch_recv_asdu(info, evt->sender, (char *)recv[0],recv[1]);
     /*发送事件至Link 确认用户数据*/
-    app_send_userdata_ack_evt_to_link(info,(struct serial_link_info*)recv[0]);
+    app_send_userdata_ack_evt_to_link(info,(struct serial_link_info*)evt->sender);
     break;
   }
 

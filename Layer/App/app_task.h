@@ -29,4 +29,7 @@ extern int app_task_add_seq(arraylist *al,unsigned int link_id, unsigned int asd
 extern struct app_task *app_task_get(arraylist *al);
 extern struct app_send_info *app_task_covert_to_asdu_frame(struct app_info *info, struct app_task *task);
 extern int app_task_check_empty(arraylist *al,int link_id);
+extern void app_linkframe_convert_to_asdu(struct app_info *info,struct app_recv_info *recv_info);
+
+
 #endif

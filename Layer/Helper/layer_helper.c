@@ -19,13 +19,14 @@ void serial_link_send_req_evt_to_app(struct serial_link_info *info,int sub_evt)
  * 
  * @param info 链路信息
  * @param asdu_data 收到的asdu数据缓存地址
+ * @param asdu_len  asdu数据长度
  */
-void serial_link_send_asdu_evt_to_app(struct serial_link_info *info,char *asdu_data)
+void serial_link_send_asdu_evt_to_app(struct serial_link_info *info,char *asdu_data,int asdu_len)
 {
   struct iec_event *evt=0;
   int *recv=(int *)rt_malloc(sizeof(int)*2);
-  recv[0]=(int)info;
-  recv[1]=(int)asdu_data;
+  recv[0]=(int)asdu_data;
+  recv[1]=asdu_len;
   evt=iec_create_event(info, info->applayer_id, EVT_APP_RECV_DATA, 0, 0);
   iec_set_event_sub(evt, EVT_SUB_DAT_USER, recv, 1);
   iec_post_event(((struct app_info *)info->applayer_id)->app_event, evt, 20);
