@@ -11,7 +11,7 @@ struct link_obj
 	char name[CFG_NAME_MAX];  /*名称 放在首位*/
 	char link_type; 	/*链路类型*/
 	
-	char active;	 /*是否激活*/
+	char active;	 /*是否激活 可进行数据交互*/
 	char double_dir; /*平衡或非平衡*/
 	
 	char *recv_buff; /*接收缓存*/

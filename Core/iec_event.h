@@ -75,10 +75,10 @@ struct node_update_info
 /// </summary>
 struct link_param
 {
-  char name[CFG_NAME_MAX];
-	unsigned char link_addr;
+  char name[CFG_NAME_MAX]; /*链路名称*/
+	unsigned char link_addr;  /*链路地址 NET时 为SOCKET号*/
 	unsigned char link_addr_len;
-	unsigned char link_dir;
+	unsigned char link_dir; /*传输模式*/
 };
 
 /// <summary>

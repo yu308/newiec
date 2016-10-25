@@ -1,6 +1,7 @@
 #ifndef _iec_sys_h_
 #define _iec_sys_h_
 #include "iec_cfg.h"
+#include "../Layer/Helper/layer_helper.h"
 
 /// <summary>
 /// 系统信息
@@ -9,8 +10,8 @@ struct sys_info
 {
 	int communicate_role;	/*系统通信角色*/
 
-	int link_obj[CFG_LINK_MAX];	 /*当前链路*/
-	int app_obj[CFG_APP_MAX];	/*当前APP*/
+	arraylist *link_obj;	 /*当前链路*/
+	arraylist *app_obj;	/*当前APP*/
 
 	rt_mailbox_t sys_event;	/*系统事件*/
 };

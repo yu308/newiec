@@ -1,6 +1,9 @@
 /* This file was automatically generated.  Do not edit! */
 #ifndef _array_list_h_
 #define _array_list_h_
+
+#include "../../OS/os_helper.h"
+
 typedef struct arraylist arraylist;
 void arraylist_destroy(arraylist *l);
 void arraylist_splice(arraylist *l,arraylist *source,unsigned int index);

@@ -101,7 +101,7 @@ struct serial_link_info
 
 extern struct serial_link_info *serial_link_create(char *name,int addr,int addr_len,int dir);
 extern void serial_link_del(struct serial_link_info *info);
-extern void serial_link_thread_start(int plink_info);
+extern void serial_link_thread_start(struct serial_link_info *info);
 
 
 

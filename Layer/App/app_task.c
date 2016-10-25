@@ -84,7 +84,6 @@ int app_task_add_normal(arraylist *al,unsigned int link_id,unsigned int asdu_ide
 int app_task_pack_node(char *buff,int node_addr_len, arraylist *node_list,int *out_count)
 {
 	int len = 0,count=0;
-	struct asdu_cfg *acfg = iec_get_asdu_cfg(asdu_ident);
 	struct node_frame_info *f_node = 0;
 	
 
@@ -158,15 +157,15 @@ struct app_send_info *app_task_covert_to_asdu_frame(struct app_info *info,struct
   asdu_frame[idx++] = (task->seq << 7);
   asdu_frame[idx++] = (task->cause&0xFF);
   
-  rt_memcpy(&asdu_frame[idx], &task->cause, info->cfg->cause_len);
-  idx += info->cfg->cause_len;
+  rt_memcpy(&asdu_frame[idx], &task->cause, info->cfg.cause_len);
+  idx += info->cfg.cause_len;
 
-  rt_memcpy(&asdu_frame[idx], &info->cfg->asdu_addr, info->cfg->asdu_addr_len);
-  idx += info->cfg->asdu_addr_len;
+  rt_memcpy(&asdu_frame[idx], &info->cfg.asdu_addr, info->cfg.asdu_addr_len);
+  idx += info->cfg.asdu_addr_len;
 
 
 	  /*普通信息点处理*/
-	idx+=app_task_pack__node(&asdu_frame[idx], info->cfg->node_addr_len,task->node_data_list,&node_count);
+	idx+=app_task_pack__node(&asdu_frame[idx], info->cfg.node_addr_len,task->node_data_list,&node_count);
  
 
 
@@ -250,27 +249,14 @@ static int app_frame_ctrl_cmd_proc(int asdu_ident,int node_addr,char *node_data,
 static int app_check_node_list(struct app_info *info,int seq,int node_addr)
 {
   arraylist *al_temp=0;
-  struct normal_node *n_node=0;
-  struct seq_node *seq_node=0;
+  struct node_obj *node=0;
   int i=0;
 
-  if(seq==0)
+  al_temp=info->n_node_list;
+  arraylist_iterate(al_temp, i, node)
     {
-      al_temp=info->n_node_list;
-      arraylist_iterate(al_temp, i, n_node)
-        {
-          if(n_node->addr==node_addr)
-            return 1;
-        }
-    }
-  else if(seq==1)
-    {
-      al_temp=info->s_node_list;
-      arraylist_iterate(al_temp, i, seq_node)
-        {
-          if(seq_node->start_addr==node_addr)
-            return 1;
-        }
+      if(node->addr==node_addr&&(node->seq=seq))
+        return 1;
     }
 
   return 0;
@@ -289,7 +275,7 @@ void app_linkframe_convert_to_asdu(struct app_info *info,struct app_recv_info *r
   if(recv_info->node_count>1)
     return;
 
-  rt_memcpy(&node_addr,&recv_info->asdu_sub_data[0],info->cfg->node_addr_len);
+  rt_memcpy(&node_addr,&recv_info->asdu_sub_data[0],info->cfg.node_addr_len);
 
   if(app_check_node_list(info, recv_info->seq, node_addr)==0)
     {
@@ -306,8 +292,8 @@ void app_linkframe_convert_to_asdu(struct app_info *info,struct app_recv_info *r
       /*控制方向过程控制信息处理*/
       if(recv_info->cause==Act)
         {
-          state=app_frame_ctrl_cmd_proc(recv_info,node_addr,recv_info->asdu_sub_data[info->cfg->node_addr_len],
-                                        recv_info->asdu_sub_len-info->cfg->node_addr_len);
+          state=app_frame_ctrl_cmd_proc(recv_info,node_addr,recv_info->asdu_sub_data[info->cfg.node_addr_len],
+                                        recv_info->asdu_sub_len-info->cfg.node_addr_len);
 
           if(state==1)
             {
@@ -356,13 +342,13 @@ void app_task_insert_ack_asdu(struct app_info *info,int link_id,struct app_recv_
   struct node_frame_info *n_node_info=rt_malloc(sizeof(struct node_frame_info));
 
   int node_addr=0;
-  rt_memcpy(&node_addr, &recv_info->asdu_sub_data[0], info->cfg->node_addr_len);
-  idx+=info->cfg->node_addr_len;
+  rt_memcpy(&node_addr, &recv_info->asdu_sub_data[0], info->cfg.node_addr_len);
+  idx+=info->cfg.node_addr_len;
 
   n_node_info->addr=node_addr;
   n_node_info->buffered=0;
   n_node_info->vsq=recv_info->seq<<7|recv_info->node_count;
-  n_node_info->data_len=recv_info->asdu_sub_len-info->cfg->node_addr_len;
+  n_node_info->data_len=recv_info->asdu_sub_len-info->cfg.node_addr_len;
   rt_memcpy(n_node_info->byte_buff,&recv_info->asdu_sub_data[idx],n_node_info->data_len);
   //if(cfg->tm_ident!=0)
   /* 转化为utc时间 时间标签*/

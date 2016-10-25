@@ -7,13 +7,7 @@
 struct net_link_cfg
 {
 	int socket;
-	
-	unsigned int t0;
-	unsigned int t1;
-	unsigned int t2;
-	
-	unsigned int K;
-	unsigned int W;
+
 };
 
 struct net_link_info

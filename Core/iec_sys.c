@@ -23,16 +23,20 @@ void iec_main_thread_entry(void *param);
  * 
  * @return 链路ID  0 未找到
  */
-static int iec_sys_find_link(struct sys_info *info,char *name)
+static struct link_obj *iec_sys_find_link(struct sys_info *info,char *name)
 {
   int i=0;
-  char link_name[16];
+  char link_name[CFG_NAME_MAX];
+  struct link_obj *link=0;
 
-  for(i=0;i<CFG_LINK_MAX;i++)
+  arraylist_iterate(info->link_obj, i, link)
     {
-      rt_memcpy(&link_name,(char *)info->link_obj[i],16);
-      if(rt_strcmp(name, link_name)==0)
-        return info->link_obj[i];
+      if(link!=0)
+        {
+          rt_memcpy(&link_name,(char *)link->name,CFG_NAME_MAX);
+          if(rt_strcmp(name, link_name)==0)
+            return link;
+        }
     }
 
   return 0;
@@ -46,21 +50,16 @@ static int iec_sys_find_link(struct sys_info *info,char *name)
  * 
  * @return  1 添加成功  0 当前系统支持链路已满
  */
-static int iec_sys_add_link(struct sys_info *info,void *link_id)
+static int iec_sys_add_link(struct sys_info *info,void *link)
 {
-  int i=0;
-
-  for(i=0;i<CFG_LINK_MAX;i++)
-    {
-      if(info->link_obj[i]==0)
-        {
-          info->link_obj[i]=(int)link_id;
-          return 1;
-        }
+  if(arraylist_size(info->link_obj)>CFG_LINK_MAX)
+    { 
+      rt_kprintf("IEC:LINK: obj's buffer is full.\n");
+      return 0;
     }
 
-  rt_kprintf("IEC:LINK: obj's buffer is full.\n");
-  return 0;
+  arraylist_add(info->link_obj, link);
+  return 1;
 }
 
 /** 
@@ -75,6 +74,7 @@ static void iec_sys_evt_create_link_handle(struct sys_info *info,struct iec_even
 
   struct link_param *link_p=0;
   struct serial_link_info *serial_link=0;
+  struct net_link_info *net_link=0;
 
   switch(sub_evt)
     {
@@ -89,6 +89,12 @@ static void iec_sys_evt_create_link_handle(struct sys_info *info,struct iec_even
 
       break;
     case EVT_SUB_SYS_LINK_SOCKET:
+      link_p=evt->sub_msg;
+      net_link=net_link_create(link_p->name,link_p->link_addr,link_p->link_dir);
+      if(iec_sys_add_link(info, net_link)==0)
+        {
+          net_link_del(net_link);
+        }
       break;
     }
 }
@@ -102,7 +108,7 @@ static void iec_sys_evt_create_link_handle(struct sys_info *info,struct iec_even
 static void iec_sys_evt_start_handle(struct sys_info *info,struct iec_event *evt)
 {
   int sub_evt=evt->evt_sub_type;
-  int link_id=*(int *)(evt->sub_msg);
+  struct link_obj *link=(struct link_obj *)(evt->sub_msg);
 
   switch(sub_evt)
     {
@@ -110,10 +116,11 @@ static void iec_sys_evt_start_handle(struct sys_info *info,struct iec_event *evt
       break;
     case EVT_SUB_SYS_APP:
       break;
-    case EVT_SUB_SYS_LINK_SERIAL:
-      serial_link_thread_start(link_id);
+    case EVT_SUB_SYS_LINK_SERIAL: 
+      serial_link_thread_start((struct serial_link_info *)link);
       break;
     case EVT_SUB_SYS_LINK_SOCKET:
+      net_link_thread_start((struct net_link_info*)link);
       break;
     }
 }
@@ -219,23 +226,16 @@ void iec_sys_api_create_link(char *link_name,int link_type,unsigned int link_add
  * @param type  链路类型
  * @param link_name  对应链路名称
  */
-void iec_sys_api_start_link(int type,char *link_name)
+void iec_sys_api_start_link(char *link_name)
 {
-  int *link_id=rt_malloc(sizeof(int));
-
-  *link_id=iec_sys_find_link(&gSys_Info, link_name);
-
+  struct link_obj *link=0;
+  link=iec_sys_find_link(&gSys_Info, link_name);
   int sub_evt=0;
 
-  if(type==1) sub_evt=EVT_SUB_SYS_LINK_SERIAL;
-  if(type==2) sub_evt=EVT_SUB_SYS_LINK_SOCKET;
+  if(link==0)
+    return;
 
-  if(*link_id!=0)
-    {
-      struct iec_event *evt=iec_create_event(0, (int)&gSys_Info, EVT_SYS_START, 0, 0);
-      iec_set_event_sub(evt, sub_evt, link_id, 1);
-      iec_post_event(gSys_Info.sys_event, evt, 20);
-    }
-  else
-    rt_free(link_id);
+  struct iec_event *evt=iec_create_event(0, (int)&gSys_Info, EVT_SYS_START, 0, 0);
+  iec_set_event_sub(evt, link->link_type,(int*)link, 0);
+  iec_post_event(gSys_Info.sys_event, evt, 20);
 }

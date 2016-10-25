@@ -1,6 +1,6 @@
 #ifndef _iec_node_h_
 #define _iec_node_h_
-
+#include "../Core/iec_cfg.h"
 struct node_obj
 {
 	unsigned int  addr;
@@ -61,7 +61,7 @@ struct node_frame_info
 extern struct seq_node *iec_create_seq_node(int node_start_addr,int count);
 extern void iec_del_seq_node(struct seq_node *node);
 extern unsigned int iec_pack_node_addr(char *buff, unsigned int node_addr, int addr_len);
-extern unsigned int iec_pack_node_element(char *buff, int element_val, int element_ident);
+extern unsigned int iec_pack_node_element(char *buff, void *element_val, int element_ident);
 extern struct normal_node *iec_create_normal_node(int node_addr);
 void iec_api_update_normal_node(int appid,int level, unsigned int asdu_ident,
                                 unsigned int cause,struct node_frame_info *f_node);

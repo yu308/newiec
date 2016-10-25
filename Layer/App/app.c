@@ -30,7 +30,6 @@ void app_init(struct app_info *info, int asdu_addr, int asdu_addr_len,int cause_
 
 
 	info->n_node_list = arraylist_create();
-	info->s_node_list = arraylist_create();
 
 	info->first_task = arraylist_create();
 	info->second_task = arraylist_create();
@@ -73,11 +72,6 @@ void app_create_normal_node(struct app_info *info,int *normal_node)
 	arraylist_add(info->n_node_list, normal_node);
 }
 
-/*添加序列化信息点*/
-void app_create_seq_node(struct app_info *info, int *seq_node)
-{
-	arraylist_add(info->s_node_list, seq_node);
-}
 
 
 /** 
@@ -99,20 +93,20 @@ static void app_evt_dispatch_recv_asdu(struct app_info *info,int link_id,char *a
     }
 
   int recv_asdu_addr=0;
-  rt_memcpy(&recv_asdu_addr, &asdu_data[3], info->cfg->asdu_addr_len);
+  rt_memcpy(&recv_asdu_addr, &asdu_data[3], info->cfg.asdu_addr_len);
 
-  if(recv_asdu_addr!=info->cfg->asdu_addr)
+  if(recv_asdu_addr!=info->cfg.asdu_addr)
     {
       recv_info.ack_cause=Unknowasdu;
       return;
     }
 
   recv_info.asdu_ident=asdu_data[0];
-  rt_memcpy(&recv_info.cause,&asdu_data[2],info->cfg->cause_len);
+  rt_memcpy(&recv_info.cause,&asdu_data[2],info->cfg.cause_len);
   recv_info.node_count=asdu_data[1]&0x7F;
   recv_info.seq=(asdu_data[1]>>7)&0x1;
-  recv_info.asdu_sub_len=asdu_len-2-info->cfg->cause_len-info->cfg->asdu_addr_len;
-  rt_memcpy(&recv_info.asdu_sub_data,&asdu_data[2+info->cfg->cause_len+info->cfg->asdu_addr_len],
+  recv_info.asdu_sub_len=asdu_len-2-info->cfg.cause_len-info->cfg.asdu_addr_len;
+  rt_memcpy(&recv_info.asdu_sub_data,&asdu_data[2+info->cfg.cause_len+info->cfg.asdu_addr_len],
             recv_info.asdu_sub_len);
 
   app_linkframe_convert_to_asdu(info, &recv_info);

@@ -16,7 +16,7 @@ int link_get_dir(struct link_obj *link)
 }
 
 
-void link_set_write_handle(struct link_obj *obj, int *handle)
+void link_set_write_handle(struct link_obj *link, int *handle)
 {
 	link->write = (write_handle)handle;
 }
@@ -27,7 +27,7 @@ int link_get_active_state(struct link_obj *link)
   return link->active;
 }
 
-int serial_link_set_active_state(struct link_obj *link,int state)
+void serial_link_set_active_state(struct link_obj *link,int state)
 {
   link->active=state;
 }
