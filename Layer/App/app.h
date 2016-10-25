@@ -9,43 +9,41 @@
 
 struct buffered_data
 {
-	int node_addr;		/*信息点地址*/
-	int asdu_ident;		/*ASDU标识*/
-	int utc_node_time;	/*信息点扩展时间*/
-	int utc_time;		/*发生时间*/
+	int node_addr;		/*脨脜脧垄碌茫碌脴脰路*/
+	int asdu_ident;		/*ASDU卤锚脢露*/
+	int utc_node_time;	/*脨脜脧垄碌茫脌漏脮鹿脢卤录盲*/
+	int utc_time;		/*路垄脡煤脢卤录盲*/
 };
 
 /// <summary>
-/// 应用配置信息
+/// 脫娄脫脙脜盲脰脙脨脜脧垄
 /// </summary>
 struct app_cfg
 {
-	int asdu_addr; /*ASDU地址*/	
-	int asdu_addr_len;	/*ASDU地址长度*/
-	int cause_len;	/*传送原因长度*/
-	int node_addr_len;	/*信息点地址长度*/
-	int sm2_enable;		/*SM2加密功能*/
+	int asdu_addr; /*ASDU碌脴脰路*/	
+	int asdu_addr_len;	/*ASDU碌脴脰路鲁陇露脠*/
+	int cause_len;	/*麓芦脣脥脭颅脪貌鲁陇露脠*/
+	int node_addr_len;	/*脨脜脧垄碌茫碌脴脰路鲁陇露脠*/
+	int sm2_enable;		/*SM2录脫脙脺鹿娄脛脺*/
 };
 
 /// <summary>
-/// 应用信息
+/// 脫娄脫脙脨脜脧垄
 /// </summary>
 struct app_info
 {
-	struct app_cfg *cfg;
+	struct app_cfg cfg;
 
-	int linklayer_id[CFG_LINK_MAX];		/*绑定的link链路*/
+	int linklayer_id[CFG_LINK_MAX];		/*掳贸露篓碌脛link脕麓脗路*/
  
 #if(CFG_ROLE_MODE==SYS_ROLE_MIXED)
-	int bro_applayer_id[CFG_APP_MAX];	/*中转机混合模式下 关联的APP*/
+	int bro_applayer_id[CFG_APP_MAX];	/*脰脨脳陋禄煤禄矛潞脧脛拢脢陆脧脗 鹿脴脕陋碌脛APP*/
 #endif
 
-	arraylist *n_node_list;	/*普通信息点组记录*/
-	arraylist *s_node_list;/*序列化信息点组记录*/
+	arraylist *n_node_list;	/*脝脮脥篓脨脜脧垄碌茫脳茅录脟脗录*/
 	
-
-	arraylist *first_task;	/*一级数据 即传输优先级最高的数据*/
-	arraylist *second_task;	/*二级数据 次之*/
+	arraylist *first_task;	/*脪禄录露脢媒戮脻 录麓麓芦脢盲脫脜脧脠录露脳卯赂脽碌脛脢媒戮脻*/
+	arraylist *second_task;	/*露镁录露脢媒戮脻 麓脦脰庐*/
 
 	arraylist *buffered;
 

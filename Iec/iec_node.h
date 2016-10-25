@@ -1,29 +1,35 @@
 #ifndef _iec_node_h_
 #define _iec_node_h_
 
+struct node_obj
+{
+	unsigned int  addr;
+	unsigned int  seq;
+};
+
 union node_val
 {
-	int int_val;		/*ÕûĞÎ*/
-	float float_val;	/*¸¡µã*/
-	char iarray_val[4];		/*×Ö·û*/
-	volatile unsigned bit_val : 32;	/*Î»´®*/
+	int int_val;		/*æ•´å½¢*/
+	float float_val;	/*æµ®ç‚¹*/
+	char iarray_val[4];		/*å­—ç¬¦*/
+	volatile unsigned bit_val : 32;	/*ä½ä¸²*/
 };
 
 
 /// <summary>
-/// ĞÅÏ¢µã ÓÃÓÚAPPÄ£¿é±ê¼ÇÖ§³ÖµÄĞÅÏ¢µã
+/// ä¿¡æ¯ç‚¹ ç”¨äºAPPæ¨¡å—æ ‡è®°æ”¯æŒçš„ä¿¡æ¯ç‚¹
 /// </summary>
 struct normal_node
 {
-	int addr;	/* ĞÅÏ¢µãµØÖ· */
-	//union node_val val; /*ĞÅÏ¢µãÖµ*/
+	int addr;	/* ä¿¡æ¯ç‚¹åœ°å€ */
+	//union node_val val; /*ä¿¡æ¯ç‚¹å€¼*/
 
-	//int buffered;		/*ÊÇ·ñ»º´æÊı¾İ*/
-	//int asdu_ident;		/*·¢ËÍÊı¾İÊ±²ÉÓÃASDUÀàĞÍ*/
+	//int buffered;		/*æ˜¯å¦ç¼“å­˜æ•°æ®*/
+	//int asdu_ident;		/*å‘é€æ•°æ®æ—¶é‡‡ç”¨ASDUç±»å‹*/
 };
 
 /// <summary>
-/// ĞòÁĞ»¯ĞÅÏ¢µã×é ÓÃÓÚAPPÄ£¿é±ê¼ÇÖ§³ÖµÄĞÅÏ¢µã
+/// åºåˆ—åŒ–ä¿¡æ¯ç‚¹ç»„ ç”¨äºAPPæ¨¡å—æ ‡è®°æ”¯æŒçš„ä¿¡æ¯ç‚¹
 /// </summary>
 struct seq_node
 {
@@ -36,30 +42,21 @@ struct seq_node
 	//int asdu_ident;
 };
 
-//struct file_node ÎÄ¼ş²Ù×÷
+//struct file_node æ–‡ä»¶æ“ä½œ
 
 /// <summary>
-/// EVENTÖĞĞÅÏ¢µãµÄ±íÏÖĞÎÊ½
+/// EVENTä¸­ä¿¡æ¯ç‚¹çš„è¡¨ç°å½¢å¼
 /// </summary>
 struct node_frame_info
-{
+{	
 	unsigned int addr;
-	int val;
-	int qual;
-	unsigned int utc_time;
-	int millsecond;
+	unsigned int vsq;
 	int buffered;
-
+	char byte_buff[CFG_ASDU_DATA_BUFF_MAX];
+	int data_len;
 };
 
-struct seq_node_frame_info
-{
-	unsigned int addr;
-	int count;
-	int *val;
-	int *qual;
-	int buffered;
-};
+
 
 extern struct seq_node *iec_create_seq_node(int node_start_addr,int count);
 extern void iec_del_seq_node(struct seq_node *node);

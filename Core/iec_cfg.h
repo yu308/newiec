@@ -53,7 +53,7 @@ extern void XPRINTF();
 
 #define CFG_ROLE_MODE			SYS_ROLE_CLIENT
 
-
+#define CFG_NAME_MAX			(24)
 /*
 -客户端模式
 	--仅串行通信方式

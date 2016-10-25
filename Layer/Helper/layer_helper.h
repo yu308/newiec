@@ -10,7 +10,7 @@
 #include "../App/app.h"
 #include "../App/app_task.h"
 
-#include "../Link/serial_link.h"
+#include "../Link/link.h"
 #include "../Link/serial_linkdef.h"
 
 extern void serial_link_send_req_evt_to_app(struct serial_link_info *info,int sub_evt);

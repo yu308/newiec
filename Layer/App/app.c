@@ -21,15 +21,12 @@ void app_thread_entry(void *param);
 void app_init(struct app_info *info, int asdu_addr, int asdu_addr_len,int cause_len,int node_addr_len,int sm2_enable)
 {
 	rt_memset(info, 0, sizeof(struct app_info));
-	struct app_cfg *cfg = (struct app_cfg *)rt_malloc(sizeof(struct app_cfg));
-
-	cfg->asdu_addr = asdu_addr;
-	cfg->asdu_addr_len = asdu_addr_len;
-	cfg->cause_len = cause_len;
-	cfg->node_addr_len = node_addr_len;
-	cfg->sm2_enable = sm2_enable;
-
-	info->cfg = cfg;
+	
+	info->cfg.asdu_addr = asdu_addr;
+	info->cfg.asdu_addr_len = asdu_addr_len;
+	info->cfg.cause_len = cause_len;
+	info->cfg.node_addr_len = node_addr_len;
+	info->cfg.sm2_enable = sm2_enable;
 
 
 	info->n_node_list = arraylist_create();
@@ -181,9 +178,9 @@ static void app_evt_update_node_handle(struct app_info *info, struct iec_event *
 	int res = 0,i=0;
 	struct node_update_info *nd_info = (struct node_update_info *)evt->main_msg;
 
-  struct node_frame_info  *n_nd_frame_info=0;
+  struct node_frame_info  *nd_frame_info=0;
   struct seq_node_frame_info *s_nd_frame_info=0;
-  struct serial_link_info *link_info=0;
+  struct link_obj *link_info=0;
   arraylist *task_list = 0;
 
   int *temp=0;
@@ -208,52 +205,25 @@ static void app_evt_update_node_handle(struct app_info *info, struct iec_event *
       if(info->linklayer_id[i]==0)
         continue;
 
-      link_info=(struct serial_link_info *)info->linklayer_id[i];
+      link_info=(struct link_obj *)info->linklayer_id[i];
 
-      if(serial_link_get_active_state(link_info)==0)
+      if(link_get_active_state(link_info)==0)
         continue;
 
       if (evt->evt_sub_type == EVT_SUB_NORMAL_NODE)
         {
-          n_nd_frame_info=rt_malloc(sizeof(struct node_frame_info));
-          rt_memcpy(n_nd_frame_info,evt->sub_msg,sizeof(struct node_frame_info));
+          nd_frame_info=rt_malloc(sizeof(struct node_frame_info));
+          rt_memcpy(nd_frame_info,evt->sub_msg,sizeof(struct node_frame_info));
           res = app_task_add_normal(task_list,info->linklayer_id[i], nd_info->asdu_ident, nd_info->cause,
-                                    n_nd_frame_info);
-
-          if(res==-1)//已有同类任务
-            {
-              rt_free(n_nd_frame_info);
-            }
-        }
-      else if (evt->evt_sub_type == EVT_SUB_SEQ_NODE)
-        {
-          s_nd_frame_info=rt_malloc(sizeof(struct seq_node_frame_info));
-          rt_memcpy(s_nd_frame_info,evt->sub_msg,sizeof(struct seq_node_frame_info));
-          temp=rt_malloc(s_nd_frame_info->count*sizeof(int));
-          rt_memcpy(temp,s_nd_frame_info->val,s_nd_frame_info->count*sizeof(int));
-          s_nd_frame_info->val=temp;
-          temp=rt_malloc(s_nd_frame_info->count*sizeof(int));
-          rt_memcpy(temp,s_nd_frame_info->qual,s_nd_frame_info->count*sizeof(int));
-          s_nd_frame_info->qual=temp;
-          res = app_task_add_seq(task_list,info->linklayer_id[i], nd_info->asdu_ident, nd_info->cause, s_nd_frame_info);
-          if(res==-1)
-            {
-              /*内部数据被原有的点使用,不释放*/
-              rt_free(s_nd_frame_info);
-            }
+                                    nd_frame_info);
         }
 
-      if(res==0)
+      if(res>=0)
         {
           app_send_update_evt_to_link(info, link_info,nd_info->level);
         }
     }
 
-  /*if(evt->evt_sub_type==EVT_SUB_SEQ_NODE)
-    {
-      rt_free(((struct seq_node_frame_info*)evt->sub_msg)->qual);
-      rt_free(((struct seq_node_frame_info*)evt->sub_msg)->val);
-    }*/
 }
 
 
@@ -280,10 +250,6 @@ void app_thread_entry(void *param)
 			if (evt->evt_sub_type == EVT_SUB_NORMAL_NODE)
 			{
 				app_create_normal_node(info, evt->sub_msg);
-			}
-			else if (evt->evt_sub_type == EVT_SUB_SEQ_NODE)
-			{
-				app_create_seq_node(info, evt->sub_msg);
 			}
 			break;
 		case EVT_APP_NODE_UPDATE:	

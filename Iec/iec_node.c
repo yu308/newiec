@@ -3,44 +3,40 @@
 #include "iec_element.h"
 #include <time.h>
 
-/** 
- *  ´´½¨ĞòÁĞ»¯ĞÅÏ¢µã
- * 
- * @param node_start_addr ĞÅÏ¢µã×é¿ªÊ¼µØÖ· 
- * @param count ĞÅÏ¢µã×éÊı¾İÊıÁ¿
- * 
- * @return ĞòÁĞ»¯ĞÅÏ¢µã
- */
-struct seq_node *iec_create_seq_node(int node_start_addr,int count)
-{
-	struct seq_node *node =rt_malloc(sizeof(struct seq_node));
-	if (node != 0)
-	{
-		rt_memset(node, 0, sizeof(struct seq_node));
-		node->start_addr = node_start_addr;
-		node->count = count;
-	}
 
-	return node;
+
+struct node_obj *iec_create_node(unsigned int node_addr,int seq_count)
+{
+	struct node_obj *nd=rt_malloc(sizeof(struct node_obj));
+	if(nd==0)
+	{
+		rt_kprintf("IEC:NODE: Created fail\n");
+		return 0;
+	}
+	
+	nd->addr=node_addr;
+	nd->seq=seq_count;
+	
+	return nd;
 }
 
 /// <summary>
-/// É¾³ıÄ³¸öÍ¨ÓÃĞÅÏ¢µã
+/// åˆ é™¤æŸä¸ªä¿¡æ¯ç‚¹
 /// </summary>
 /// <param name="node">The node.</param>
-void iec_del_seq_node(struct seq_node *node)
+void iec_del_node(struct node_obj *node)
 {
 	rt_free(node);
 }
 
 /** 
- * ·â×°ĞÅÏ¢µãµØÖ·
+ * å°è£…ä¿¡æ¯ç‚¹åœ°å€
  * 
- * @param buff Êı¾İ»º´æ 
- * @param node_addr ĞÅÏ¢µãµØÖ·
- * @param addr_len µØÖ·³¤¶È
+ * @param buff æ•°æ®ç¼“å­˜ 
+ * @param node_addr ä¿¡æ¯ç‚¹åœ°å€
+ * @param addr_len åœ°å€é•¿åº¦
  * 
- * @return Êı¾İ³¤¶È
+ * @return æ•°æ®é•¿åº¦
  */
 unsigned int iec_pack_node_addr(char *buff, unsigned int node_addr, int addr_len)
 {
@@ -49,29 +45,29 @@ unsigned int iec_pack_node_addr(char *buff, unsigned int node_addr, int addr_len
 }
 
 /** 
- * ·â×°ĞÅÏ¢µãÔªËØÊı¾İ
+ * å°è£…ä¿¡æ¯ç‚¹å…ƒç´ æ•°æ®
  * 
- * @param buff  Êı¾İ»º´æ
- * @param element_val  Êı¾İÔªËØÖµ
- * @param element_ident Êı¾İÔªËØ±êÊ¶
+ * @param buff  æ•°æ®ç¼“å­˜
+ * @param element_val  æ•°æ®å…ƒç´ å€¼
+ * @param element_ident æ•°æ®å…ƒç´ æ ‡è¯†
  * 
- * @return Êı¾İ³¤¶È
+ * @return æ•°æ®é•¿åº¦
  */
-unsigned int iec_pack_node_element(char *buff, int element_val, int element_ident)
+unsigned int iec_pack_node_element(char *buff, void *element_val, int element_ident)
 {
-	rt_memcpy(&buff[0], &element_val, element_len_cfg[element_ident]);
+	rt_memcpy(&buff[0], element_val, element_len_cfg[element_ident]);
 	return element_len_cfg[element_ident];
 }
 
 /** 
- * ·â×°Ê±¼äÀàÔªËØÊı¾İ
+ * å°è£…æ—¶é—´ç±»å…ƒç´ æ•°æ®
  * 
- * @param buff Êı¾İ»º´æ
- * @param utc_time UTCÊ±¼ä
- * @param millsecond ºÁÃëÊı
- * @param tm_ident Ê±¼ä±êÊ¶
+ * @param buff æ•°æ®ç¼“å­˜
+ * @param utc_time UTCæ—¶é—´
+ * @param millsecond æ¯«ç§’æ•°
+ * @param tm_ident æ—¶é—´æ ‡è¯†
  * 
- * @return Êı¾İ³¤¶È
+ * @return æ•°æ®é•¿åº¦
  */
 unsigned int iec_pack_tm_node_element(char *buff, int utc_time, int millsecond,int tm_ident)
 {
@@ -113,26 +109,6 @@ unsigned int iec_pack_tm_node_element(char *buff, int utc_time, int millsecond,i
 	return element_len_cfg[tm_ident];
 }
 
-/** 
- * ´´½¨ĞÅÏ¢µã
- * 
- * @param node_addr ĞÅÏ¢µãµØÖ·
- * 
- * @return ĞÅÏ¢µã
- */
-struct normal_node *iec_create_normal_node(int node_addr)
-{
-	struct normal_node *node = rt_malloc(sizeof(struct normal_node));
-	if (node != 0)
-	{
-		rt_memset(node, 0, sizeof(struct normal_node));
-		node->addr = node_addr;
-	}
-
-	return node;
-}
-
-
 
 
 /**************** API ******************/
@@ -140,13 +116,13 @@ struct normal_node *iec_create_normal_node(int node_addr)
 #include "../Layer/Helper/layer_helper.h"
 
 /// <summary>
-/// Íâ²¿½Ó¿Ú ´´½¨Í¨ÓÃĞÅÏ¢µã
+/// å¤–éƒ¨æ¥å£ åˆ›å»ºé€šç”¨ä¿¡æ¯ç‚¹
 /// </summary>
 /// <param name="appid">The appid.</param>
 /// <param name="node_addr">The node_addr.</param>
-void iec_api_create_normal_node(int appid, int node_addr)
+void iec_api_create_node(int appid, int node_addr,int seq_count)
 {
-	struct normal_node *node=iec_create_normal_node(node_addr);
+	struct node_obj *node=iec_create_node(node_addr,seq_count);
 
 	struct iec_event *evt=iec_create_event(0, appid, EVT_APP_ADD_NODE, 0,1);
 	iec_set_event_sub(evt, EVT_SUB_NORMAL_NODE, (int *)node, 0);
@@ -154,35 +130,19 @@ void iec_api_create_normal_node(int appid, int node_addr)
 
 }
 
-/// <summary>
-/// Íâ²¿½Ó¿Ú  ´´½¨ĞòÁĞ»¯ĞÅÏ¢µã
-/// </summary>
-/// <param name="appid">The appid.</param>
-/// <param name="node_addr">The node_addr.</param>
-/// <param name="count">The count.</param>
-void iec_api_create_seq_node(int appid, int node_addr, int count)
-{
-	struct seq_node *node = iec_create_seq_node(node_addr, count);
-
-	struct iec_event *evt = iec_create_event(0, appid, EVT_APP_ADD_NODE, 0, 1);
-	iec_set_event_sub(evt, EVT_SUB_SEQ_NODE, (int *)node, 0);
-	iec_post_event(((struct app_info *)appid)->app_event, evt, 20);
-
-}
-
 /** 
- * Éú³ÉÒ»¸öĞÅÏ¢µãµÄ´«ÊäÊı¾İĞÅÏ¢
+ * ç”Ÿæˆä¸€ä¸ªä¿¡æ¯ç‚¹çš„ä¼ è¾“æ•°æ®ä¿¡æ¯
  * 
- * @param node_addr µØÖ·
- * @param val Öµ
- * @param qual ÃèÊö·û
- * @param utc_time UTCÊ±¼ä
- * @param millsecond ºÁÃëÊı
- * @param buffered ÊÇ·ñ»º´æ
+ * @param node_addr åœ°å€
+ * @param val å€¼
+ * @param qual æè¿°ç¬¦
+ * @param utc_time UTCæ—¶é—´
+ * @param millsecond æ¯«ç§’æ•°
+ * @param buffered æ˜¯å¦ç¼“å­˜
  * 
- * @return ´«ÊäÊı¾İĞÅÏ¢
+ * @return ä¼ è¾“æ•°æ®ä¿¡æ¯
  */
-struct node_frame_info * iec_api_gen_normal_node_data(unsigned int node_addr,int val, unsigned int qual, unsigned int utc_time,int millsecond,int buffered)
+struct node_frame_info * iec_api_gen_node_info(unsigned int node_addr,int buffered)
 {
 	struct node_frame_info *f_node = rt_malloc(sizeof(struct node_frame_info));
 	if (f_node == 0)
@@ -190,54 +150,26 @@ struct node_frame_info * iec_api_gen_normal_node_data(unsigned int node_addr,int
 
 	rt_memset(f_node, 0, sizeof(struct node_frame_info));
 
-	f_node->val = val;
-	f_node->qual = qual;
-	f_node->utc_time = utc_time;
 	f_node->addr = node_addr;
 	f_node->buffered = buffered;
-	f_node->millsecond = millsecond;
 
 	return f_node;
 }
 
-/** 
- * ĞòÁĞ»¯ĞÅÏ¢µãµÄ´«ÊäÊı¾İĞÅÏ¢
- * 
- * @param node_addr ¿ªÊ¼µØÖ·
- * @param count ÊıÁ¿
- * @param val Öµ×é
- * @param qual ÃèÊö·û×é
- * @param buffered ÊÇ·ñ»º´æ
- * 
- * @return ĞÅÏ¢µãÊı¾İĞÅÏ¢
- */
-struct seq_node_frame_info *iec_api_gen_seq_node_data(unsigned int node_addr, int count, int *val, int *qual, int buffered)
+void iec_api_add_element_to_node(struct node_frame_info *nd_info,int element_tag,void *el_val)
 {
-	struct seq_node_frame_info *f_s_node = rt_malloc(sizeof(struct seq_node_frame_info));
-	if (f_s_node == 0)
-		return 0;
-
-	rt_memset(f_s_node, 0, sizeof(struct seq_node_frame_info));
-
-	f_s_node->val = val;
-	f_s_node->qual = qual;
-	f_s_node->addr = node_addr;
-	f_s_node->buffered = buffered;
-	f_s_node->count = count;
-
-
-	return f_s_node;
+	nd_info->data_len+=iec_pack_node_element(&nd_info->byte_buff[nd_info->data_len],el_val,element_tag);
 }
 
 
 /** 
- * ¸üĞÂĞÅÏ¢µã--- ÓÃ»§½Ó¿Ú
+ * æ›´æ–°ä¿¡æ¯ç‚¹--- ç”¨æˆ·æ¥å£
  * 
- * @param appid appÊµÀı
- * @param level Êı¾İÓÅÏÈ¼¶ ¶ÔÓ¦Ò»¼¶Êı¾İ ¶ş¼¶Êı¾İ
- * @param asdu_ident Ê¹ÓÃµÄASDU±êÊ¶
- * @param cause ´«ËÍÔ­Òò
- * @param f_node ĞÅÏ¢µãÊı¾İ´«ÊäĞÅÏ¢
+ * @param appid appå®ä¾‹
+ * @param level æ•°æ®ä¼˜å…ˆçº§ å¯¹åº”ä¸€çº§æ•°æ® äºŒçº§æ•°æ®
+ * @param asdu_ident ä½¿ç”¨çš„ASDUæ ‡è¯†
+ * @param cause ä¼ é€åŸå› 
+ * @param f_node ä¿¡æ¯ç‚¹æ•°æ®ä¼ è¾“ä¿¡æ¯
  */
 void iec_api_update_normal_node(int appid,int level, unsigned int asdu_ident,
 	unsigned int cause,struct node_frame_info *f_node)
@@ -260,25 +192,4 @@ void iec_api_update_normal_node(int appid,int level, unsigned int asdu_ident,
 
 }
 
-/*
-* ¸üĞÂĞòÁĞ»¯ĞÅÏ¢µãÊı¾İ  --- ÓÃ»§Êı¾İ
-*
-*/
-void iec_api_update_seq_node(int appid, int level, unsigned int asdu_ident, unsigned int cause, struct seq_node_frame_info *f_s_node)
-{
-	struct node_update_info *info = rt_malloc(sizeof(struct node_update_info));
 
-	if (info == 0)
-		return;
-
-	rt_memset(info, 0, sizeof(struct node_update_info));
-
-	info->appid = appid;
-	info->asdu_ident = asdu_ident;
-	info->cause = cause;
-	info->level = level;
-
-	struct iec_event *evt = iec_create_event(0, appid, EVT_APP_NODE_UPDATE, (int*)info, 1);
-	iec_set_event_sub(evt, EVT_SUB_SEQ_NODE, (int *)f_s_node, 1);
-	iec_post_event(((struct app_info *)appid)->app_event, evt, 20);
-}

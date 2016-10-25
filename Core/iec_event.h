@@ -41,7 +41,7 @@
 
 
 #define		EVT_SUB_NORMAL_NODE		(1) /*通用信息点事件*/ 
-#define		EVT_SUB_SEQ_NODE		(2) /*序列化信息点事件*/
+//#define		EVT_SUB_SEQ_NODE		(2) /*序列化信息点事件*/
 
 
 
@@ -75,7 +75,7 @@ struct node_update_info
 /// </summary>
 struct link_param
 {
-  char name[16];
+  char name[CFG_NAME_MAX];
 	unsigned char link_addr;
 	unsigned char link_addr_len;
 	unsigned char link_dir;

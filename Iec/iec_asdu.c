@@ -45,22 +45,7 @@ unsigned int iec_asdu_pack_node(char *buff, struct asdu_cfg *cfg,int node_addr,i
 
 	idx += iec_pack_node_addr(buff, node_addr, node_addr_len);
 
-	if (cfg->val_ident != 0)
-	{
-		idx+=iec_pack_node_element(&buff[idx], val, cfg->val_ident);
-	}
-	if (cfg->qual_ident != 0)
-	{
-		idx += iec_pack_node_element(&buff[idx], qual, cfg->qual_ident);
-	}
-	if (cfg->tm_ident != 0)
-	{
-		idx += iec_pack_tm_node_element(&buff[idx], utc_time, millsecond, cfg->tm_ident);
-	}
-	if (cfg->ext_tm_ident != 0)
-	{
-		idx += iec_pack_tm_node_element(&buff[idx], utc_time, millsecond, cfg->ext_tm_ident);
-	}
+	
 
 	return idx;
 }

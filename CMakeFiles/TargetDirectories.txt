@@ -1,3 +1,0 @@
-/home/yu/work/newiec/CMakeFiles/edit_cache.dir
-/home/yu/work/newiec/CMakeFiles/rebuild_cache.dir
-/home/yu/work/newiec/CMakeFiles/newiec.dir

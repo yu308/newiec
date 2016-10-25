@@ -9,6 +9,45 @@ void serial_link_thread_entry(void *param);
 #define MAX_EVENT_COUNT			(5)
 #endif
 
+
+/// <summary>
+/// 获取链路地址.
+/// </summary>
+/// <returns>链路地址</returns>
+int serial_link_get_addr(struct serial_link_cfg *cfg)
+{
+	return cfg->link_addr;
+}
+
+/// <summary>
+/// 获取链路地址长度
+/// </summary>
+/// <returns>链路地址长度</returns>
+int serial_link_get_addr_len(struct serial_link_cfg *cfg)
+{
+	return cfg->link_addr_len;
+}
+
+/// <summary>
+/// 串行方式下设置链路地址
+/// </summary>
+/// <param name="addr">The addr.</param>
+void serial_link_set_addr(struct serial_link_cfg *cfg, int addr)
+{
+	cfg->link_addr=addr;
+}
+
+
+/// <summary>
+/// 串行方式下设置链路地址长度.
+/// </summary>
+/// <param name="len">The length.</param>
+void serial_link_set_addr_len(struct serial_link_cfg *cfg, int len)
+{
+	cfg->link_addr_len = len;
+}
+
+
 /// <summary>
 /// 初始化已有链路
 /// </summary>
@@ -18,25 +57,27 @@ void serial_link_thread_entry(void *param);
 /// <param name="dir">The dir.</param>
 void serial_link_init(struct serial_link_info *info, char *name,int addr, int addr_len, int dir)
 {
-	XMEMSET(info, 0, sizeof(struct serial_link_info));
-	struct serial_link_cfg *cfg= (struct serial_link_cfg *)rt_malloc(sizeof(struct serial_link_cfg));
+	rt_memset(info, 0, sizeof(struct serial_link_info));
 
-	cfg->double_dir = dir;
-	cfg->link_addr_len = addr_len;
-	cfg->link_addr = addr;
-	cfg->recv_buff = rt_malloc(256);
-	cfg->send_buff = rt_malloc(256);
-	cfg->prev_sent_buff = rt_malloc(256);
-	cfg->prev_sent_len = 0;
-  rt_memcpy(cfg->name, name, rt_strlen(name)); 
-
-	info->cfg = cfg;
+	info->obj.double_dir = dir;
+	info->obj.link_type=SERIAL;
+	info->obj.active=0;
+	info->obj.recv_buff= rt_malloc(256);
+	info->obj.send_buff=rt_malloc(256);
+	rt_memcpy(info->obj.name, name, rt_strlen(name)); 
+	
+	info->cfg.link_addr=addr;
+	info->cfg.link_addr_len=addr_len;
+	info->cfg.prev_sent_buff = rt_malloc(256);
+	info->cfg.prev_sent_len = 0;
+  
 	info->acd_tag = 0;
 	info->app_tag = 0;
 	info->fcb = 0;
+	info->applayer_id=0;
 
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
-	info->serial_event = rt_mb_create("serialmb", MAX_EVENT_COUNT, RT_IPC_FLAG_FIFO);
+	info->obj->mb_event = rt_mb_create("serialmb", MAX_EVENT_COUNT, RT_IPC_FLAG_FIFO);
 #endif
 }
 
@@ -62,100 +103,31 @@ struct serial_link_info *serial_link_create(char *name,int addr, int addr_len, i
 }
 
 /// <summary>
-/// 清除链路配置信息.
+/// 清除串行链路配置信息.
 /// </summary>
 /// <param name="cfg">The CFG.</param>
 void serial_link_del(struct serial_link_info *info)
 {
-	rt_free(info->cfg->recv_buff);
-	rt_free(info->cfg->send_buff);
-	rt_free(info->cfg->prev_sent_buff);
-	rt_free(info->cfg);
+	rt_free(info->obj.recv_buff);
+	rt_free(info->obj.send_buff);
+	rt_free(info->cfg.prev_sent_buff);
+	
+	rt_mb_delete(info->serial_event);
+	rt_thread_delete(info->serial_tid);
+	
+	rt_free(info);
 }
 
 
-/// <summary>
-/// 重新初始化,恢复初始状态
-/// </summary>
-/// <param name="cfg">The CFG.</param>
-void serial_link_reinit(struct serial_link_info *info)
+void net_link_del(struct net_link_info *info)
 {
-	info->acd_tag = 0;
-	info->app_tag = 0;
-	info->fcb = 0;
-}
-
-/// <summary>
-/// 串行方式下设置链路地址
-/// </summary>
-/// <param name="addr">The addr.</param>
-void serial_link_set_addr(struct serial_link_cfg *cfg, int addr)
-{
-	cfg->link_addr = addr;
-}
-
-
-/// <summary>
-/// 串行方式下设置链路地址长度.
-/// </summary>
-/// <param name="len">The length.</param>
-void serial_link_set_addr_len(struct serial_link_cfg *cfg, int len)
-{
-	cfg->link_addr_len = len;
-}
-
-/// <summary>
-/// 设置传输模式
-/// </summary>
-/// <param name="dir">The dir. =0 非平衡传输模式  =1 平衡传输模式</param>
-void serial_link_set_dir(struct serial_link_cfg *cfg, int dir)
-{
-	cfg->double_dir = dir;
-}
-
-int serial_link_get_dir(struct serial_link_cfg *cfg)
-{
-	return cfg->double_dir;
-}
-
-/// <summary>
-/// 获取链路地址.
-/// </summary>
-/// <returns>链路地址</returns>
-int serial_link_get_addr(struct serial_link_cfg *cfg)
-{
-	return cfg->link_addr;
-}
-
-/// <summary>
-/// 获取链路地址长度
-/// </summary>
-/// <returns>链路地址长度</returns>
-int serial_link_get_addr_len(struct serial_link_cfg *cfg)
-{
-	return cfg->link_addr_len;
-}
-
-
-void serial_link_set_write_handle(struct serial_link_cfg *cfg, int *handle)
-{
-	cfg->serial_write = (serial_write_handle)handle;
-}
-
-
-int serial_link_get_active_state(struct serial_link_cfg *cfg)
-{
-  return cfg->active;
-}
-
-int serial_link_set_active_state(struct serial_link_cfg *cfg,int state)
-{
-  cfg->active=state;
-}
-
-char *serial_link_get_name(struct serial_link_cfg *cfg)
-{
-  return cfg->name;
+	rt_free(info->obj.recv_buff);
+	rt_free(info->obj.send_buff);
+	
+	rt_mb_delete(info->net_event);
+	rt_thread_delete(info->net_tid);
+	
+	rt_free(info);
 }
 
 /// <summary>

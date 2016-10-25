@@ -196,7 +196,7 @@ void iec_sys_api_start_sys()
 void iec_sys_api_create_link(char *link_name,int link_type,unsigned int link_addr,int link_addr_len,int dir)
 {
   struct iec_event *evt=iec_create_event(0, (int)&gSys_Info, EVT_SYS_CREATE_LINK, 0, 0);
-  if(link_type==1)// serial
+  if(link_type==EVT_SUB_SYS_LINK_SERIAL)// serial
     {
       struct link_param *link=rt_malloc(sizeof(struct link_param));
       rt_memset(link,0,sizeof(struct link_param));
@@ -207,7 +207,7 @@ void iec_sys_api_create_link(char *link_name,int link_type,unsigned int link_add
       iec_set_event_sub(evt, EVT_SUB_SYS_LINK_SERIAL, (int*)link, 1);
       iec_post_event(gSys_Info.sys_event, evt, 20);
     }
-  else if(link_type==2) //socket
+  else if(link_type==EVT_SUB_SYS_LINK_SOCKET) //socket
     {
 
     }
