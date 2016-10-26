@@ -41,7 +41,7 @@ void link_send_asdu_evt_to_app(struct link_obj *link,char *asdu_data,int asdu_le
 void app_send_update_evt_to_link(struct app_info *info,struct link_obj *link,int sub_evt)
 {
   struct iec_event *evt = 0;
-  evt=iec_create_event((unsigned int)info,(unsigned int)link_info, EVT_LINK_RECV_DATA, 0, 0);
+  evt=iec_create_event((unsigned int)info,(unsigned int)link,EVT_LINK_RECV_DATA, 0, 0);
   iec_set_event_sub(evt,sub_evt,0,0);
   iec_post_event(link->mb_event, evt, 20);
 }

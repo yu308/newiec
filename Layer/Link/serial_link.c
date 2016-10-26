@@ -64,7 +64,8 @@ void serial_link_init(struct serial_link_info *info, char *name,int addr, int ad
 	info->obj.active=0;
 	info->obj.recv_buff= rt_malloc(256);
 	info->obj.send_buff=rt_malloc(256);
-	rt_memcpy(info->obj.name, name, rt_strlen(name)); 
+  info->obj.applayer_id=(unsigned int)info;
+  rt_memcpy(info->obj.name, name, rt_strlen(name));
 	
 	info->cfg.link_addr=addr;
 	info->cfg.link_addr_len=addr_len;
@@ -74,7 +75,6 @@ void serial_link_init(struct serial_link_info *info, char *name,int addr, int ad
 	info->acd_tag = 0;
 	info->app_tag = 0;
 	info->fcb = 0;
-	info->applayer_id=0;
 
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
 	info->obj.mb_event = rt_mb_create("serialmb", MAX_EVENT_COUNT, RT_IPC_FLAG_FIFO);
@@ -410,7 +410,7 @@ static void serial_link_phy_recv_handle(struct serial_link_info *info,struct iec
 	else if (dispatch_res == TO_APP_USER)
 	{
 		/*控制类帧解析*/
-		serial_link_send_asdu_evt_to_app(info,&info->obj.recv_buff[5+info->cfg.link_addr_len]);
+		link_send_asdu_evt_to_app(info,&info->obj.recv_buff[5+info->cfg.link_addr_len],data_len-5-info->cfg.link_addr_len);
 	}
 }
 
@@ -462,7 +462,7 @@ static void serial_link_recv_event_handle(struct serial_link_info *info,struct i
 		serial_link_phy_recv_handle(info, evt);
 		break;
 	case EVT_SUB_DAT_LEVEL_1:
-	case EVT_SUB_DAT_LEVEL_2:
+	case EVT_SUB_DAT_LEVEL_2: 
   case EVT_SUB_DAT_USER:
 		serial_link_app_recv_handle(info, evt);
 		break;
@@ -482,7 +482,7 @@ static void serial_link_asdu_send_evt_handle(struct serial_link_info *info ,stru
   switch(sub_evt)
     {
     case EVT_SUB_DAT_USER:
-      if(app_task_check_empty(((struct app_info*)(info->applayer_id))->first_task, (int)info)>0)
+      if(app_task_check_empty(((struct app_info*)(info->obj.applayer_id))->first_task, (int)info)>0)
         {
           info->acd_tag=1;
         }

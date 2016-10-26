@@ -38,14 +38,6 @@ extern void XPRINTF();
 
 #define CFG_RUNNING_MODE		MUTLI_MODE
 
-#if(CFG_RUNNING_MODE==MUTLI_MODE)
-#define SYS_TASK_PROI			osPriorityNormal
-#define	APP_TASK_PROI			osPriorityAboveNormal
-#define	LINK_TASK_PROI			osPriorityAboveNormal
-#elif(CFG_RUNNING_MODE==SINGLE_MODE)
-#define SYS_TASK_PROI			osPriorityNormal
-#endif
-
 
 #define SYS_ROLE_CLIENT			(1<<0)		/*仅支持角色为客户端 网络方式时链路层为socket服务器端 */
 #define SYS_ROLE_SERVER			(1<<1)		/*仅支持角色为服务端	网络方式链路层为socket客户端*/

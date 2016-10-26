@@ -112,6 +112,7 @@ static void app_evt_dispatch_recv_asdu(struct app_info *info,int link_id,char *a
   app_linkframe_convert_to_asdu(info, &recv_info);
 
   app_task_insert_ack_asdu(info,link_id,&recv_info);
+
  
 
 }
