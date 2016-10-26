@@ -91,9 +91,14 @@ extern void XPRINTF();
 #define CFG_LINK_MAX			(4)		/*支持的链路数量 */
 #define CFG_APP_MAX				(1)		/*APP数量 */
 #define	CFG_SOCKET_MAX			(5)		/*网络模式下SOCKET最大连接数*/
+#define CFG_IEC104_T0           (30)
+#define CFG_IEC104_T1           (15)
+#define CFG_IEC104_T2           (10)
+#define CFG_IEC104_T3           (20)
+#define CFG_IEC104_K            (12)
+#define CFG_IEC104_W            (8)
 
-
-#define	CFG_ASDU_DATA_BUFF_MAX       (200)		/*ASDU包含信息点数*/
+#define	CFG_ASDU_DATA_BUFF_MAX       (200)		/*ASDU数据缓存长度*/
 
 
 /******************************ASDU 表格配置******************************/

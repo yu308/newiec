@@ -426,7 +426,7 @@ static void serial_link_app_recv_handle(struct serial_link_info *info, struct ie
     {
       if (link_get_dir(info->cfg) == 1)/*平衡模式*/
         {
-          serial_link_send_req_evt_to_app(info, evt->evt_type);
+          link_send_req_evt_to_app(info, evt->evt_type);
         }
       else
         {
@@ -463,6 +463,7 @@ static void serial_link_recv_event_handle(struct serial_link_info *info,struct i
 		break;
 	case EVT_SUB_DAT_LEVEL_1:
 	case EVT_SUB_DAT_LEVEL_2:
+  case EVT_SUB_DAT_USER:
 		serial_link_app_recv_handle(info, evt);
 		break;
 	}

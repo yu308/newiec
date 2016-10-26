@@ -82,7 +82,6 @@ struct serial_link_info
 	int acd_tag;
 	int app_tag;
 	int fcb;
-	int applayer_id;
 
 
 };

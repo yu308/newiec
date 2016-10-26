@@ -31,11 +31,11 @@
 #ifndef __RT_THREAD_H__
 #define __RT_THREAD_H__
 
-#include <rtconfig.h>
-#include <rtdebug.h>
-#include <rtdef.h>
-#include <rtservice.h>
-#include <rtm.h>
+#include "rtconfig.h"
+#include "rtdebug.h"
+#include "rtdef.h"
+#include "rtservice.h"
+#include "rthw.h"
 
 #ifdef __cplusplus
 extern "C" {
