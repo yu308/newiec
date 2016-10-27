@@ -65,6 +65,21 @@ struct app_info *app_create(int asdu_addr, int asdu_addr_len, int cause_len, int
   return info;
 }
 
+void app_add_link(struct app_info *app,unsigned int link_id)
+{
+  int i=0;
+  for(i=0;i<CFG_LINK_MAX;i++)
+  {
+    if(app->linklayer_id[i]!=0)
+    {
+      app->linklayer_id[i]=link_id;
+      return ;
+    }
+  }
+  
+  rt_kprintf("IEC:APP: link is full\n");
+  
+}
 
 /*添加信息点*/
 void app_create_normal_node(struct app_info *info,int *normal_node)
@@ -140,6 +155,7 @@ static void app_evt_recv_data_handle(struct app_info *info,struct iec_event *evt
       {
         send_info = app_task_covert_to_asdu_frame(info, task_temp);
         app_send_asdu_evt_to_link(info,send_info);
+        app_task_free(info->first_task,task_temp);
       }
     break;
   case EVT_SUB_DAT_LEVEL_2:
@@ -148,13 +164,14 @@ static void app_evt_recv_data_handle(struct app_info *info,struct iec_event *evt
       {
         send_info = app_task_covert_to_asdu_frame(info, task_temp);
         app_send_asdu_evt_to_link(info, send_info);
+        app_task_free(info->second_task,task_temp);
       }
     break;
   case EVT_SUB_DAT_USER:
     recv=evt->sub_msg;
 	  app_evt_dispatch_recv_asdu(info, evt->sender, (char *)recv[0],recv[1]);
     /*发送事件至Link 确认用户数据*/
-    app_send_userdata_ack_evt_to_link(info,(struct serial_link_info*)evt->sender);
+    app_send_userdata_ack_evt_to_link(info,(struct link_obj*)evt->sender);
     break;
   }
 

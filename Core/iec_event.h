@@ -16,6 +16,8 @@
 #define		EVT_SYS_DEL_LINK		(6)		/*删除一个链路层 MSG---LINK模块ID*/
 #define		EVT_SYS_EDIT_PROFILE	(7)		/*修改某个对象配置*/
 
+#define         EVT_SUB_SYS_BIND                (1)
+
 #define   EVT_SUB_SYS                (1)
 #define   EVT_SUB_SYS_LINK_SERIAL    (2)
 #define   EVT_SUB_SYS_LINK_SOCKET    (3)
@@ -118,7 +120,7 @@ struct app_recv_info
 /// 创建APP实例时的参数
 /// </summary>
 struct app_param
-{
+{        char name[CFG_NAME_MAX];
 	unsigned char asdu_addr;
 	unsigned char asdu_addr_len;
 	unsigned char cause_len;

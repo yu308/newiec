@@ -263,7 +263,7 @@ static int serial_link_dispatch(struct serial_link_info *info, struct serial_lin
 		break;
 	case FC_DW_RST_REMOTE:
 	case FC_DW_RST_USER:
-		serial_link_reinit(info);
+		//serial_link_reinit(info);
 		return TO_LINK;
 		break;
 	case FC_DW_DATA_YES:
@@ -401,16 +401,16 @@ static void serial_link_phy_recv_handle(struct serial_link_info *info,struct iec
 	else if (dispatch_res == TO_APP_FIRST)
 	{
 		/*发送APP部分数据至APP层*/
-		serial_link_send_req_evt_to_app(info, EVT_SUB_DAT_LEVEL_1);
+		link_send_req_evt_to_app((struct link_obj*)info, EVT_SUB_DAT_LEVEL_1);
 	}
 	else if (dispatch_res == TO_APP_SECOND)
 	{
-		serial_link_send_req_evt_to_app(info, EVT_SUB_DAT_LEVEL_2);
+		link_send_req_evt_to_app((struct link_obj*)info, EVT_SUB_DAT_LEVEL_2);
 	}
 	else if (dispatch_res == TO_APP_USER)
 	{
 		/*控制类帧解析*/
-		link_send_asdu_evt_to_app(info,&info->obj.recv_buff[5+info->cfg.link_addr_len],data_len-5-info->cfg.link_addr_len);
+		link_send_asdu_evt_to_app((struct link_obj*)info,&info->obj.recv_buff[5+info->cfg.link_addr_len],data_len-5-info->cfg.link_addr_len);
 	}
 }
 
@@ -426,7 +426,7 @@ static void serial_link_app_recv_handle(struct serial_link_info *info, struct ie
     {
       if (link_get_dir(info->cfg) == 1)/*平衡模式*/
         {
-          link_send_req_evt_to_app(info, evt->evt_type);
+          link_send_req_evt_to_app((struct link_obj*)info, evt->evt_type);
         }
       else
         {

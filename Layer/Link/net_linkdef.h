@@ -24,6 +24,9 @@
 #define EVT_IEC_TIMEOUT      (0x100)
 #define EVT_SUB_IEC_T3_TIMEOUT    (1<<0)
 
+#define EVT_IEC_CNT_FULL     (0x101)
+#define EVT_SUB_IEC_K_FULL   (0x1)
+
 /* 信息传输控制域 */
 struct i_control_domain
 {
@@ -82,7 +85,6 @@ struct net_link_info
 	struct net_link_cfg cfg;
 
   unsigned int start;
-	unsigned int appid;
 
   unsigned int current_k;
   unsigned int current_w;
@@ -95,5 +97,8 @@ struct net_link_info
   unsigned int recv_counter;
   unsigned int sent_counter;
 };
+
+
+struct net_link_info *net_link_create(char *name,int socketid,int dir);
 
 #endif

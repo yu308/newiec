@@ -92,11 +92,17 @@ static int net_link_counter_check(struct net_link_info *net_link,int counter_t,i
  */
 static void net_link_send_timeout(struct net_link_info *net_link)
 {
-  struct iec_event *evt=iec_create_event(net_link,net_link,EVT_IEC_TIMEOUT,0,0);
+  struct iec_event *evt=iec_create_event((int)net_link,(int)net_link,EVT_IEC_TIMEOUT,0,0);
   iec_set_event_sub(evt, EVT_SUB_IEC_T3_TIMEOUT,0, 0);
   iec_post_event(net_link->obj.mb_event, evt, 20);
 }
 
+static void net_link_send_cnt_full(struct net_link_info *net_link)
+{
+  struct iec_event *evt=iec_create_event((int)net_link, (int)net_link, EVT_IEC_CNT_FULL, 0, 0);
+  iec_set_event_sub(evt, EVT_SUB_IEC_K_FULL, 0, 0);
+  iec_post_event(net_link->obj.mb_event, evt, 20);
+}
 /** 
  * 超时计数监测任务
  * 
@@ -243,6 +249,7 @@ static int net_link_check_phy_data(struct net_link_info *net_link,char *buff,uns
       if(net_link_counter_check(net_link,2,ctrl.s_domain.recv_num)==0)
         return -1;
 
+      net_link->current_k=0;
       return F104_S_FORMAT_BYTE;
     }
   else if(format==F104_U_FORMAT_BYTE)
@@ -310,7 +317,7 @@ static void net_link_phy_recv_dispatch(struct net_link_info *net_link,int format
         {
           asdu_buff=rt_malloc(len-4);
           rt_memcpy(asdu_buff,&apci_data[4],len-4);
-          link_send_asdu_evt_to_app(net_link,asdu_buff,len-4);
+          link_send_asdu_evt_to_app((struct link_obj*)net_link,asdu_buff,len-4);
         }
     }
   else if(format==F104_U_FORMAT_BYTE)
@@ -332,7 +339,7 @@ static void net_link_app_recv_dispatch(struct net_link_info *net_link,struct iec
   if(evt->evt_sub_type==EVT_SUB_DAT_USER)/* 控制方向回应 */
     {
       if(net_link->start==1)
-        link_send_req_evt_to_app(net_link,evt->evt_sub_type);
+        link_send_req_evt_to_app((struct link_obj*)net_link,evt->evt_sub_type);
     }
   else
     {
@@ -340,7 +347,7 @@ static void net_link_app_recv_dispatch(struct net_link_info *net_link,struct iec
         {
           if(link_get_dir(net_link)==1)/*平衡模式*/
             {
-              link_send_req_evt_to_app(net_link,evt->evt_sub_type);
+              link_send_req_evt_to_app((struct link_obj*)net_link,evt->evt_sub_type);
             }
           else
             {
@@ -429,15 +436,20 @@ static void net_link_send_evt_handle(struct net_link_info *net_link,struct iec_e
     case EVT_SUB_DAT_USER:
       if(app_task_check_empty(((struct app_info*)(net_link->obj.applayer_id))->first_task, (int)net_link)>0)
         {
-          link_send_req_evt_to_app(net_link,evt->evt_sub_type);
+          link_send_req_evt_to_app((struct link_obj*)net_link,evt->evt_sub_type);
         }
       count=net_link_pack_I_frame(net_link,send_info->app_data, send_info->app_data_len);
       rt_free(send_info->app_data);
       break;
     }
 
-  net_link->obj.write(net_link->obj.send_buff,count);
-
+  if(net_link->current_k<CFG_IEC104_K)
+    {
+      net_link->obj.write(net_link->obj.send_buff,count);
+      net_link->current_k++;
+    }
+  else
+    net_link_send_cnt_full(net_link);
 }
 
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
@@ -470,6 +482,9 @@ void net_link_thread_entry(void *param)
 			break;
     case EVT_IEC_TIMEOUT:
       /*关闭socket*/
+      net_link_del(info);
+      break;
+    case EVT_IEC_CNT_FULL:
       net_link_del(info);
       break;
 		default:

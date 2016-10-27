@@ -19,7 +19,8 @@ struct buffered_data
 /// Ó¦ÓÃÅäÖÃÐÅÏ¢
 /// </summary>
 struct app_cfg
-{
+{       
+        char name[CFG_NAME_MAX];
 	int asdu_addr; /*ASDUµØÖ·*/	
 	int asdu_addr_len;	/*ASDUµØÖ·³¤¶È*/
 	int cause_len;	/*´«ËÍÔ­Òò³¤¶È*/
@@ -34,7 +35,7 @@ struct app_info
 {
 	struct app_cfg cfg;
 
-	int linklayer_id[CFG_LINK_MAX];		/*°ó¶¨µÄlinkÁ´Â·*/
+	unsigned int linklayer_id[CFG_LINK_MAX];		/*°ó¶¨µÄlinkÁ´Â·*/
  
 #if(CFG_ROLE_MODE==SYS_ROLE_MIXED)
 	int bro_applayer_id[CFG_APP_MAX];	/*ÖÐ×ª»ú»ìºÏÄ£Ê½ÏÂ ¹ØÁªµÄAPP*/

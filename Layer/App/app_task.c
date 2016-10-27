@@ -4,6 +4,39 @@
 
 #define TASK_IDENT_NAME_FORMAT		"%08X-%02X-%02X-%02X"			/*LINKID-ASDU-CAUSE-SEQ*/
 
+
+int app_task_free(arraylist *task_list,struct app_task *task,int clear)
+{
+  struct app_task *temp=0;
+  struct node_frame_info *node_temp=0;
+  int i=0;
+
+  int node_count=arraylist_size(task->node_data_list);
+  if(clear==0&&node_count>0) /*任务中有信息点数据 清除标识设置为0 时 直接返回*/
+    return 0;
+
+  if(clear==1) /*清除标识为1时 强制清除 首先清除已有的信息点数据*/
+    {
+      arraylist_iterate(task->node_data_list, i, node_temp)
+        {
+          rt_free(node_temp->byte_buff);
+          rt_free(node_temp);
+        }
+      i=0;
+      arraylist_destroy(task->node_data_list);
+    }
+  arraylist_iterate(task_list, i, temp)
+    {
+      if(rt_strcmp(temp->task_name, task->task_name)==0)
+        {
+          arraylist_remove(task_list, i);
+          break;
+        }
+    }
+  rt_free(task);
+}
+
+
 /** 
  * 添加通用信息点任务
  * 
@@ -37,18 +70,18 @@ int app_task_add_normal(arraylist *al,unsigned int link_id,unsigned int asdu_ide
                     {
                       if (f_node_temp->addr == f_node->addr)
                         {
-							rt_memcpy(f_node_temp->byte_buff,f_node->byte_buff,f_node->data_len);
-							f_node_temp->data_len=f_node->data_len;
-							rt_free(f_node);
-							return i;
+                          rt_memcpy(f_node_temp->byte_buff,f_node->byte_buff,f_node->data_len);
+                          f_node_temp->data_len=f_node->data_len;
+                          rt_free(f_node);
+                          return i;
                         }
                     }
                 }
-				else 
-				{
-					arraylist_add(temp->node_data_list, f_node);
-					return i;
-				}	
+              else 
+                {
+                  arraylist_add(temp->node_data_list, f_node);
+                  return i;
+                }	
           
             }
 
@@ -165,8 +198,8 @@ struct app_send_info *app_task_covert_to_asdu_frame(struct app_info *info,struct
 
 
 	  /*普通信息点处理*/
-	idx+=app_task_pack__node(&asdu_frame[idx], info->cfg.node_addr_len,task->node_data_list,&node_count);
- 
+	idx+=app_task_pack_node(&asdu_frame[idx], info->cfg.node_addr_len,task->node_data_list,&node_count);
+  
 
 
   asdu_frame[1] |= node_count;
@@ -174,6 +207,8 @@ struct app_send_info *app_task_covert_to_asdu_frame(struct app_info *info,struct
   send_info->link_id=task->link_id;
   send_info->app_data = asdu_frame;
   send_info->app_data_len = idx;
+
+
   return send_info;
 }
 
@@ -207,7 +242,7 @@ int app_task_check_empty(arraylist *al,int link_id)
 
 /*用户实现的控制命令接口*/
 extern int app_frame_ctrl_cmd_user_callback(int asdu_ident,int node_addr,char *node_val,int node_data_len);
-
+extern int app_frame_ctrl_sys_cmd_callback(int asdu_ident,char *node_val,int node_data_len);
 /*{
   if(node_addr==0x4001)//单点命令
     {
@@ -292,7 +327,7 @@ void app_linkframe_convert_to_asdu(struct app_info *info,struct app_recv_info *r
       /*控制方向过程控制信息处理*/
       if(recv_info->cause==Act)
         {
-          state=app_frame_ctrl_cmd_proc(recv_info,node_addr,recv_info->asdu_sub_data[info->cfg.node_addr_len],
+          state=app_frame_ctrl_cmd_proc(recv_info->asdu_ident,node_addr,&recv_info->asdu_sub_data[info->cfg.node_addr_len],
                                         recv_info->asdu_sub_len-info->cfg.node_addr_len);
 
           if(state==1)

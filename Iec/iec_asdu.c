@@ -65,6 +65,7 @@ unsigned int iec_asdu_pack_node(char *buff, struct asdu_cfg *cfg,int node_addr,i
  */
 unsigned int iec_asdu_pack_seq_node(char *buff, struct asdu_cfg *cfg, int node_addr, int node_addr_len,int count,int *val, int *qual)
 {
+  /*
 	int idx = 0,i=0;
 
 	idx += iec_pack_node_addr(buff, node_addr, node_addr_len);
@@ -84,4 +85,5 @@ unsigned int iec_asdu_pack_seq_node(char *buff, struct asdu_cfg *cfg, int node_a
 	}
 
 	return idx;
+*/
 }

@@ -9,7 +9,7 @@
 void link_send_req_evt_to_app(struct link_obj *link,int sub_evt)
 {
 	struct iec_event *evt = 0;
-	evt = iec_create_event(link, link->applayer_id, EVT_APP_RECV_DATA, 0, 0);
+	evt = iec_create_event((int)link, link->applayer_id, EVT_APP_RECV_DATA, 0, 0);
 	iec_set_event_sub(evt, sub_evt, 0, 0);
 	iec_post_event(((struct app_info *)link->applayer_id)->app_event, evt, 20);
 }
@@ -27,7 +27,7 @@ void link_send_asdu_evt_to_app(struct link_obj *link,char *asdu_data,int asdu_le
   int *recv=(int *)rt_malloc(sizeof(int)*2);
   recv[0]=(int)asdu_data;
   recv[1]=asdu_len;
-  evt=iec_create_event(link, link->applayer_id, EVT_APP_RECV_DATA, 0, 0);
+  evt=iec_create_event((int)link, link->applayer_id, EVT_APP_RECV_DATA, 0, 0);
   iec_set_event_sub(evt, EVT_SUB_DAT_USER, recv, 1);
   iec_post_event(((struct app_info *)link->applayer_id)->app_event, evt, 20);
 }
@@ -68,6 +68,6 @@ void app_send_asdu_evt_to_link(struct app_info *info,struct app_send_info *send_
 {
   struct iec_event *evt=0;
   evt=iec_create_event((unsigned int)info,(unsigned int)send_asdu->link_id,EVT_LINK_SEND_DATA,0,0);
-  iec_set_event_sub(evt,EVT_SUB_DAT_USER,send_asdu,1);
+  iec_set_event_sub(evt,EVT_SUB_DAT_USER,(int *)send_asdu,1);
   iec_post_event(((struct link_obj*)(send_asdu->link_id))->mb_event,evt,20);
 }
