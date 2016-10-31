@@ -155,15 +155,16 @@ int app_task_pack_node(char *buff,int node_addr_len, arraylist *node_list,int *o
  * 
  * @return 若无任务，则返回0
  */
-struct app_task *app_task_get(arraylist *al)
+struct app_task *app_task_get(arraylist *al,unsigned int link_id)
 {
   struct app_task *task=0;
-
-  if(al->size>0)
-    {
-      task=arraylist_get(al, 0);
-    }
-
+  int i=0;
+  for(i=0;i<al->size;i++)
+  {
+    task=arraylist_get(al, i);
+    if(task->link_id==link_id)
+      return task;
+  }
   return task;
 
 }
@@ -188,7 +189,7 @@ struct app_send_info *app_task_covert_to_asdu_frame(struct app_info *info,struct
 
   asdu_frame[idx++] = task->asdu_ident;
   asdu_frame[idx++] = (task->seq << 7);
-  asdu_frame[idx++] = (task->cause&0xFF);
+
   
   rt_memcpy(&asdu_frame[idx], &task->cause, info->cfg.cause_len);
   idx += info->cfg.cause_len;
@@ -242,7 +243,7 @@ int app_task_check_empty(arraylist *al,int link_id)
 
 /*用户实现的控制命令接口*/
 extern int app_frame_ctrl_cmd_user_callback(int asdu_ident,int node_addr,char *node_val,int node_data_len);
-extern int app_frame_ctrl_sys_cmd_callback(int asdu_ident,char *node_val,int node_data_len);
+extern int app_frame_ctrl_sys_cmd_callback(int appid,int asdu_ident,char *node_val,int node_data_len);
 /*{
   if(node_addr==0x4001)//单点命令
     {
@@ -258,7 +259,56 @@ extern int app_frame_ctrl_sys_cmd_callback(int asdu_ident,char *node_val,int nod
     }
 
 }*/
+#include "appsys.h"
+extern struct system_dev gSystemDev;
+int all_call_proc(int appid)
+{
+  struct node_frame_info *frame_info=0;
+  Info_E_QDS qds;
+  Info_E_SIQ siq;
+  Info_E_QOI qoi;
+  int state=switcher_check_status(gSystemDev.ftu_dev->swc,SWC_ST_CLOSE);
+  siq.SPI=state;
+  siq.BL=0;
+  siq.IV=0;
+  siq.NT=0;
+  siq.RES=0;
+  siq.SB=0;
+  
+  frame_info=(struct node_frame_info *)iec_api_gen_node_info(0x1,0);
+  iec_api_add_element_to_node(frame_info,SIQ,&siq);
+  iec_api_update_normal_node(appid,EVT_SUB_DAT_LEVEL_1,M_SP_NA,20,frame_info);
+  
+  frame_info=(struct node_frame_info *)iec_api_gen_node_info(0x4001,0);
+  iec_api_add_element_to_node(frame_info,SVA,&gSystemDev.ftu_dev->c_realdata.Uab);
+ 	qds.OV=0;
+	qds.RES=0;
+	qds.BL=0;
+	qds.SB=0;
+	qds.NT=0;
+	qds.IV=0;
+  iec_api_add_element_to_node(frame_info,QDS,&qds);
+  iec_api_update_normal_node(appid,EVT_SUB_DAT_LEVEL_1,M_ME_NB,20,frame_info);
+  
 
+  qoi=GOL_CALL;
+   frame_info=(struct node_frame_info *)iec_api_gen_node_info(0x0,0);
+  iec_api_add_element_to_node(frame_info,QOI,&qoi);
+  iec_api_update_normal_node(appid,EVT_SUB_DAT_LEVEL_1,C_IC_NA,Actterm,frame_info);
+}
+
+int app_frame_ctrl_sys_cmd_callback(int appid,int asdu_ident,char *node_val,int node_data_len)
+{
+  if(asdu_ident==C_IC_NA)
+  {
+    Info_E_QOI *qoi=(Info_E_QOI*)node_val;
+    if((*qoi)==GOL_CALL)
+    {
+      all_call_proc(appid);
+    }
+  }
+  return 1;
+}
 /** 
  * 控制命令处理,具体过程由用户提供的接口实现
  * 
@@ -269,9 +319,13 @@ extern int app_frame_ctrl_sys_cmd_callback(int asdu_ident,char *node_val,int nod
  */
 static int app_frame_ctrl_cmd_proc(int asdu_ident,int node_addr,char *node_data,int node_data_len)
 {
-  return app_frame_ctrl_cmd_user_callback(asdu_ident,node_addr,node_data,node_data_len);
+  //return app_frame_ctrl_cmd_user_callback(asdu_ident,node_addr,node_data,node_data_len);
 }
 
+static int app_frame_ctrl_sys_cmd_proc(int appid,int asdu_ident,char *node_data,int node_data_len)
+{
+  return app_frame_ctrl_sys_cmd_callback(appid,asdu_ident,node_data,node_data_len);
+}
 /** 
  * 检测当前APP是否支持对应信息点地址
  * 
@@ -283,10 +337,13 @@ static int app_frame_ctrl_cmd_proc(int asdu_ident,int node_addr,char *node_data,
  */
 static int app_check_node_list(struct app_info *info,int seq,int node_addr)
 {
+  
   arraylist *al_temp=0;
   struct node_obj *node=0;
   int i=0;
 
+  if(node_addr==0)
+    return 1;
   al_temp=info->n_node_list;
   arraylist_iterate(al_temp, i, node)
     {
@@ -312,6 +369,7 @@ void app_linkframe_convert_to_asdu(struct app_info *info,struct app_recv_info *r
 
   rt_memcpy(&node_addr,&recv_info->asdu_sub_data[0],info->cfg.node_addr_len);
 
+  
   if(app_check_node_list(info, recv_info->seq, node_addr)==0)
     {
       recv_info->ack_cause=Unknowinfo;
@@ -350,10 +408,14 @@ void app_linkframe_convert_to_asdu(struct app_info *info,struct app_recv_info *r
   else if((recv_info->asdu_ident>99)&&(recv_info->asdu_ident<107))
     {
       /*控制方向的系统命令*/
+       recv_info->ack_cause=Actcon;
+        app_frame_ctrl_sys_cmd_proc((int)info,recv_info->asdu_ident,&recv_info->asdu_sub_data[info->cfg.node_addr_len],
+                                        recv_info->asdu_sub_len-info->cfg.node_addr_len);
     }
   else if((recv_info->asdu_ident>109)&&(recv_info->asdu_ident<114))
     {
       /*控制方向的参数命令*/
+     
     }
   else if((recv_info->asdu_ident>119)&&(recv_info->asdu_ident<127))
     {

@@ -13,6 +13,7 @@ struct link_obj
 
   unsigned int applayer_id;
 	char active;	 /*是否激活 可进行数据交互*/
+        char data_trans_active; /*数据传输激活*/
 	char double_dir; /*平衡或非平衡*/
 	
 	char *recv_buff; /*接收缓存*/

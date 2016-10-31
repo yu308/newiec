@@ -256,11 +256,11 @@ static int net_link_check_phy_data(struct net_link_info *net_link,char *buff,uns
     {
       if(ctrl.u_domain.sbit_act==1)
         {
-          net_link->start=1;
+          net_link->obj.data_trans_active=1;
         }
       else if(ctrl.u_domain.stopbit_act==1)
         {
-          net_link->start=0;
+          net_link->obj.data_trans_active=0;
         }
 
       return F104_U_FORMAT_BYTE;
@@ -313,7 +313,7 @@ static void net_link_phy_recv_dispatch(struct net_link_info *net_link,int format
 
   if(format==F104_I_FORMAT_BYTE_2)
     {
-      if(net_link->start==1)/*链路启用*/
+      if(net_link->obj.data_trans_active==1)/*链路启用*/
         {
           asdu_buff=rt_malloc(len-4);
           rt_memcpy(asdu_buff,&apci_data[4],len-4);
@@ -338,7 +338,7 @@ static void net_link_app_recv_dispatch(struct net_link_info *net_link,struct iec
 {
   if(evt->evt_sub_type==EVT_SUB_DAT_USER)/* 控制方向回应 */
     {
-      if(net_link->start==1)
+      if(net_link->obj.data_trans_active==1)
         link_send_req_evt_to_app((struct link_obj*)net_link,evt->evt_sub_type);
     }
   else

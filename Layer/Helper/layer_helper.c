@@ -71,3 +71,11 @@ void app_send_asdu_evt_to_link(struct app_info *info,struct app_send_info *send_
   iec_set_event_sub(evt,EVT_SUB_DAT_USER,(int *)send_asdu,1);
   iec_post_event(((struct link_obj*)(send_asdu->link_id))->mb_event,evt,20);
 }
+
+void app_send_no_asdu_evt_to_link(struct app_info *info,unsigned int link_id,int data_level)
+{
+  struct iec_event *evt=0;
+  evt=iec_create_event((unsigned int)info,link_id,EVT_LINK_SEND_DATA,0,0);
+  iec_set_event_sub(evt,data_level,0,0);
+  iec_post_event(((struct link_obj*)(link_id))->mb_event,evt,20);
+}

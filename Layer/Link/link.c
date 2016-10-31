@@ -27,7 +27,7 @@ int link_get_active_state(struct link_obj *link)
   return link->active;
 }
 
-void serial_link_set_active_state(struct link_obj *link,int state)
+void link_set_active_state(struct link_obj *link,int state)
 {
   link->active=state;
 }

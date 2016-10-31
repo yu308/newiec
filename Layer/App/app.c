@@ -3,9 +3,9 @@
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
 void app_thread_entry(void *param);
 #define APP_THREAD_PROI         (14)
-#define APP_THREAD_STACK_SIZE   (1024)
+#define APP_THREAD_STACK_SIZE   (2048)
 #define APP_THREAD_TICK		(50)
-#define MAX_EVENT_COUNT			(5)
+#define MAX_EVENT_COUNT			(8)
 #endif
 
 /** 
@@ -18,7 +18,7 @@ void app_thread_entry(void *param);
  * @param node_addr_len 地址长度
  * @param sm2_enable SM2功能启用
  */
-void app_init(struct app_info *info, int asdu_addr, int asdu_addr_len,int cause_len,int node_addr_len,int sm2_enable)
+void app_init(struct app_info *info,char *name, int asdu_addr, int asdu_addr_len,int cause_len,int node_addr_len,int sm2_enable)
 {
 	rt_memset(info, 0, sizeof(struct app_info));
 	
@@ -27,7 +27,7 @@ void app_init(struct app_info *info, int asdu_addr, int asdu_addr_len,int cause_
 	info->cfg.cause_len = cause_len;
 	info->cfg.node_addr_len = node_addr_len;
 	info->cfg.sm2_enable = sm2_enable;
-
+        rt_memcpy(info->cfg.name,name,rt_strlen(name));
 
 	info->n_node_list = arraylist_create();
 
@@ -51,7 +51,7 @@ void app_init(struct app_info *info, int asdu_addr, int asdu_addr_len,int cause_
  * 
  * @return APP
  */
-struct app_info *app_create(int asdu_addr, int asdu_addr_len, int cause_len, int node_addr_len, int sm2_enable)
+struct app_info *app_create(char *name,int asdu_addr, int asdu_addr_len, int cause_len, int node_addr_len, int sm2_enable)
 {
 	struct app_info *info = (struct app_info *)rt_malloc(sizeof(struct app_info));
 	if (info == 0)
@@ -59,8 +59,8 @@ struct app_info *app_create(int asdu_addr, int asdu_addr_len, int cause_len, int
 		rt_kprintf("applayer configure malloc fail.\n");
 		return 0;
 	}
-
-	app_init(info, asdu_addr, asdu_addr_len, cause_len, node_addr_len, sm2_enable);
+    
+	app_init(info,name, asdu_addr, asdu_addr_len, cause_len, node_addr_len, sm2_enable);
 
   return info;
 }
@@ -70,7 +70,7 @@ void app_add_link(struct app_info *app,unsigned int link_id)
   int i=0;
   for(i=0;i<CFG_LINK_MAX;i++)
   {
-    if(app->linklayer_id[i]!=0)
+    if(app->linklayer_id[i]==0)
     {
       app->linklayer_id[i]=link_id;
       return ;
@@ -150,22 +150,30 @@ static void app_evt_recv_data_handle(struct app_info *info,struct iec_event *evt
   switch (sub_evt)
   {
   case EVT_SUB_DAT_LEVEL_1:
-	  task_temp = app_task_get(info->first_task);
+	  task_temp = app_task_get(info->first_task,evt->sender);
     if(task_temp!=0)
       {
         send_info = app_task_covert_to_asdu_frame(info, task_temp);
         app_send_asdu_evt_to_link(info,send_info);
         app_task_free(info->first_task,task_temp);
       }
+    else
+    {
+      app_send_no_asdu_evt_to_link(info,evt->sender,EVT_SUB_DAT_LEVEL_1);
+    }
     break;
   case EVT_SUB_DAT_LEVEL_2:
-	  task_temp = app_task_get(info->second_task);
+	  task_temp = app_task_get(info->second_task,evt->sender);
     if(task_temp!=0)
       {
         send_info = app_task_covert_to_asdu_frame(info, task_temp);
         app_send_asdu_evt_to_link(info, send_info);
         app_task_free(info->second_task,task_temp);
       }
+    else
+    {
+      app_send_no_asdu_evt_to_link(info,evt->sender,EVT_SUB_DAT_LEVEL_2);
+    }
     break;
   case EVT_SUB_DAT_USER:
     recv=evt->sub_msg;

@@ -84,7 +84,6 @@ struct net_link_info
 	struct link_obj obj;
 	struct net_link_cfg cfg;
 
-  unsigned int start;
 
   unsigned int current_k;
   unsigned int current_w;

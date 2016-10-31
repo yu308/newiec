@@ -61,7 +61,7 @@ void arraylist_allocate(arraylist* l, unsigned int size)
 		while (new_capacity < size) {
 			new_capacity *= 2;
 		}
-		l->body = realloc(l->body, sizeof(void*) * new_capacity);
+		l->body = rt_realloc(l->body, sizeof(void*) * new_capacity);
 		assert(l->body);
 		l->capacity = new_capacity;
 	}
