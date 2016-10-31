@@ -29,7 +29,6 @@ void app_init(struct app_info *info,char *name, int asdu_addr, int asdu_addr_len
 	info->cfg.sm2_enable = sm2_enable;
         rt_memcpy(info->cfg.name,name,rt_strlen(name));
 
-	info->n_node_list = arraylist_create();
 
 	info->first_task = arraylist_create();
 	info->second_task = arraylist_create();
@@ -81,13 +80,19 @@ void app_add_link(struct app_info *app,unsigned int link_id)
   
 }
 
-/*添加信息点*/
-void app_create_normal_node(struct app_info *info,int *normal_node)
+void app_set_cmd_cb(struct app_info *app,unsigned int cb_idx,void *cb)
 {
-	arraylist_add(info->n_node_list, normal_node);
+  if(cb_idx==EVT_SUB_APP_CTRL_CMD)
+    app->ctrl_cmd_cb=cb;
+  if(cb_idx==EVT_SUB_APP_FILE_CMD)
+    app->file_cmd_cb=cb;
+  if(cb_idx==EVT_SUB_APP_PARAM_CMD)
+    app->param_cmd_cb=cb;
+  if(cb_idx==EVT_SUB_APP_SYS_CMD)
+    app->sys_cmd_cb=cb;
+
+
 }
-
-
 
 /** 
  *  APP-接收端收到ASDU类数据处理函数
@@ -266,10 +271,6 @@ void app_thread_entry(void *param)
 		switch (evt->evt_type)
 		{
 		case EVT_APP_ADD_NODE:
-			if (evt->evt_sub_type == EVT_SUB_NORMAL_NODE)
-			{
-				app_create_normal_node(info, evt->sub_msg);
-			}
 			break;
 		case EVT_APP_NODE_UPDATE:	
 			app_evt_update_node_handle(info, evt);

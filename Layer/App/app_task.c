@@ -326,33 +326,7 @@ static int app_frame_ctrl_sys_cmd_proc(int appid,int asdu_ident,char *node_data,
 {
   return app_frame_ctrl_sys_cmd_callback(appid,asdu_ident,node_data,node_data_len);
 }
-/** 
- * 检测当前APP是否支持对应信息点地址
- * 
- * @param info 
- * @param seq 
- * @param node_addr 
- * 
- * @return 1 支持 0 不支持
- */
-static int app_check_node_list(struct app_info *info,int seq,int node_addr)
-{
-  
-  arraylist *al_temp=0;
-  struct node_obj *node=0;
-  int i=0;
 
-  if(node_addr==0)
-    return 1;
-  al_temp=info->n_node_list;
-  arraylist_iterate(al_temp, i, node)
-    {
-      if(node->addr==node_addr&&(node->seq=seq))
-        return 1;
-    }
-
-  return 0;
-}
 
 /** 
  * APP对链路送至的ASDU数据转换处理,准备创建发送信息,建立任务
@@ -369,14 +343,9 @@ void app_linkframe_convert_to_asdu(struct app_info *info,struct app_recv_info *r
 
   rt_memcpy(&node_addr,&recv_info->asdu_sub_data[0],info->cfg.node_addr_len);
 
-  
-  if(app_check_node_list(info, recv_info->seq, node_addr)==0)
-    {
-      recv_info->ack_cause=Unknowinfo;
-      return;
-    }
+  /*检测APP是否支持信息点地址,移至用户接口判断*/
 
-  if((recv_info->asdu_ident>0)&&(recv_info->asdu_ident<41))
+   if((recv_info->asdu_ident>0)&&(recv_info->asdu_ident<41))
     {
       /*监视方向过程信息处理*/
     }

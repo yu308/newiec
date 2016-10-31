@@ -4,7 +4,10 @@
 #include "../../OS/os_helper.h"
 #include "../Helper/layer_helper.h"
 
-
+typedef int (*sys_cmd_proc)(unsigned int asdu_ident,char* node_data,unsigned int len);
+typedef int (*ctrl_cmd_proc)(unsigned int asdu_ident,unsigned int node_addr,char* node_data,unsigned int len);
+typedef int (*file_cmd_proc)();
+typedef int (*param_cmd_proc)();
 
 
 struct buffered_data
@@ -20,7 +23,7 @@ struct buffered_data
 /// </summary>
 struct app_cfg
 {       
-        char name[CFG_NAME_MAX];
+  char name[CFG_NAME_MAX];
 	int asdu_addr; /*ASDUµØÖ·*/	
 	int asdu_addr_len;	/*ASDUµØÖ·³¤¶È*/
 	int cause_len;	/*´«ËÍÔ­Òò³¤¶È*/
@@ -41,12 +44,15 @@ struct app_info
 	int bro_applayer_id[CFG_APP_MAX];	/*ÖÐ×ª»ú»ìºÏÄ£Ê½ÏÂ ¹ØÁªµÄAPP*/
 #endif
 
-	arraylist *n_node_list;	/*ÆÕÍ¨ÐÅÏ¢µã×é¼ÇÂ¼*/
-	
 	arraylist *first_task;	/*Ò»¼¶Êý¾Ý ¼´´«ÊäÓÅÏÈ¼¶×î¸ßµÄÊý¾Ý*/
 	arraylist *second_task;	/*¶þ¼¶Êý¾Ý ´ÎÖ®*/
 
 	arraylist *buffered;
+
+  sys_cmd_proc  sys_cmd_cb;
+  ctrl_cmd_proc ctrl_cmd_cb;
+  file_cmd_proc  file_cmd_cb;
+  param_cmd_proc  param_cmd_cb;
 
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
 	rt_mailbox_t app_event;

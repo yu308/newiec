@@ -6,8 +6,6 @@
 /// 全局系统信息
 /// </summary>
 struct sys_info  gSys_Info;
-rt_sem_t iec_sys_init_sem_done;
-
 
 void iec_main_thread_entry(void *param);
 #define MAIN_THREAD_PROI    (15)
@@ -95,6 +93,12 @@ static int iec_sys_add_app(struct sys_info *info,void *app)
   return 1;
 }
 
+
+extern WEAK void sys_create_link_complete(char *name,unsigned int linkid);
+
+
+extern WEAK void sys_create_app_complete(char *name,unsigned int appid);
+
 /** 
  * 创建链路实例事件处理函数
  * 
@@ -119,7 +123,7 @@ static void iec_sys_evt_create_link_handle(struct sys_info *info,struct iec_even
           serial_link_del(serial_link);
           return;
         }
-
+      sys_create_link_complete(serial_link->obj.name, (unsigned int)serial_link);
       break;
     case EVT_SUB_SYS_LINK_SOCKET:
       link_p=evt->sub_msg;
@@ -127,7 +131,9 @@ static void iec_sys_evt_create_link_handle(struct sys_info *info,struct iec_even
       if(iec_sys_add_link(info, net_link)==0)
         {
           net_link_del(net_link);
+          return;
         }
+      sys_create_link_complete(net_link->obj.name, (unsigned int)net_link);
       break;
     }
 }
@@ -144,7 +150,7 @@ static void iec_sys_evt_create_app_handle(struct sys_info *info,struct iec_event
         {
           return;
         }
-  
+   sys_create_app_complete(app_i->cfg.name, (unsigned int)app_i);
 }
 
 /** 
@@ -191,6 +197,23 @@ static void iec_sys_evt_edit_handle(struct sys_info *info,struct iec_event *evt)
     param=evt->sub_msg;
    iec_sys_app_bind_link((struct app_info *)param[0],(struct link_obj *)param[1]);
     break;
+  case EVT_SUB_APP_CTRL_CMD:
+    param=evt->sub_msg;
+    app_set_cmd_cb((struct app_info*)param[0],EVT_SUB_APP_CTRL_CMD, param[1]);
+    break;
+  case EVT_SUB_APP_PARAM_CMD:
+    param=evt->sub_msg;
+    app_set_cmd_cb((struct app_info*)param[0],EVT_SUB_APP_PARAM_CMD, param[1]);
+    break;
+  case EVT_SUB_APP_FILE_CMD:
+    param=evt->sub_msg;
+    app_set_cmd_cb((struct app_info*)param[0],EVT_SUB_APP_FILE_CMD, param[1]);
+    break;
+  case EVT_SUB_APP_SYS_CMD:
+    param=evt->sub_msg;
+    app_set_cmd_cb((struct app_info*)param[0],EVT_SUB_APP_SYS_CMD, param[1]);
+    break;
+
   }
 }
 
@@ -219,8 +242,7 @@ void iec_main_thread_entry(void *param)
       iec_sys_evt_create_link_handle(info, evt);
 			break;
 		case EVT_SYS_CREATE_APP:
-                  iec_sys_evt_create_app_handle(info,evt);
-                  rt_sem_release(iec_sys_init_sem_done);
+      iec_sys_evt_create_app_handle(info,evt);
 			break;
 		case EVT_SYS_DEL_LINK:
 			break;
@@ -229,13 +251,13 @@ void iec_main_thread_entry(void *param)
     case EVT_SYS_START:
       iec_sys_evt_start_handle(info, evt);
       break;
-                case EVT_SYS_EDIT_PROFILE:
-                  iec_sys_evt_edit_handle(info,evt);
-                  break;
+    case EVT_SYS_EDIT_PROFILE:
+      iec_sys_evt_edit_handle(info,evt);
+      break;
 		default:
 			break;
 		}
-                iec_free_event(evt);
+    iec_free_event(evt);
 	}
 
 }
@@ -244,16 +266,15 @@ void iec_main_thread_entry(void *param)
 
 /// <summary>
 /// 系统初始化
-/// </summary>
+//v/ </summary>
 void iec_sys_api_init_sysinfo()
 {
 	gSys_Info.communicate_role = CFG_ROLE_MODE;
 	gSys_Info.sys_event = rt_mb_create("sysevt", MAX_EVENT_COUNT, RT_IPC_FLAG_FIFO);
   
-        gSys_Info.app_obj=arraylist_create();
-        gSys_Info.link_obj=arraylist_create();
+  gSys_Info.app_obj=arraylist_create();
+  gSys_Info.link_obj=arraylist_create();
         
-        iec_sys_init_sem_done=rt_sem_create("init",0,RT_IPC_FLAG_FIFO);
 
 }
 
@@ -323,15 +344,15 @@ void iec_sys_api_create_app(char *name,unsigned int asdu_addr,unsigned int asdu_
                             unsigned int node_addr_len,unsigned int sm2)
 {
     struct app_param *app=rt_malloc(sizeof(struct app_param));
-      rt_memset(app,0,sizeof(struct app_param));
-      app->asdu_addr=asdu_addr;
-      app->asdu_addr_len=asdu_addr_len;
-      app->cause_len=cause_len;
-      app->node_addr_len=node_addr_len;
-      app->sm2_enable=sm2;
-      rt_memcpy(app->name, name, rt_strlen(name));
-  struct iec_event *evt=iec_create_event(0, (int)&gSys_Info, EVT_SYS_CREATE_APP, (int *)app, 1);
-      iec_post_event(gSys_Info.sys_event, evt, 20);
+    rt_memset(app,0,sizeof(struct app_param));
+    app->asdu_addr=asdu_addr;
+    app->asdu_addr_len=asdu_addr_len;
+    app->cause_len=cause_len;
+    app->node_addr_len=node_addr_len;
+    app->sm2_enable=sm2;
+    rt_memcpy(app->name, name, rt_strlen(name));
+    struct iec_event *evt=iec_create_event(0, (int)&gSys_Info, EVT_SYS_CREATE_APP, (int *)app, 1);
+    iec_post_event(gSys_Info.sys_event, evt, 20);
 }
 
 void iec_sys_api_start_app(char *app_name)
@@ -351,15 +372,14 @@ void iec_sys_api_start_app(char *app_name)
 
 void iec_sys_api_app_bind_link(char *link_name,char *app_name)
 {
-   struct app_info *app=0;
-   struct link_obj *link=0;
+  struct app_info *app=0;
+  struct link_obj *link=0;
   app=iec_sys_find_app(&gSys_Info, app_name);
   int sub_evt=0;
   int *bind_info=rt_malloc(sizeof(int)*2);
   
   if(app==0)
     return;
-  
   
   link=iec_sys_find_link(&gSys_Info, link_name);
 
@@ -373,6 +393,21 @@ void iec_sys_api_app_bind_link(char *link_name,char *app_name)
   iec_post_event(gSys_Info.sys_event, evt, 20);
 }
 
+void iec_sys_api_app_set_cmd_cb(char *app_name,int cb_idx,void *cb)
+{
+  unsigned int *param=rt_malloc(sizeof(unsigned int)*2);
+  struct app_info *app=iec_sys_find_app(&gSys_Info, app_name);
+  if(app==0)
+    return;
+
+  param[0]=app;
+  param[1]=(unsigned int)cb;
+
+  struct iec_event *evt=iec_create_event(0, (int)&gSys_Info,EVT_SYS_EDIT_PROFILE , 0, 0);
+  iec_set_event_sub(evt,cb_idx,param,1);
+  iec_post_event(gSys_Info.sys_event, evt, 20);
+}
+
 /*****************TEST************************/
 void iec_serial_write(char *buff,int len)
 {
@@ -382,12 +417,12 @@ void iec_serial_write(char *buff,int len)
 
 void iec_sys_send_phy_recv(char *name,char *buff,int len)
 {
-   struct link_obj *link=iec_sys_find_link(&gSys_Info, name);
-   link->write=iec_serial_write;
-    struct link_recv_info *recv_info=rt_malloc(sizeof(struct link_recv_info));
+  struct link_obj *link=iec_sys_find_link(&gSys_Info, name);
+  link->write=iec_serial_write;
+  struct link_recv_info *recv_info=rt_malloc(sizeof(struct link_recv_info));
     
-    recv_info->recv_data=buff;
-    recv_info->recv_len=len;
+  recv_info->recv_data=buff;
+  recv_info->recv_len=len;
 
   struct iec_event *evt=iec_create_event(0, (int)&gSys_Info, EVT_LINK_RECV_DATA, 0, 0);
   iec_set_event_sub(evt, EVT_SUB_DAT_LINK_PHY,(int*)recv_info, 1);
@@ -395,45 +430,14 @@ void iec_sys_send_phy_recv(char *name,char *buff,int len)
 }
 
 
-void iec_create_all_node()
-{
- struct app_info *app=iec_sys_find_app(&gSys_Info,"app");
- iec_api_create_node((unsigned int )app,0,0);
- iec_api_create_node((unsigned int )app,0x4001,0);
- iec_api_create_node((unsigned int )app,0x4002,0);
- iec_api_create_node((unsigned int )app,0x4003,0);
- iec_api_create_node((unsigned int )app,0x4004,0);
- iec_api_create_node((unsigned int )app,0x4005,0);
- iec_api_create_node((unsigned int )app,0x4006,0);
- iec_api_create_node((unsigned int )app,0x4007,0);
- iec_api_create_node((unsigned int )app,0x4008,0);
- iec_api_create_node((unsigned int )app,0x4009,0);
- iec_api_create_node((unsigned int )app,0x400A,0);
- iec_api_create_node((unsigned int )app,0x400B,0);
- 
- iec_api_create_node((unsigned int )app,0x1,0);
-}
-
-
-void iec_update_node()
-{
-  
-}
-
 void iec_test_sys()
 {
   rt_device_t dev=rt_device_find("serial0");
-   rt_device_open(dev, RT_DEVICE_OFLAG_RDWR|RT_DEVICE_FLAG_DMA_RX);
-   rt_device_control(dev,0xEE,0);
+  rt_device_open(dev, RT_DEVICE_OFLAG_RDWR|RT_DEVICE_FLAG_DMA_RX);
+  rt_device_control(dev,0xEE,0);
   
- iec_sys_api_create_link("serial",EVT_SUB_SYS_LINK_SERIAL,1,1,0);
- iec_sys_api_create_app("app",1,1,1,2,0);
- rt_sem_take(iec_sys_init_sem_done,0x100000);
- iec_sys_api_app_bind_link("serial","app");
- iec_sys_api_start_app("app");
- iec_sys_api_start_link("serial");
- iec_create_all_node();
- 
+  iec_sys_api_create_link("serial",EVT_SUB_SYS_LINK_SERIAL,1,1,0);
+  iec_sys_api_create_app("app",1,1,1,2,0);
 }
 
 void iec_recv_data(char *buff,int len)
@@ -443,3 +447,11 @@ void iec_recv_data(char *buff,int len)
   rt_device_control(dev,0xEE,0);
   iec_sys_send_phy_recv("serial",buff,len);
 }
+
+WEAK void sys_create_app_complete(char *name,unsigned int appid)
+{
+  iec_sys_api_app_bind_link("serial","app");
+  iec_sys_api_start_app("app");
+  iec_sys_api_start_link("serial");
+}
+

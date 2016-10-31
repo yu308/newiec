@@ -11,7 +11,14 @@
 	函数			 level_action_object		level 层  action 操作  object 对象
 	声明			 xxxxx						全小写
 **************************************************/
-
+/// Weak attribute
+#if defined   ( __CC_ARM   )
+#define WEAK __attribute__ ((weak))
+#elif defined ( __ICCARM__ )
+#define WEAK __weak
+#elif defined (  __GNUC__  )
+//#define WEAK __attribute__ ((weak))
+#endif
 /********************* Memory *********************/
 #ifndef EXTMALLOC
 #define XMALLOC  rt_malloc

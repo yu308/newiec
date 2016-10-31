@@ -115,21 +115,6 @@ unsigned int iec_pack_tm_node_element(char *buff, int utc_time, int millsecond,i
 #include "../Core/iec_event.h"
 #include "../Layer/Helper/layer_helper.h"
 
-/// <summary>
-/// 外部接口 创建通用信息点
-/// </summary>
-/// <param name="appid">The appid.</param>
-/// <param name="node_addr">The node_addr.</param>
-void iec_api_create_node(int appid, int node_addr,int seq_count)
-{
-	struct node_obj *node=iec_create_node(node_addr,seq_count);
-
-	struct iec_event *evt=iec_create_event(0, appid, EVT_APP_ADD_NODE, 0,1);
-	iec_set_event_sub(evt, EVT_SUB_NORMAL_NODE, (int *)node, 0);
-	iec_post_event(((struct app_info *)appid)->app_event, evt, 20);
-
-}
-
 /** 
  * 生成一个信息点的传输数据信息
  * 
@@ -171,7 +156,7 @@ void iec_api_add_element_to_node(struct node_frame_info *nd_info,int element_tag
  * @param cause 传送原因
  * @param f_node 信息点数据传输信息
  */
-void iec_api_update_normal_node(int appid,int level, unsigned int asdu_ident,
+void iec_api_update_node(int appid,int level, unsigned int asdu_ident,
 	unsigned int cause,struct node_frame_info *f_node)
 {
 	struct node_update_info *info = rt_malloc(sizeof(struct node_update_info));
