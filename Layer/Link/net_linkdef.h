@@ -99,5 +99,7 @@ struct net_link_info
 
 
 struct net_link_info *net_link_create(char *name,int socketid,int dir);
+void net_link_del(struct net_link_info *net_info);
+void net_link_thread_start(struct net_link_info *net_link);
 
 #endif

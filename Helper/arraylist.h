@@ -2,7 +2,7 @@
 #ifndef _array_list_h_
 #define _array_list_h_
 
-
+#include "../OS/os_helper.h"
 
 typedef struct arraylist arraylist;
 void arraylist_destroy(arraylist *l);

@@ -38,11 +38,11 @@ struct arraylist {
  */
 arraylist* arraylist_create()
 {
-	arraylist* new_list = rt_malloc(sizeof(arraylist));
+	arraylist* new_list =(arraylist *)rt_malloc(sizeof(arraylist));
 	new_list->size = 0;
 	// Allocate the array
 	new_list->body = rt_malloc(sizeof(void*) * ARRAYLIST_INITIAL_CAPACITY);
-	RT_RT_ASSERT(new_list->body);
+	RT_ASSERT(new_list->body);
 	new_list->capacity = ARRAYLIST_INITIAL_CAPACITY;
 	return new_list;
 }

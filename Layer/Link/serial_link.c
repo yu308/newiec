@@ -1,5 +1,5 @@
 #include "../../OS/os_helper.h"
-#include "../Helper/layer_helper.h"
+#include "../layer.h"
 
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
 void serial_link_thread_entry(void *param);
@@ -392,17 +392,17 @@ static void serial_link_phy_recv_handle(struct serial_link_info *info,struct iec
 		return;
 
 	if (dispatch_res == INVAILD_FCB)
-		info->obj.write(info->cfg.prev_sent_buff, info->cfg.prev_sent_len);
+		info->obj.write(0,info->cfg.prev_sent_buff, info->cfg.prev_sent_len);
 	else if (dispatch_res == TO_LINK)
 	{
 		data_len = serial_link_pack_fixed_frame(info, FC_UP_YES);
-		info->obj.write(info->obj.send_buff, data_len);
+		info->obj.write(0,info->obj.send_buff, data_len);
 		rt_memcpy(info->cfg.prev_sent_buff, info->obj.send_buff, data_len);
 	}
 	else if (dispatch_res == TO_LINK_REQ)
 	{
 		data_len = serial_link_pack_fixed_frame(info, FC_UP_LINK);
-		info->obj.write(info->obj.send_buff, data_len);
+		info->obj.write(0,info->obj.send_buff, data_len);
 		rt_memcpy(info->cfg.prev_sent_buff, info->obj.send_buff, data_len);
 	}
 	else if (dispatch_res == TO_APP_FIRST)
@@ -431,7 +431,7 @@ static void serial_link_app_recv_handle(struct serial_link_info *info, struct ie
 {
   if(evt->evt_sub_type!=EVT_SUB_DAT_USER)
     {
-      if (link_get_dir(info->cfg) == 1)/*平衡模式*/
+      if (link_get_dir(&info->obj) == 1)/*平衡模式*/
         {
           link_send_req_evt_to_app((struct link_obj*)info, evt->evt_type);
         }
@@ -446,8 +446,8 @@ static void serial_link_app_recv_handle(struct serial_link_info *info, struct ie
   else
     {
       info->acd_tag=1;
-     int data_len = serial_link_pack_fixed_frame(info, FC_UP_YES);
-      info->obj.write(info->obj.send_buff, data_len);
+      int data_len = serial_link_pack_fixed_frame(info, FC_UP_YES);
+      info->obj.write(0,info->obj.send_buff, data_len);
       rt_memcpy(info->cfg.prev_sent_buff, info->obj.send_buff, data_len);
     }
 }
@@ -490,7 +490,7 @@ static void serial_link_asdu_send_evt_handle(struct serial_link_info *info ,stru
   if(send_info==0)
   {
     count = serial_link_pack_fixed_frame(info, FC_UP_NO_DATA);
-    info->obj.write(info->obj.send_buff, count);
+    info->obj.write(0,info->obj.send_buff, count);
     rt_memcpy(info->cfg.prev_sent_buff, info->obj.send_buff, count);
     return;
   }
@@ -507,7 +507,7 @@ static void serial_link_asdu_send_evt_handle(struct serial_link_info *info ,stru
       break;
     }
 
-  info->obj.write(info->obj.send_buff,count);
+  info->obj.write(0,info->obj.send_buff,count);
   rt_memcpy(info->cfg.prev_sent_buff, info->obj.send_buff, count);
 }
 
@@ -532,7 +532,7 @@ void serial_link_thread_entry(void *param)
 		case EVT_LINK_PHY_DISCONNECT:
 			break;
 		case EVT_LINK_RECV_DATA:
-                        link_set_active_state(info,1);
+      link_set_active_state(&info->obj,1);
 			serial_link_recv_event_handle(info, evt);
 			break;
 		case EVT_LINK_SEND_DATA:

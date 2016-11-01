@@ -156,7 +156,7 @@ extern struct iec_event *iec_recv_event(rt_mailbox_t queue_id,unsigned int milli
 extern struct iec_event *iec_create_event(int sender, int recver, int evt_type,int *main_msg, int auto_free);
 extern void iec_free_event(struct iec_event *evt);
 
-void iec_set_event_sub(struct iec_event *evt, int evt_sub_type, int *sub_msg, int auto_free);
+extern void iec_set_event_sub(struct iec_event *evt, int evt_sub_type, int *sub_msg, int auto_free);
 
 
 #endif

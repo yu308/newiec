@@ -1,5 +1,5 @@
 #include "../../OS/os_helper.h"
-#include "../Helper/layer_helper.h"
+#include "../layer.h"
 
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
 void net_link_thread_entry(void *param);
@@ -323,7 +323,7 @@ static void net_link_phy_recv_dispatch(struct net_link_info *net_link,int format
   else if(format==F104_U_FORMAT_BYTE)
     {
       ack_len=net_link_pack_U_frame(net_link,ctrl);
-      net_link->obj.write(net_link->obj.send_buff,ack_len);
+      net_link->obj.write(net_link->cfg.socket,net_link->obj.send_buff,ack_len);
       //net_link_counter_add(net_link,2);//增加发送计数
     }
 }
@@ -345,7 +345,7 @@ static void net_link_app_recv_dispatch(struct net_link_info *net_link,struct iec
     {
       if(net_link->obj.active==1)/*总招完成?*/
         {
-          if(link_get_dir(net_link)==1)/*平衡模式*/
+          if(link_get_dir(&net_link->obj)==1)/*平衡模式*/
             {
               link_send_req_evt_to_app((struct link_obj*)net_link,evt->evt_sub_type);
             }
@@ -445,7 +445,7 @@ static void net_link_send_evt_handle(struct net_link_info *net_link,struct iec_e
 
   if(net_link->current_k<CFG_IEC104_K)
     {
-      net_link->obj.write(net_link->obj.send_buff,count);
+      net_link->obj.write(net_link->cfg.socket, net_link->obj.send_buff,count);
       net_link->current_k++;
     }
   else

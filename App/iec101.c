@@ -1,5 +1,6 @@
 #include "../Core/core.h"
 #include "../Iec/iec.h"
+#include "../Layer/layer.h"
 
 #define IEC101_LINK_NAME    "iec1_s"
 #define IEC101_APP_NAME     "iec1_a"
@@ -9,18 +10,50 @@ nd_info = iec_api_gen_node_info(node_addr,buffered);}else{ \
     iec_api_add_nodedata_to_node(nd_info,node_addr,node_addr_len); }  \
 }while(0)
 
+/**
+ * 系统初始化流程
+ * 1、iec_sys_api_init_sysinfo() 初始化变量
+ * 2、iec_sys_api_start_sys() 启动系统主任务
+ * 3、iec101_link_init(..)  创建链路实例
+ * 4、iec101_app_init(..) 创建APP实例
+ * 5、link创建完成后设置相关参数 iec_sys_create_link_complete
+ * 6、app创建完成后绑定Link,设置APP应用操作函数 iec_sys_create_app_complete
+ */
+
 int iec101_sys_cmd_callback(unsigned int asdu_ident,char *node_data,unsigned int node_len);
 int iec101_ctrl_cmd_callback(unsigned int asdu_ident,unsigned int node_addr,char *node_data,unsigned int node_len);
+void iec101_serial_write(unsigned int dev,unsigned char *data,unsigned int len);
+
 
 void iec101_link_init(char *name,int link_addr,int link_addr_len,int dir)
 {
     iec_sys_api_create_link(name, EVT_SUB_SYS_LINK_SERIAL,link_addr,link_addr_len,dir);
 }
 
+
 void iec101_app_init(char *name,int asdu_addr,int asdu_addr_len,int cause_len,int node_addr_len,int sm2)
 {
     iec_sys_api_create_app(name,asdu_addr,asdu_addr_len,cause_len,node_addr_len,sm2);
 }
+
+
+void iec101_serial_write(unsigned int dev,unsigned char *data,unsigned int len)
+{
+  rt_device_t serial_dev=rt_device_find("serial0");
+  if(serial_dev!=0)
+    rt_device_write(serial_dev,0,data,len);
+}
+
+
+
+void iec_sys_create_link_complete(char *name,unsigned int linkid)
+{
+  if(rt_strcmp(name, IEC101_LINK_NAME)==0)
+    {
+      link_set_write_handle((struct link_obj*)linkid,iec101_serial_write);
+    }
+}
+
 
 void iec_sys_create_app_complete(char *name,unsigned int appid)
 {
@@ -68,21 +101,21 @@ int iec101_sys_cmd_callback(unsigned int asdu_ident,char *node_data,unsigned int
     switch (asdu_ident)
     {
     case C_IC_NA:
-        state=iec101_all_call_proc();
+        cmd_res=iec101_all_call_proc();
     case C_CS_NA:
-        state = iec101_sync_time_proc(node_data);
+        cmd_res = iec101_sync_time_proc(node_data);
         break;
     case C_TS_NA:
-        state = iec101_test_proc(node_data);
+        cmd_res = iec101_test_proc(node_data);
         break;
     case C_CD_NA:
-        state = iec101_delay_time_proc(node_data);
+        cmd_res = iec101_delay_time_proc(node_data);
         break;
     case C_RP_NA:
-        state = iec101_reset_proc(node_data);
+        cmd_res = iec101_reset_proc(node_data);
         break;
     default:
-        state = CMD_RES_ERR_TYPE;
+        cmd_res = CMD_RES_ERR_TYPE;
         break;
     }
 

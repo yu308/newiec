@@ -70,4 +70,14 @@ struct app_info
 #define APP_FUN_FIRST		(4)
 #define APP_FUN_SECOND		(5)
 #define APP_FUN_USER		(6)
+
+void app_init(struct app_info *info,char *name, int asdu_addr, int asdu_addr_len,int cause_len,int node_addr_len,int sm2_enable);
+
+struct app_info *app_create(char *name,int asdu_addr, int asdu_addr_len, int cause_len, int node_addr_len, int sm2_enable);
+
+void app_add_link(struct app_info *app,unsigned int link_id);
+
+void app_set_cmd_cb(struct app_info *app,unsigned int cb_idx,void *cb);
+
+void app_start(int papp_info);
 #endif

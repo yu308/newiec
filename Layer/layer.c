@@ -1,4 +1,5 @@
-#include "layer_helper.h"
+#include "../Core/core.h"
+#include "layer.h"
 
 /** 
  * 用于向app发送请求数据事件
@@ -32,7 +33,7 @@ void link_send_asdu_evt_to_app(struct link_obj *link,char *asdu_data,int asdu_le
   iec_post_event(((struct app_info *)link->applayer_id)->app_event, evt, 20);
 }
 
-/** 
+/**
  * 用于向link通知有信息点更新
  * 
  * @param info App信息

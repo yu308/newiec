@@ -2,32 +2,6 @@
 #include "iec.h"
 
 
-
-
-struct node_obj *iec_create_node(unsigned int node_addr,int seq_count)
-{
-	struct node_obj *nd=rt_malloc(sizeof(struct node_obj));
-	if(nd==0)
-	{
-		rt_kprintf("IEC:NODE: Created fail\n");
-		return 0;
-	}
-
-	nd->addr=node_addr;
-	nd->seq=seq_count;
-
-	return nd;
-}
-
-/// <summary>
-/// 删除某个信息点
-/// </summary>
-/// <param name="node">The node.</param>
-void iec_del_node(struct node_obj *node)
-{
-	rt_free(node);
-}
-
 /**
  * 封装信息点地址
  *
@@ -117,7 +91,7 @@ void iec_api_add_element_to_node(struct node_frame_info *nd_info,int element_tag
  * @param cause 传送原因
  * @param f_node 信息点数据传输信息
  */
-void iec_api_update_node(int appid,int level, unsigned int asdu_ident,
+void iec_api_update_node(unsigned int appid,int level, unsigned int asdu_ident,
 	unsigned int cause,struct node_frame_info *f_node)
 {
 	struct node_update_info *info = rt_malloc(sizeof(struct node_update_info));

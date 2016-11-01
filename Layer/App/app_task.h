@@ -2,6 +2,7 @@
 #define _app_task_h_
 
 #include "../../Core/core.h"
+#include "../layer.h"
 #include "../../Iec/iec.h"
 
 struct app_task
@@ -22,6 +23,7 @@ struct app_node_frame_cfg
 	unsigned int utc_time;
 };
 
+int app_task_free(arraylist *task_list,struct app_task *task,int clear);
 
 
 extern int app_task_add_normal(arraylist *al,unsigned int link_id, unsigned int asdu_ident, int cause, struct node_frame_info *f_node);

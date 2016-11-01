@@ -3,7 +3,7 @@
 
 #include "../../Core/core.h"
 
-typedef void(*write_handle)(char *buff, int len);
+typedef void(*write_handle)(unsigned int dev,char *buff, int len);
 
 
 struct link_obj
@@ -26,6 +26,21 @@ struct link_obj
 	rt_mailbox_t mb_event;
 #endif
 };
+
+
+void link_set_dir(struct link_obj *link, int dir);
+
+int link_get_dir(struct link_obj *link);
+
+
+void link_set_write_handle(struct link_obj *link, int *handle);
+
+
+int link_get_active_state(struct link_obj *link);
+
+void link_set_active_state(struct link_obj *link,int state);
+
+char *link_get_name(struct link_obj *link);
 
 
 #endif

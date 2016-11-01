@@ -34,6 +34,7 @@ int app_task_free(arraylist *task_list,struct app_task *task,int clear)
         }
     }
   rt_free(task);
+  return 0;
 }
 
 
@@ -247,8 +248,6 @@ int app_task_check_empty(arraylist *al,int link_id)
 }
 
 /*用户实现的控制命令接口*/
-extern int app_frame_ctrl_cmd_user_callback(int asdu_ident,int node_addr,char *node_val,int node_data_len);
-extern int app_frame_ctrl_sys_cmd_callback(int appid,int asdu_ident,char *node_val,int node_data_len);
 /*{
   if(node_addr==0x4001)//单点命令
     {
@@ -264,76 +263,8 @@ extern int app_frame_ctrl_sys_cmd_callback(int appid,int asdu_ident,char *node_v
     }
 
 }*/
-#include "appsys.h"
-extern struct system_dev gSystemDev;
-int all_call_proc(int appid)
-{
-  struct node_frame_info *frame_info=0;
-  Info_E_QDS qds;
-  Info_E_SIQ siq;
-  Info_E_QOI qoi;
-  int state=switcher_check_status(gSystemDev.ftu_dev->swc,SWC_ST_CLOSE);
-  siq.SPI=state;
-  siq.BL=0;
-  siq.IV=0;
-  siq.NT=0;
-  siq.RES=0;
-  siq.SB=0;
 
-  frame_info=(struct node_frame_info *)iec_api_gen_node_info(0x1,0);
-  iec_api_add_element_to_node(frame_info,SIQ,&siq);
-  iec_api_update_node(appid,EVT_SUB_DAT_LEVEL_1,M_SP_NA,20,frame_info);
-
-  frame_info=(struct node_frame_info *)iec_api_gen_node_info(0x4001,0);
-  iec_api_add_element_to_node(frame_info,SVA,&gSystemDev.ftu_dev->c_realdata.Uab);
- 	qds.OV=0;
-	qds.RES=0;
-	qds.BL=0;
-	qds.SB=0;
-	qds.NT=0;
-	qds.IV=0;
-  iec_api_add_element_to_node(frame_info,QDS,&qds);
-  iec_api_update_node(appid,EVT_SUB_DAT_LEVEL_1,M_ME_NB,20,frame_info);
-
-
-  qoi=GOL_CALL;
-   frame_info=(struct node_frame_info *)iec_api_gen_node_info(0x0,0);
-  iec_api_add_element_to_node(frame_info,QOI,&qoi);
-  iec_api_update_node(appid,EVT_SUB_DAT_LEVEL_1,C_IC_NA,Actterm,frame_info);
-}
-
-int app_frame_ctrl_sys_cmd_callback(int appid,int asdu_ident,char *node_val,int node_data_len)
-{
-  if(asdu_ident==C_IC_NA)
-  {
-    Info_E_QOI *qoi=(Info_E_QOI*)node_val;
-    if((*qoi)==GOL_CALL)
-    {
-      all_call_proc(appid);
-    }
-  }
-  return 1;
-}
-/**
- * 控制命令处理,具体过程由用户提供的接口实现
- *
- * @param asdu_ident ASDU标识
- * @param node_addr 信息点地址
- * @param node_data 信息点数据
- * @param node_data_len 信息点数据长度
- */
-static int app_frame_ctrl_cmd_proc(int asdu_ident,int node_addr,char *node_data,int node_data_len)
-{
-  //return app_frame_ctrl_cmd_user_callback(asdu_ident,node_addr,node_data,node_data_len);
-}
-
-static int app_frame_ctrl_sys_cmd_proc(int appid,int asdu_ident,char *node_data,int node_data_len)
-{
-  return app_frame_ctrl_sys_cmd_callback(appid,asdu_ident,node_data,node_data_len);
-}
-
-
-/**
+ /**
  * APP对链路送至的ASDU数据转换处理,准备创建发送信息,建立任务
  *
  * @param info APP信息
