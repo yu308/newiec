@@ -1,10 +1,8 @@
-#include "iec_cfg.h"
-#include "iec_asdu.h"
-#include "iec_element.h"
-
+#include "../Core/core.h"
+#include "iec.h"
 /**
  * ASDU配置信息表
- * 
+ *
  */
 
 const struct asdu_cfg g_SysASDU_Table[] =
@@ -19,64 +17,64 @@ const struct asdu_cfg g_SysASDU_Table[] =
 #if CFG_ASDU_M_DP_NA
 	{ M_DP_NA,DIQ,NO_QUAL_WORD,NO_TIME,NO_EXT_TIME },
 #endif
-#if CFG_ASDU_M_DP_TA	
+#if CFG_ASDU_M_DP_TA
 	{ M_DP_TA,DIQ,NO_QUAL_WORD,TM24,NO_EXT_TIME },
 #endif
 
 #if CFG_ASDU_M_ST_NA
 	{ M_ST_NA,VTI,QDS,NO_TIME,NO_EXT_TIME },
 #endif
-#if CFG_ASDU_M_ST_TA	
+#if CFG_ASDU_M_ST_TA
 	{ M_ST_TA,VTI,QDS,TM24,NO_EXT_TIME },
 #endif
 
 #if CFG_ASDU_M_BO_NA
 	{ M_BO_NA,BSI,QDS,NO_TIME,NO_EXT_TIME },
 #endif
-#if CFG_ASDU_M_BO_TA  
+#if CFG_ASDU_M_BO_TA
 	{ M_BO_TA,BSI,QDS,TM24,NO_EXT_TIME },
 #endif
 
-#if CFG_ASDU_M_ME_NA  
+#if CFG_ASDU_M_ME_NA
 	{ M_ME_NA,NVA,QDS,NO_TIME,NO_EXT_TIME },
 #endif
 #if CFG_ASDU_M_ME_TA
 	{ M_ME_TA,NVA,QDS,TM24,NO_EXT_TIME },
 #endif
-#if CFG_ASDU_M_ME_NB  
+#if CFG_ASDU_M_ME_NB
 	{ M_ME_NB,SVA,QDS,NO_TIME,NO_EXT_TIME },
 #endif
-#if CFG_ASDU_M_ME_TB  
+#if CFG_ASDU_M_ME_TB
 	{ M_ME_NB,SVA,QDS,TM24,NO_EXT_TIME },
 #endif
 #if CFG_ASDU_M_ME_NC
 	{ M_ME_NC,STD,QDS,NO_TIME,NO_EXT_TIME },
 #endif
-#if CFG_ASDU_M_ME_TC   
+#if CFG_ASDU_M_ME_TC
 	{ M_ME_NC,STD,QDS,TM24,NO_EXT_TIME },
 #endif
 
 #if CFG_ASDU_M_IT_NA
 	{ M_IT_NA,BCR,NO_QUAL_WORD,NO_TIME,NO_EXT_TIME },
 #endif
-#if CFG_ASDU_M_IT_TA   
+#if CFG_ASDU_M_IT_TA
 	{ M_IT_TA,BCR,NO_QUAL_WORD,TM24,NO_EXT_TIME },
 #endif
 
-#if CFG_ASDU_M_EP_TA  
+#if CFG_ASDU_M_EP_TA
 	{M_EP_TA,SEP,NO_QUAL_WORD,TM16,TM24},
 #endif
-#if CFG_ASDU_M_EP_TB   
+#if CFG_ASDU_M_EP_TB
 	{ M_EP_TB,SPE,QDP,TM16,TM24 },
 #endif
 
-#if CFG_ASDU_M_EP_TC 
+#if CFG_ASDU_M_EP_TC
 	{ M_EP_TC,OCI,QDP,TM16,TM24 },
 #endif
-#if CFG_ASDU_M_PS_NA  
+#if CFG_ASDU_M_PS_NA
 	{ M_PS_NA,SCD,QDS,NO_TIME,NO_EXT_TIME },
 #endif
-#if CFG_ASDU_M_ME_ND  
+#if CFG_ASDU_M_ME_ND
 	{ M_ME_ND,NVA,NO_QUAL_WORD,NO_TIME,NO_EXT_TIME },
 #endif
 
@@ -86,50 +84,50 @@ const struct asdu_cfg g_SysASDU_Table[] =
 #if CFG_ASDU_M_DP_TB
 	{ M_DP_TB,DIQ,NO_QUAL_WORD,TM56,NO_EXT_TIME },
 #endif
-#if CFG_ASDU_M_ST_TB 
+#if CFG_ASDU_M_ST_TB
 	{ M_ST_TB,VTI,QDS,TM56,NO_EXT_TIME },
 #endif
-#if CFG_ASDU_M_BO_TB 
+#if CFG_ASDU_M_BO_TB
 	{ M_BO_TB,BSI,QDS,TM56,NO_EXT_TIME },
 #endif
-#if CFG_ASDU_M_ME_TD  
+#if CFG_ASDU_M_ME_TD
 	{ M_ME_TD,NVA,QDS,TM56,NO_EXT_TIME },
 #endif
-#if CFG_ASDU_M_ME_TE 
+#if CFG_ASDU_M_ME_TE
 	{ M_ME_TE,SVA,QDS,TM56,NO_EXT_TIME },
 #endif
-#if CFG_ASDU_M_ME_TF   
+#if CFG_ASDU_M_ME_TF
 	{ M_ME_TF,STD,QDS,TM56,NO_EXT_TIME },
 #endif
-#if CFG_ASDU_M_IT_TB 
+#if CFG_ASDU_M_IT_TB
 	{ M_IT_TB,BCR,NO_QUAL_WORD,TM56,NO_EXT_TIME },
 #endif
-#if CFG_ASDU_M_EP_TD   
+#if CFG_ASDU_M_EP_TD
 	{ M_EP_TD,SEP,NO_QUAL_WORD,TM16,TM56 },
 #endif
-#if CFG_ASDU_M_EP_TE   
+#if CFG_ASDU_M_EP_TE
 	{ M_EP_TE,SPE,QDP,TM16,TM56 },
 #endif
-#if CFG_ASDU_M_EP_TF   
+#if CFG_ASDU_M_EP_TF
 	{ M_EP_TF,OCI,QDP,TM16,TM56 },
 #endif
 
-#if CFG_ASDU_C_SC_NA    
+#if CFG_ASDU_C_SC_NA
 	{ C_SC_NA,SCO,NO_QUAL_WORD,NO_TIME,NO_EXT_TIME },
 #endif
-#if CFG_ASDU_C_DC_NA 
+#if CFG_ASDU_C_DC_NA
 	{ C_DC_NA,DCO,NO_QUAL_WORD,NO_TIME,NO_EXT_TIME },
 #endif
-#if CFG_ASDU_C_RC_NA   
+#if CFG_ASDU_C_RC_NA
 	{ C_RC_NA,RCO,NO_QUAL_WORD,NO_TIME,NO_EXT_TIME },
 #endif
-#if CFG_ASDU_C_SE_NA  
+#if CFG_ASDU_C_SE_NA
 	{ C_SE_NA,NVA,QOS,NO_TIME,NO_EXT_TIME },
 #endif
-#if CFG_ASDU_C_SE_NB 
+#if CFG_ASDU_C_SE_NB
 	{ C_SE_NB,SVA,QOS,NO_TIME,NO_EXT_TIME },
 #endif
-#if CFG_ASDU_C_SE_NC 
+#if CFG_ASDU_C_SE_NC
 	{ C_SE_NC,STD,QOS,NO_TIME,NO_EXT_TIME },
 #endif
 #if CFG_ASDU_C_BO_NA
@@ -158,42 +156,42 @@ const struct asdu_cfg g_SysASDU_Table[] =
 #if CFG_ASDU_C_RP_NA
 	{ C_RP_NA,QRP,NO_QUAL_WORD,NO_TIME,NO_EXT_TIME },
 #endif
-#if CFG_ASDU_C_CD_NA 
+#if CFG_ASDU_C_CD_NA
 	{ C_CD_NA,TM16,NO_QUAL_WORD,NO_TIME,NO_EXT_TIME },
 #endif
 
-#if CFG_ASDU_P_ME_NA  
+#if CFG_ASDU_P_ME_NA
 	{ P_ME_NA,NVA,QPM,NO_TIME,NO_EXT_TIME },
 #endif
-#if CFG_ASDU_P_ME_NB  
-	{ P_ME_NB,SVA,QPM,NO_TIME,NO_EXT_TIME }, 
+#if CFG_ASDU_P_ME_NB
+	{ P_ME_NB,SVA,QPM,NO_TIME,NO_EXT_TIME },
 #endif
-#if CFG_ASDU_P_ME_NC 
+#if CFG_ASDU_P_ME_NC
 	{ P_ME_NC,STD,QPM,NO_TIME,NO_EXT_TIME },
 #endif
 #if CFG_ASDU_P_AC_NA
 	{ P_AC_NA,QPA,NO_QUAL_WORD,NO_TIME,NO_EXT_TIME },
 #endif
 
-#if CFG_ASDU_F_FR_NA 
+#if CFG_ASDU_F_FR_NA
 	{ F_FR_NA,0,NO_QUAL_WORD,NO_TIME,NO_EXT_TIME },
 #endif
-#if CFG_ASDU_F_SR_NA  
+#if CFG_ASDU_F_SR_NA
 	{ F_SR_NA,0,NO_QUAL_WORD,NO_TIME,NO_EXT_TIME },
 #endif
-#if CFG_ASDU_F_SC_NA   
+#if CFG_ASDU_F_SC_NA
 	{ F_SC_NA,0,NO_QUAL_WORD,NO_TIME,NO_EXT_TIME },
 #endif
-#if CFG_ASDU_F_LS_NA   
+#if CFG_ASDU_F_LS_NA
 	{ F_LS_NA,0,NO_QUAL_WORD,NO_TIME,NO_EXT_TIME },
 #endif
-#if CFG_ASDU_F_AF_NA   
+#if CFG_ASDU_F_AF_NA
 	{ F_AF_NA,0,NO_QUAL_WORD,NO_TIME,NO_EXT_TIME },
 #endif
-#if CFG_ASDU_F_SG_NA   
+#if CFG_ASDU_F_SG_NA
 	{ F_SG_NA,0,NO_QUAL_WORD,NO_TIME,NO_EXT_TIME },
 #endif
-#if CFG_ASDU_F_DR_TA   
+#if CFG_ASDU_F_DR_TA
 	{ F_DR_TA,0,NO_QUAL_WORD,NO_TIME,NO_EXT_TIME },
 #endif
 };

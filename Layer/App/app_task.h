@@ -1,8 +1,8 @@
 #ifndef _app_task_h_
 #define _app_task_h_
 
-#include "../Helper/arraylist.h"
-#include "../../Iec/iec_helper.h"
+#include "../../Core/core.h"
+#include "../../Iec/iec.h"
 
 struct app_task
 {

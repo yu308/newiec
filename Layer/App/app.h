@@ -1,8 +1,15 @@
 #ifndef _app_h_
 #define _app_h_
 
-#include "../../OS/os_helper.h"
-#include "../Helper/layer_helper.h"
+#include "../../Core/core.h"
+#include "../layer.h"
+
+#define CMD_RES_OK  (1)
+#define CMD_RES_FAIL (0)
+#define CMD_RES_ERR_TYPE    (-1)
+#define CMD_RES_ERR_CAUSE   (-2)
+#define CMD_RES_ERR_ASDU    (-3)
+#define CMD_RES_ERR_NODE    (-4)
 
 typedef int (*sys_cmd_proc)(unsigned int asdu_ident,char* node_data,unsigned int len);
 typedef int (*ctrl_cmd_proc)(unsigned int asdu_ident,unsigned int node_addr,char* node_data,unsigned int len);
@@ -22,9 +29,9 @@ struct buffered_data
 /// Ó¦ÓÃÅäÖÃÐÅÏ¢
 /// </summary>
 struct app_cfg
-{       
+{
   char name[CFG_NAME_MAX];
-	int asdu_addr; /*ASDUµØÖ·*/	
+	int asdu_addr; /*ASDUµØÖ·*/
 	int asdu_addr_len;	/*ASDUµØÖ·³¤¶È*/
 	int cause_len;	/*´«ËÍÔ­Òò³¤¶È*/
 	int node_addr_len;	/*ÐÅÏ¢µãµØÖ·³¤¶È*/
@@ -39,7 +46,7 @@ struct app_info
 	struct app_cfg cfg;
 
 	unsigned int linklayer_id[CFG_LINK_MAX];		/*°ó¶¨µÄlinkÁ´Â·*/
- 
+
 #if(CFG_ROLE_MODE==SYS_ROLE_MIXED)
 	int bro_applayer_id[CFG_APP_MAX];	/*ÖÐ×ª»ú»ìºÏÄ£Ê½ÏÂ ¹ØÁªµÄAPP*/
 #endif

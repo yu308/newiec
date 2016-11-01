@@ -1,7 +1,7 @@
 #ifndef _asdu_table_h_
 #define _asdu_table_h_
 
-#include "iec_cfg.h"
+#include "../Core/core.h"
 #include "iec_asdu.h"
 
 

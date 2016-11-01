@@ -1,13 +1,11 @@
-#include "iec_event.h"
-#include "iec_element.h"
-#include "iec_asdu.h"
-#include "iec_asdu_table.h"
+#include "iec.h"
 
-/** 
- *  查找对应标识的ASDU配置信息 
- * 
+
+/**
+ *  查找对应标识的ASDU配置信息
+ *
  * @param ident  ASDU标识
- * 
+ *
  * @return ASDU配置信息
  */
 struct asdu_cfg* iec_get_asdu_cfg(int ident)
@@ -24,26 +22,4 @@ struct asdu_cfg* iec_get_asdu_cfg(int ident)
 	return 0;
 }
 
-/** 
- * 封装信息点数据
- * 
- * @param buff 数据缓存 
- * @param cfg ASDU配置信息
- * @param node_addr 信息点地址
- * @param node_addr_len 信息点地址长度
- * @param val 信息点的值
- * @param qual 信息点值描述符
- * @param utc_time  utc时间
- * @param millsecond 毫秒计数 0-999
- * 
- * @return 信息点数据的长度
- */
-unsigned int iec_asdu_pack_node(char *buff, struct asdu_cfg *cfg,int node_addr,int node_addr_len,int val,int qual,int utc_time,
-	int millsecond)
-{
-	int idx = 0;
 
-	idx += iec_pack_node_addr(buff, node_addr, node_addr_len);
-
-	return idx;
-}

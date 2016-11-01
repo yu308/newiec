@@ -1,7 +1,6 @@
-#include "../../Core/iec_cfg.h"
-#include "iec_node.h"
-#include "iec_element.h"
-#include <time.h>
+#include "../Core/core.h"
+#include "iec.h"
+
 
 
 
@@ -13,10 +12,10 @@ struct node_obj *iec_create_node(unsigned int node_addr,int seq_count)
 		rt_kprintf("IEC:NODE: Created fail\n");
 		return 0;
 	}
-	
+
 	nd->addr=node_addr;
 	nd->seq=seq_count;
-	
+
 	return nd;
 }
 
@@ -29,13 +28,13 @@ void iec_del_node(struct node_obj *node)
 	rt_free(node);
 }
 
-/** 
+/**
  * 封装信息点地址
- * 
- * @param buff 数据缓存 
+ *
+ * @param buff 数据缓存
  * @param node_addr 信息点地址
  * @param addr_len 地址长度
- * 
+ *
  * @return 数据长度
  */
 unsigned int iec_pack_node_addr(char *buff, unsigned int node_addr, int addr_len)
@@ -44,13 +43,13 @@ unsigned int iec_pack_node_addr(char *buff, unsigned int node_addr, int addr_len
 	return addr_len;
 }
 
-/** 
+/**
  * 封装信息点元素数据
- * 
+ *
  * @param buff  数据缓存
  * @param element_val  数据元素值
  * @param element_ident 数据元素标识
- * 
+ *
  * @return 数据长度
  */
 unsigned int iec_pack_node_element(char *buff, void *element_val, int element_ident)
@@ -59,72 +58,23 @@ unsigned int iec_pack_node_element(char *buff, void *element_val, int element_id
 	return element_len_cfg[element_ident];
 }
 
-/** 
- * 封装时间类元素数据
- * 
- * @param buff 数据缓存
- * @param utc_time UTC时间
- * @param millsecond 毫秒数
- * @param tm_ident 时间标识
- * 
- * @return 数据长度
- */
-unsigned int iec_pack_tm_node_element(char *buff, int utc_time, int millsecond,int tm_ident)
-{
-	struct tm *t = gmtime(&utc_time);
-	Info_E_TM56 info_tm56;
-	Info_E_TM24 info_tm24;
-	Info_E_TM16 info_tm16;
-
-	rt_memset(&info_tm56, 0, 7);
-	rt_memset(&info_tm24, 0, 3);
-	rt_memset(&info_tm16, 0, 2);
-
-	if (tm_ident == TM56)
-	{
-		info_tm56.YEAR = t->tm_year + 1900 - 2000;
-		info_tm56.MONTH = t->tm_mon + 1;
-		info_tm56.DOM = t->tm_mday;
-		info_tm56.DOW = t->tm_wday + 1;
-		info_tm56.HOUR = t->tm_hour;
-		info_tm56.MIN = t->tm_min;
-		info_tm56.M_SEC = t->tm_sec * 1000+millsecond;
-
-		rt_memcpy(&buff[0], &info_tm56, element_len_cfg[tm_ident]);
-	}
-	else if (tm_ident == TM24)
-	{
-		info_tm24.MIN = t->tm_min;
-		info_tm24.M_SEC = t->tm_sec * 1000 + millsecond;
-		rt_memcpy(&buff[0], &info_tm24, element_len_cfg[tm_ident]);
-
-	}
-	else if (tm_ident == TM16)
-	{
-		info_tm16.M_SEC = t->tm_sec * 1000 + millsecond;
-		rt_memcpy(&buff[0], &info_tm16, element_len_cfg[tm_ident]);
-	}
-
-	
-	return element_len_cfg[tm_ident];
-}
 
 
 
 /**************** API ******************/
-#include "../Core/iec_event.h"
-#include "../Layer/Helper/layer_helper.h"
+#include "../Core/core.h"
+#include "../Layer/layer.h"
 
-/** 
+/**
  * 生成一个信息点的传输数据信息
- * 
+ *
  * @param node_addr 地址
  * @param val 值
  * @param qual 描述符
  * @param utc_time UTC时间
  * @param millsecond 毫秒数
  * @param buffered 是否缓存
- * 
+ *
  * @return 传输数据信息
  */
 struct node_frame_info * iec_api_gen_node_info(unsigned int node_addr,int buffered)
@@ -137,8 +87,19 @@ struct node_frame_info * iec_api_gen_node_info(unsigned int node_addr,int buffer
 
 	f_node->addr = node_addr;
 	f_node->buffered = buffered;
+    f_node->single=1;
 
 	return f_node;
+}
+
+void iec_api_add_nodedata_to_node(struct node_frame_info *head_node,int node_addr,int node_addr_len)
+{
+    if (head_node!=0)
+    {
+        rt_memcpy(&head_node->byte_buff[head_node->data_len], &node_addr, node_addr_len);
+        head_node->data_len+=node_addr_len;
+        head_node->single+=1;
+    }
 }
 
 void iec_api_add_element_to_node(struct node_frame_info *nd_info,int element_tag,void *el_val)
@@ -147,9 +108,9 @@ void iec_api_add_element_to_node(struct node_frame_info *nd_info,int element_tag
 }
 
 
-/** 
+/**
  * 更新信息点--- 用户接口
- * 
+ *
  * @param appid app实例
  * @param level 数据优先级 对应一级数据 二级数据
  * @param asdu_ident 使用的ASDU标识

@@ -1,4 +1,4 @@
-#include "../Helper/layer_helper.h"
+#include "../layer.h"
 
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
 void app_thread_entry(void *param);
@@ -8,9 +8,9 @@ void app_thread_entry(void *param);
 #define MAX_EVENT_COUNT			(8)
 #endif
 
-/** 
+/**
  *  初始化某个APP实例信息
- * 
+ *
  * @param info APP实例
  * @param asdu_addr ASDU地址
  * @param asdu_addr_len ASDU地址长度
@@ -21,7 +21,7 @@ void app_thread_entry(void *param);
 void app_init(struct app_info *info,char *name, int asdu_addr, int asdu_addr_len,int cause_len,int node_addr_len,int sm2_enable)
 {
 	rt_memset(info, 0, sizeof(struct app_info));
-	
+
 	info->cfg.asdu_addr = asdu_addr;
 	info->cfg.asdu_addr_len = asdu_addr_len;
 	info->cfg.cause_len = cause_len;
@@ -35,19 +35,19 @@ void app_init(struct app_info *info,char *name, int asdu_addr, int asdu_addr_len
 	info->buffered = arraylist_create();
 
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
-	info->app_event =rt_mb_create("appmb", MAX_EVENT_COUNT, RT_IPC_FLAG_FIFO); 
+	info->app_event =rt_mb_create("appmb", MAX_EVENT_COUNT, RT_IPC_FLAG_FIFO);
 #endif
 }
 
-/** 
+/**
  * 生成一个APP
- * 
+ *
  * @param asdu_addr ASDU地址
  * @param asdu_addr_len ASDU地址长度
  * @param cause_len 传送原因长度
  * @param node_addr_len 信息点地址长度
  * @param sm2_enable SM2功能启用
- * 
+ *
  * @return APP
  */
 struct app_info *app_create(char *name,int asdu_addr, int asdu_addr_len, int cause_len, int node_addr_len, int sm2_enable)
@@ -58,7 +58,7 @@ struct app_info *app_create(char *name,int asdu_addr, int asdu_addr_len, int cau
 		rt_kprintf("applayer configure malloc fail.\n");
 		return 0;
 	}
-    
+
 	app_init(info,name, asdu_addr, asdu_addr_len, cause_len, node_addr_len, sm2_enable);
 
   return info;
@@ -75,28 +75,28 @@ void app_add_link(struct app_info *app,unsigned int link_id)
       return ;
     }
   }
-  
+
   rt_kprintf("IEC:APP: link is full\n");
-  
+
 }
 
 void app_set_cmd_cb(struct app_info *app,unsigned int cb_idx,void *cb)
 {
   if(cb_idx==EVT_SUB_APP_CTRL_CMD)
-    app->ctrl_cmd_cb=cb;
+    app->ctrl_cmd_cb=(ctrl_cmd_proc)cb;
   if(cb_idx==EVT_SUB_APP_FILE_CMD)
-    app->file_cmd_cb=cb;
+    app->file_cmd_cb=(file_cmd_proc)cb;
   if(cb_idx==EVT_SUB_APP_PARAM_CMD)
-    app->param_cmd_cb=cb;
+    app->param_cmd_cb=(param_cmd_proc)cb;
   if(cb_idx==EVT_SUB_APP_SYS_CMD)
-    app->sys_cmd_cb=cb;
+    app->sys_cmd_cb=(sys_cmd_proc)cb;
 
 
 }
 
-/** 
+/**
  *  APP-接收端收到ASDU类数据处理函数
- * 
+ *
  * @param info APP
  * @param asdu_data ASDU字节数据
  */
@@ -133,14 +133,14 @@ static void app_evt_dispatch_recv_asdu(struct app_info *info,int link_id,char *a
 
   app_task_insert_ack_asdu(info,link_id,&recv_info);
 
- 
+
 
 }
 
 
-/** 
+/**
  * APP --接收link端数据处理
- * 
+ *
  * @param info APP实例
  * @param evt 事件类型 包含 请求一类数据  请求二类数据   用户类数据
  */
@@ -191,9 +191,9 @@ static void app_evt_recv_data_handle(struct app_info *info,struct iec_event *evt
 }
 
 
-/** 
+/**
  * APP-- 更新信息点事件处理
- * 
+ *
  * @param info APP实例
  * @param evt 事件 信息点更新信息及具体信息点数据
  */
@@ -224,7 +224,7 @@ static void app_evt_update_node_handle(struct app_info *info, struct iec_event *
    * 3、注册任务
    */
 
-  for(i=0;i<CFG_LINK_MAX;i++) 
+  for(i=0;i<CFG_LINK_MAX;i++)
     {
       if(info->linklayer_id[i]==0)
         continue;
@@ -272,21 +272,21 @@ void app_thread_entry(void *param)
 		{
 		case EVT_APP_ADD_NODE:
 			break;
-		case EVT_APP_NODE_UPDATE:	
+		case EVT_APP_NODE_UPDATE:
 			app_evt_update_node_handle(info, evt);
 			break;		/*ÐÅÏ¢µã±ä»¯*/
 		case EVT_APP_RECV_DATA: /*±»¶¯ÊÕµ½LINKÖÁASDUÊý¾Ý*/
 			app_evt_recv_data_handle(info, evt);
-			break;		
-		case EVT_APP_SEND_DATA:	/*Ö÷¶¯·¢ËÍASDUÊý¾Ý,ASDUÊý¾ÝÓÉÓÃ»§Ó¦ÓÃ²úÉú*/			
-			break;		
-		case EVT_APP_CTRL_OP:					
+			break;
+		case EVT_APP_SEND_DATA:	/*Ö÷¶¯·¢ËÍASDUÊý¾Ý,ASDUÊý¾ÝÓÉÓÃ»§Ó¦ÓÃ²úÉú*/
+			break;
+		case EVT_APP_CTRL_OP:
 			break;		/*¿ØÖÆ²Ù×÷*/
-		case EVT_APP_SET_OP:					
+		case EVT_APP_SET_OP:
 			break;		/*ÉèÖÃÐÞ¸Ä²Ù×÷*/
-		case EVT_APP_READ_OP:					
+		case EVT_APP_READ_OP:
 			break;		/*¶ÁÈ¡²Ù×÷*/
-		case EVT_APP_FILE_OP:					
+		case EVT_APP_FILE_OP:
 			break;		/*ÎÄ¼þ²Ù×÷*/
 		}
 

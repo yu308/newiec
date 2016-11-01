@@ -5,11 +5,8 @@
  * Uses dynamic extensible arrays.
  */
 
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
 #include "arraylist.h"
- 
+
 /*
  * Interface section used for `makeheaders`.
  */
@@ -34,7 +31,7 @@ struct arraylist {
 #define ARRAYLIST_INITIAL_CAPACITY 4
 
 
-#define arraylist_memshift(s, offset, length) memmove((s) + (offset), (s), (length)* sizeof(s));
+#define arraylist_memshift(s, offset, length) rt_memmove((s) + (offset), (s), (length)* sizeof(s));
 
 /**
  * Create a new, empty arraylist.
@@ -45,7 +42,7 @@ arraylist* arraylist_create()
 	new_list->size = 0;
 	// Allocate the array
 	new_list->body = rt_malloc(sizeof(void*) * ARRAYLIST_INITIAL_CAPACITY);
-	assert(new_list->body);
+	RT_RT_ASSERT(new_list->body);
 	new_list->capacity = ARRAYLIST_INITIAL_CAPACITY;
 	return new_list;
 }
@@ -55,19 +52,19 @@ arraylist* arraylist_create()
  */
 void arraylist_allocate(arraylist* l, unsigned int size)
 {
-	assert(size > 0);
+	RT_ASSERT(size > 0);
 	if (size > l->capacity) {
 		unsigned int new_capacity = l->capacity;
 		while (new_capacity < size) {
 			new_capacity *= 2;
 		}
 		l->body = rt_realloc(l->body, sizeof(void*) * new_capacity);
-		assert(l->body);
+		RT_ASSERT(l->body);
 		l->capacity = new_capacity;
 	}
 }
 
-/** 
+/**
  * Return the number of items contained in the list.
  */
  unsigned int arraylist_size(arraylist*l) {
@@ -88,7 +85,7 @@ void arraylist_add(arraylist* l, void* item)
  */
 void* arraylist_pop(arraylist* l)
 {
-	assert(l->size > 0);
+	RT_ASSERT(l->size > 0);
 	return l->body[--l->size];
 }
 
@@ -97,7 +94,7 @@ void* arraylist_pop(arraylist* l)
  */
 void* arraylist_get(arraylist* l, unsigned int index)
 {
-	assert(index < l->size);
+	RT_ASSERT(index < l->size);
 	return l->body[index];
 }
 
@@ -106,7 +103,7 @@ void* arraylist_get(arraylist* l, unsigned int index)
  */
 void arraylist_set(arraylist* l, unsigned int index, void* value)
 {
-	assert(index < l->size);
+	RT_ASSERT(index < l->size);
 	l->body[index] = value;
 }
 
@@ -149,10 +146,10 @@ void arraylist_clear(arraylist* l)
  */
 arraylist* arraylist_slice(arraylist* l, unsigned int index, unsigned int length)
 {
-	assert(index + length <= l->size);
+	RT_ASSERT(index + length <= l->size);
 	arraylist* new_list = arraylist_create();
 	arraylist_allocate(new_list, length);
-	memmove(new_list->body, l->body + index, length * sizeof(void*));
+	rt_memmove(new_list->body, l->body + index, length * sizeof(void*));
 	new_list->size = length;
 	return new_list;
 }
@@ -192,7 +189,7 @@ void arraylist_splice(arraylist* l, arraylist* source, unsigned int index)
 	arraylist_memshift(l->body + index, source->size, l->size - index);
 	//memmove(l->body + index + source->size, l->body + index, (l->size - index) * sizeof(void*));
 	// Copy the data over
-	memmove(l->body + index, source->body, source->size * sizeof(void*));
+	rt_memmove(l->body + index, source->body, source->size * sizeof(void*));
 	l->size += source->size;
 }
 

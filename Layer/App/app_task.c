@@ -1,6 +1,6 @@
-#include "../../Core/iec_event.h"
-#include "../Helper/layer_helper.h"
-#include "../Iec/iec_helper.h"
+#include "../../Core/core.h"
+#include "../layer.h"
+#include "../../Iec/iec.h"
 
 #define TASK_IDENT_NAME_FORMAT		"%08X-%02X-%02X-%02X"			/*LINKID-ASDU-CAUSE-SEQ*/
 
@@ -37,16 +37,16 @@ int app_task_free(arraylist *task_list,struct app_task *task,int clear)
 }
 
 
-/** 
+/**
  * 添加通用信息点任务
- * 
+ *
  * @param al 任务链表
  * @param link_id 任务所属链路id
  * @param asdu_ident ASDU标识
  * @param cause 传输原因
  * @param f_node 信息点数据信息
- * 
- * @return 创建状态 >=0 当前任务索引 成功  -1 已有数据 
+ *
+ * @return 创建状态 >=0 当前任务索引 成功  -1 已有数据
  */
 int app_task_add_normal(arraylist *al,unsigned int link_id,unsigned int asdu_ident, int cause, struct node_frame_info *f_node)
 {
@@ -77,15 +77,15 @@ int app_task_add_normal(arraylist *al,unsigned int link_id,unsigned int asdu_ide
                         }
                     }
                 }
-              else 
+              else
                 {
                   arraylist_add(temp->node_data_list, f_node);
                   return i;
-                }	
-          
+                }
+
             }
 
-        } 
+        }
     }
 
   temp = rt_malloc(sizeof(struct app_task));
@@ -103,22 +103,22 @@ int app_task_add_normal(arraylist *al,unsigned int link_id,unsigned int asdu_ide
   return i;
 }
 
-/** 
+/**
  * ASDU封装信息点数据
- * 
+ *
  * @param buff 数据缓存
  * @param asdu_ident ASDU标识
  * @param node_addr_len 地址长度
  * @param node_list ASDU信息点链表
  * @param out_count 封装的信息点数量
- * 
+ *
  * @return ASDU字节数据
  */
 int app_task_pack_node(char *buff,int node_addr_len, arraylist *node_list,int *out_count)
 {
 	int len = 0,count=0;
 	struct node_frame_info *f_node = 0;
-	
+
 
   /*确保数据长度不超过协议规定长度*/
 	while (len < (CFG_ASDU_DATA_BUFF_MAX - 20))
@@ -130,8 +130,13 @@ int app_task_pack_node(char *buff,int node_addr_len, arraylist *node_list,int *o
 			{
 				if(((f_node->vsq>>7)&0x1)>0)
 					count=f_node->vsq&0x7F;
-				else 
-					count++;
+                else if (f_node->single>1) 
+                {
+                    count = f_node->single;
+                }
+                else
+                    count++;
+
 				iec_pack_node_addr(buff,f_node->addr,node_addr_len);
 				len+=node_addr_len;
 				rt_memcpy(&buff[len],f_node->byte_buff,f_node->data_len);
@@ -148,11 +153,11 @@ int app_task_pack_node(char *buff,int node_addr_len, arraylist *node_list,int *o
 }
 
 
-/** 
+/**
  * 获取任务
- * 
- * @param al 
- * 
+ *
+ * @param al
+ *
  * @return 若无任务，则返回0
  */
 struct app_task *app_task_get(arraylist *al,unsigned int link_id)
@@ -169,12 +174,12 @@ struct app_task *app_task_get(arraylist *al,unsigned int link_id)
 
 }
 
-/** 
+/**
  * 任务转为ASDU字节数据帧
- * 
+ *
  * @param info APP应用信息
  * @param task 任务
- * 
+ *
  * @return ASDU字节数据帧
  */
 struct app_send_info *app_task_covert_to_asdu_frame(struct app_info *info,struct app_task *task)
@@ -190,7 +195,7 @@ struct app_send_info *app_task_covert_to_asdu_frame(struct app_info *info,struct
   asdu_frame[idx++] = task->asdu_ident;
   asdu_frame[idx++] = (task->seq << 7);
 
-  
+
   rt_memcpy(&asdu_frame[idx], &task->cause, info->cfg.cause_len);
   idx += info->cfg.cause_len;
 
@@ -200,7 +205,7 @@ struct app_send_info *app_task_covert_to_asdu_frame(struct app_info *info,struct
 
 	  /*普通信息点处理*/
 	idx+=app_task_pack_node(&asdu_frame[idx], info->cfg.node_addr_len,task->node_data_list,&node_count);
-  
+
 
 
   asdu_frame[1] |= node_count;
@@ -213,12 +218,12 @@ struct app_send_info *app_task_covert_to_asdu_frame(struct app_info *info,struct
   return send_info;
 }
 
-/** 
+/**
  * 检测当前链路是否有数据传输任务
- * 
- * @param al 
- * @param link_id 
- * 
+ *
+ * @param al
+ * @param link_id
+ *
  * @return 有返回1 无则返回0
  */
 int app_task_check_empty(arraylist *al,int link_id)
@@ -274,11 +279,11 @@ int all_call_proc(int appid)
   siq.NT=0;
   siq.RES=0;
   siq.SB=0;
-  
+
   frame_info=(struct node_frame_info *)iec_api_gen_node_info(0x1,0);
   iec_api_add_element_to_node(frame_info,SIQ,&siq);
-  iec_api_update_normal_node(appid,EVT_SUB_DAT_LEVEL_1,M_SP_NA,20,frame_info);
-  
+  iec_api_update_node(appid,EVT_SUB_DAT_LEVEL_1,M_SP_NA,20,frame_info);
+
   frame_info=(struct node_frame_info *)iec_api_gen_node_info(0x4001,0);
   iec_api_add_element_to_node(frame_info,SVA,&gSystemDev.ftu_dev->c_realdata.Uab);
  	qds.OV=0;
@@ -288,13 +293,13 @@ int all_call_proc(int appid)
 	qds.NT=0;
 	qds.IV=0;
   iec_api_add_element_to_node(frame_info,QDS,&qds);
-  iec_api_update_normal_node(appid,EVT_SUB_DAT_LEVEL_1,M_ME_NB,20,frame_info);
-  
+  iec_api_update_node(appid,EVT_SUB_DAT_LEVEL_1,M_ME_NB,20,frame_info);
+
 
   qoi=GOL_CALL;
    frame_info=(struct node_frame_info *)iec_api_gen_node_info(0x0,0);
   iec_api_add_element_to_node(frame_info,QOI,&qoi);
-  iec_api_update_normal_node(appid,EVT_SUB_DAT_LEVEL_1,C_IC_NA,Actterm,frame_info);
+  iec_api_update_node(appid,EVT_SUB_DAT_LEVEL_1,C_IC_NA,Actterm,frame_info);
 }
 
 int app_frame_ctrl_sys_cmd_callback(int appid,int asdu_ident,char *node_val,int node_data_len)
@@ -309,13 +314,13 @@ int app_frame_ctrl_sys_cmd_callback(int appid,int asdu_ident,char *node_val,int 
   }
   return 1;
 }
-/** 
+/**
  * 控制命令处理,具体过程由用户提供的接口实现
- * 
+ *
  * @param asdu_ident ASDU标识
  * @param node_addr 信息点地址
  * @param node_data 信息点数据
- * @param node_data_len 信息点数据长度 
+ * @param node_data_len 信息点数据长度
  */
 static int app_frame_ctrl_cmd_proc(int asdu_ident,int node_addr,char *node_data,int node_data_len)
 {
@@ -328,9 +333,9 @@ static int app_frame_ctrl_sys_cmd_proc(int appid,int asdu_ident,char *node_data,
 }
 
 
-/** 
+/**
  * APP对链路送至的ASDU数据转换处理,准备创建发送信息,建立任务
- * 
+ *
  * @param info APP信息
  * @param recv_info  收到的ASDU信息
  */
@@ -354,22 +359,25 @@ void app_linkframe_convert_to_asdu(struct app_info *info,struct app_recv_info *r
       /*控制方向过程控制信息处理*/
       if(recv_info->cause==Act)
         {
-          state=app_frame_ctrl_cmd_proc(recv_info->asdu_ident,node_addr,&recv_info->asdu_sub_data[info->cfg.node_addr_len],
-                                        recv_info->asdu_sub_len-info->cfg.node_addr_len);
-
-          if(state==1)
+            if(info->ctrl_cmd_cb!=0)
             {
-              recv_info->ack_cause=Actcon;
+                state=info->ctrl_cmd_cb(recv_info->asdu_ident,node_addr,&recv_info->asdu_sub_data[info->cfg.node_addr_len],
+                                        recv_info->asdu_sub_len-info->cfg.node_addr_len);
+                if(state==1)
+                {
+                    recv_info->ack_cause=Actcon;
+                }
+                else
+                    recv_info->ack_cause=Actterm;
             }
-          else
-            recv_info->ack_cause=Actterm;
+
 
         }
       else if(recv_info->cause==Deact)
         {
           recv_info->ack_cause=Deactcon;
         }
-    }    
+    }
   else if((recv_info->asdu_ident>69)&&(recv_info->asdu_ident<98))
     {
       /*监视方向过程控制信息处理*/
@@ -377,14 +385,17 @@ void app_linkframe_convert_to_asdu(struct app_info *info,struct app_recv_info *r
   else if((recv_info->asdu_ident>99)&&(recv_info->asdu_ident<107))
     {
       /*控制方向的系统命令*/
-       recv_info->ack_cause=Actcon;
-        app_frame_ctrl_sys_cmd_proc((int)info,recv_info->asdu_ident,&recv_info->asdu_sub_data[info->cfg.node_addr_len],
-                                        recv_info->asdu_sub_len-info->cfg.node_addr_len);
+      recv_info->ack_cause=Actcon;
+      if(info->sys_cmd_cb!=0)
+      {
+          state=info->sys_cmd_cb(recv_info->asdu_ident,&recv_info->asdu_sub_data[info->cfg.node_addr_len],
+                           recv_info->asdu_sub_len-info->cfg.node_addr_len);
+      }
     }
   else if((recv_info->asdu_ident>109)&&(recv_info->asdu_ident<114))
     {
       /*控制方向的参数命令*/
-     
+
     }
   else if((recv_info->asdu_ident>119)&&(recv_info->asdu_ident<127))
     {
@@ -424,5 +435,5 @@ void app_task_insert_ack_asdu(struct app_info *info,int link_id,struct app_recv_
   /*将要发送的ACK ASDU任务移到首位,保证下次优先发送*/
   void* item= arraylist_remove(al, res);
   arraylist_insert(al, 0, item);
-  
+
 }
