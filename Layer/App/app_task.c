@@ -10,7 +10,7 @@ int app_task_free(arraylist *task_list,struct app_task *task,int clear)
   struct app_task *temp=0;
   struct node_frame_info *node_temp=0;
   int i=0;
-
+  
   int node_count=arraylist_size(task->node_data_list);
   if(clear==0&&node_count>0) /*任务中有信息点数据 清除标识设置为0 时 直接返回*/
     return 0;
@@ -294,12 +294,21 @@ void app_linkframe_convert_to_asdu(struct app_info *info,struct app_recv_info *r
             {
                 state=info->ctrl_cmd_cb(recv_info->asdu_ident,node_addr,&recv_info->asdu_sub_data[info->cfg.node_addr_len],
                                         recv_info->asdu_sub_len-info->cfg.node_addr_len);
-                if(state==1)
+                if(state==CMD_RES_OK)
                 {
                     recv_info->ack_cause=Actcon;
                 }
-                else
+                else if(state==CMD_RES_ERR_NODE)
+                {
+                  recv_info->ack_cause=Unknowinfo;
+                }
+                else if(state==CMD_RES_ERR_TYPE)
+                {
+                  recv_info->ack_cause=Unknowtype;
+                }
+                else 
                     recv_info->ack_cause=Actterm;
+                
             }
 
 
@@ -308,6 +317,7 @@ void app_linkframe_convert_to_asdu(struct app_info *info,struct app_recv_info *r
         {
           recv_info->ack_cause=Deactcon;
         }
+      else recv_info->ack_cause=Unknowreason;
     }
   else if((recv_info->asdu_ident>69)&&(recv_info->asdu_ident<98))
     {

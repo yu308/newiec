@@ -79,7 +79,7 @@ struct serial_link_info
 	struct link_obj  obj;
 	struct serial_link_cfg cfg;
 
-	int acd_tag;
+	volatile int acd_tag;
 	int app_tag;
 	int fcb;
 

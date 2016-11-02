@@ -159,8 +159,9 @@ static void app_evt_recv_data_handle(struct app_info *info,struct iec_event *evt
     if(task_temp!=0)
       {
         send_info = app_task_covert_to_asdu_frame(info, task_temp);
-        app_send_asdu_evt_to_link(info,send_info);
+        
         app_task_free(info->first_task,task_temp,0);
+        app_send_asdu_evt_to_link(info,send_info);
       }
     else
     {
@@ -172,8 +173,9 @@ static void app_evt_recv_data_handle(struct app_info *info,struct iec_event *evt
     if(task_temp!=0)
       {
         send_info = app_task_covert_to_asdu_frame(info, task_temp);
-        app_send_asdu_evt_to_link(info, send_info);
+        
         app_task_free(info->second_task,task_temp,0);
+        app_send_asdu_evt_to_link(info, send_info);
       }
     else
     {

@@ -203,19 +203,19 @@ static void iec_sys_evt_edit_handle(struct sys_info *info,struct iec_event *evt)
     break;
   case EVT_SUB_APP_CTRL_CMD:
     param=evt->sub_msg;
-    app_set_cmd_cb((struct app_info*)param[0],EVT_SUB_APP_CTRL_CMD, (ctrl_cmd_proc)param[1]);
+    app_set_cmd_cb((struct app_info*)param[0],EVT_SUB_APP_CTRL_CMD, (void *)(ctrl_cmd_proc)param[1]);
     break;
   case EVT_SUB_APP_PARAM_CMD:
     param=evt->sub_msg;
-    app_set_cmd_cb((struct app_info*)param[0],EVT_SUB_APP_PARAM_CMD, (param_cmd_proc)param[1]);
+    app_set_cmd_cb((struct app_info*)param[0],EVT_SUB_APP_PARAM_CMD, (void *)(param_cmd_proc)param[1]);
     break;
   case EVT_SUB_APP_FILE_CMD:
     param=evt->sub_msg;
-    app_set_cmd_cb((struct app_info*)param[0],EVT_SUB_APP_FILE_CMD, (file_cmd_proc)param[1]);
+    app_set_cmd_cb((struct app_info*)param[0],EVT_SUB_APP_FILE_CMD, (void *)(file_cmd_proc)param[1]);
     break;
   case EVT_SUB_APP_SYS_CMD:
     param=evt->sub_msg;
-    app_set_cmd_cb((struct app_info*)param[0],EVT_SUB_APP_SYS_CMD, (sys_cmd_proc)param[1]);
+    app_set_cmd_cb((struct app_info*)param[0],EVT_SUB_APP_SYS_CMD, (void *)(sys_cmd_proc)param[1]);
     break;
 
   }
@@ -425,4 +425,4 @@ void iec_sys_api_send_phy_recv(char *name,char *buff,int len)
   iec_post_event(link->mb_event, evt, 20);
 }
 
-//rt_device_control(dev,0xEE,0);
+

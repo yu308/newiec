@@ -3,7 +3,7 @@
 
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
 void serial_link_thread_entry(void *param);
-#define SERIAL_THREAD_PROI      (14)
+#define SERIAL_THREAD_PROI      (15)
 #define SERIAL_THREAD_STACK_SIZE  (1024)
 #define SERIAL_THREAD_TICK		(50)
 #define MAX_EVENT_COUNT			(5)
@@ -74,7 +74,7 @@ void serial_link_init(struct serial_link_info *info, char *name,int addr, int ad
   
 	info->acd_tag = 0;
 	info->app_tag = 0;
-	info->fcb = 0;
+	info->fcb = 0xFF;
 
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
 	info->obj.mb_event = rt_mb_create("serialmb", MAX_EVENT_COUNT, RT_IPC_FLAG_FIFO);
@@ -266,7 +266,9 @@ static int serial_link_dispatch(struct serial_link_info *info, struct serial_lin
 		break;
 	case FC_DW_RST_REMOTE:
 	case FC_DW_RST_USER:
-		//serial_link_reinit(info);
+		info->fcb=0xFF;
+                link_set_active_state(&info->obj,0);
+                info->obj.data_trans_active=0;
 		return TO_LINK;
 		break;
 	case FC_DW_DATA_YES:
@@ -330,12 +332,14 @@ int serial_link_pack_unfixed_frame(struct serial_link_info *info, char funcode, 
 	union ctrl_domain up_domain;
 	int count=0;
 
+       up_domain.domain=0;
 	if (info->acd_tag > 0)
 	{
 		up_domain.up_ctrl_domain.ACD = 1;
                 info->acd_tag=0;
 	}
 
+        
 	up_domain.up_ctrl_domain.FunCoed = funcode;
 
 	{
@@ -417,7 +421,8 @@ static void serial_link_phy_recv_handle(struct serial_link_info *info,struct iec
 	else if (dispatch_res == TO_APP_USER)
 	{
 		/*控制类帧解析*/
-		link_send_asdu_evt_to_app((struct link_obj*)info,&info->obj.recv_buff[5+info->cfg.link_addr_len],data_len-7-info->cfg.link_addr_len);
+              link_set_active_state(&info->obj,1);
+	      link_send_asdu_evt_to_app((struct link_obj*)info,&info->obj.recv_buff[5+info->cfg.link_addr_len],data_len-7-info->cfg.link_addr_len);
 	}
 }
 
@@ -438,7 +443,7 @@ static void serial_link_app_recv_handle(struct serial_link_info *info, struct ie
       else
         {
           if (evt->evt_sub_type == EVT_SUB_DAT_LEVEL_1)
-            info->acd_tag++;
+            info->acd_tag=1;
           else
             info->app_tag++;
         }
@@ -471,6 +476,7 @@ static void serial_link_recv_event_handle(struct serial_link_info *info,struct i
 	case EVT_SUB_DAT_LEVEL_1:
 	case EVT_SUB_DAT_LEVEL_2: 
   case EVT_SUB_DAT_USER:
+                 
 		serial_link_app_recv_handle(info, evt);
 		break;
 	}
@@ -498,12 +504,15 @@ static void serial_link_asdu_send_evt_handle(struct serial_link_info *info ,stru
   switch(sub_evt)
     {
     case EVT_SUB_DAT_USER:
-      if(app_task_check_empty(((struct app_info*)(info->obj.applayer_id))->first_task, (int)info)>0)
+        if(app_task_check_empty(((struct app_info*)(info->obj.applayer_id))->first_task, (int)info)>0)
         {
           info->acd_tag=1;
         }
+        else 
+          info->acd_tag=0;
       count=serial_link_pack_unfixed_frame(info,FC_UP_USER_DATA ,send_info->app_data, send_info->app_data_len);
       rt_free(send_info->app_data);
+
       break;
     }
 
@@ -532,7 +541,6 @@ void serial_link_thread_entry(void *param)
 		case EVT_LINK_PHY_DISCONNECT:
 			break;
 		case EVT_LINK_RECV_DATA:
-      link_set_active_state(&info->obj,1);
 			serial_link_recv_event_handle(info, evt);
 			break;
 		case EVT_LINK_SEND_DATA:
