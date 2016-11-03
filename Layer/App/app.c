@@ -128,7 +128,8 @@ static void app_evt_dispatch_recv_asdu(struct app_info *info,int link_id,char *a
   recv_info.asdu_sub_len=asdu_len-2-info->cfg.cause_len-info->cfg.asdu_addr_len;
   rt_memcpy(&recv_info.asdu_sub_data,&asdu_data[2+info->cfg.cause_len+info->cfg.asdu_addr_len],
             recv_info.asdu_sub_len);
-
+  
+  recv_info.link_id=link_id;
   app_linkframe_convert_to_asdu(info, &recv_info);
 
   app_task_insert_ack_asdu(info,link_id,&recv_info);
@@ -235,7 +236,10 @@ static void app_evt_update_node_handle(struct app_info *info, struct iec_event *
 
       if(link_get_active_state(link_info)==0)
         continue;
-
+      
+      if(link_info->data_trans_active==0)
+        continue;
+      
       if (evt->evt_sub_type == EVT_SUB_NORMAL_NODE)
         {
           nd_frame_info=rt_malloc(sizeof(struct node_frame_info));

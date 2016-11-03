@@ -2,8 +2,6 @@
 #include "../Iec/iec.h"
 #include "../Layer/layer.h"
 
-#define IEC101_LINK_NAME    "iec1_s"
-#define IEC101_APP_NAME     "iec1_a"
 
 #define IEC101_INIT_NODE_INFO(nd_info,node_addr,buffered,node_addr_len)  do{ if(nd_info==0){ \
 nd_info = iec_api_gen_node_info(node_addr,buffered);}else{ \
@@ -17,8 +15,7 @@ nd_info = iec_api_gen_node_info(node_addr,buffered);}else{ \
 #include "ftu.h"
 #include "switcher.h"
 #include "gpio_dev.h"
-static unsigned int serial_link0=0;
-static unsigned int serial_app0=0;
+
 
 extern struct system_dev gSystemDev;
 
@@ -116,7 +113,7 @@ extern struct system_dev gSystemDev;
  * 6、app创建完成后绑定Link,设置APP应用操作函数 iec_sys_create_app_complete
  */
 
-int iec101_sys_cmd_callback(unsigned int asdu_ident,char *node_data,unsigned int node_len);
+int iec101_sys_cmd_callback(unsigned int linkid,unsigned int asdu_ident,char *node_data,unsigned int node_len);
 int iec101_ctrl_cmd_callback(unsigned int asdu_ident,unsigned int node_addr,char *node_data,unsigned int node_len);
 void iec101_serial_write(unsigned int dev,unsigned char *data,unsigned int len);
 
@@ -127,15 +124,15 @@ void serial_begin_recv()
   rt_device_control(serial_dev,0xEE,0);
 }
 
-void iec101_link_init(int link_addr,int link_addr_len,int dir)
+void iec101_link_init(char *name,int link_addr,int link_addr_len,int dir)
 {
-    iec_sys_api_create_link(IEC101_LINK_NAME, EVT_SUB_SYS_LINK_SERIAL,link_addr,link_addr_len,dir);
+    iec_sys_api_create_link(name, EVT_SUB_SYS_LINK_SERIAL,link_addr,link_addr_len,dir);
 }
 
 
-void iec101_app_init(int asdu_addr,int asdu_addr_len,int cause_len,int node_addr_len,int sm2)
+void iec101_app_init(char *name,int asdu_addr,int asdu_addr_len,int cause_len,int node_addr_len,int sm2)
 {
-    iec_sys_api_create_app(IEC101_APP_NAME,asdu_addr,asdu_addr_len,cause_len,node_addr_len,sm2);
+    iec_sys_api_create_app(name,asdu_addr,asdu_addr_len,cause_len,node_addr_len,sm2);
 }
 
 
@@ -147,52 +144,36 @@ void iec101_serial_write(unsigned int dev,unsigned char *data,unsigned int len)
 }
 
 
-
-void iec_sys_create_link_complete(char *name,unsigned int linkid)
+void iec101_link_complete(char *name,unsigned int linkid)
 {
-
-  if(rt_strcmp(name, IEC101_LINK_NAME)==0)
-    {
-      serial_link0=linkid;
-      rt_device_t dev=rt_device_find("serial0");
-      rt_device_open(dev, RT_DEVICE_OFLAG_RDWR|RT_DEVICE_FLAG_DMA_RX);
-      link_set_write_handle((struct link_obj*)linkid,(int *)iec101_serial_write);
-      serial_begin_recv();
-    }
+  iec_sys_api_start_link(name);
+  rt_device_t dev=rt_device_find("serial0");
+  rt_device_open(dev, RT_DEVICE_OFLAG_RDWR|RT_DEVICE_FLAG_DMA_RX);
+  link_set_write_handle((struct link_obj*)linkid,(int *)iec101_serial_write);
+  serial_begin_recv();
 }
 
-
-void iec_sys_create_app_complete(char *name,unsigned int appid)
+void iec101_app_complete(char *name,unsigned int appid)
 {
-    if (rt_strcmp(name,IEC101_APP_NAME)==0)
-    {
-      serial_app0=appid;
-        iec_sys_api_app_bind_link(IEC101_LINK_NAME, IEC101_APP_NAME);
-        iec_sys_api_start_app(IEC101_APP_NAME);
-        iec_sys_api_start_link(IEC101_LINK_NAME);
-        iec_sys_api_app_set_cmd_cb(IEC101_APP_NAME, EVT_SUB_APP_CTRL_CMD, (int *)iec101_ctrl_cmd_callback);
-        iec_sys_api_app_set_cmd_cb(IEC101_APP_NAME, EVT_SUB_APP_SYS_CMD, (int *)iec101_sys_cmd_callback);
-    }
+    iec_sys_api_start_app(name);
+    iec_sys_api_app_set_cmd_cb(name, EVT_SUB_APP_CTRL_CMD, (int *)iec101_ctrl_cmd_callback);
+    iec_sys_api_app_set_cmd_cb(name, EVT_SUB_APP_SYS_CMD, (int *)iec101_sys_cmd_callback);
 }
 
 struct ftu_data last_realdata;
 
-void iec101_update_mv_node()
+void iec_update_mv_node(char *app_name)
 {
-  
-  
-  if(link_get_active_state((struct link_obj*)serial_link0)==0)
-    return;
-  
-  if(((struct link_obj*)serial_link0)->data_trans_active==0)
-    return;
-  
   struct node_frame_info *nd_info=0;
+  struct app_info* app=iec_sys_api_find_app(app_name);
+  
+  if(app==0)
+    return;
 
   Info_E_QDS qds;
   Info_E_QOI qoi;
 
- int node_addr_len=((struct app_info*)serial_app0)->cfg.node_addr_len;
+ int node_addr_len=app->cfg.node_addr_len;
       qds.BL = 0;
       qds.IV = 0;
       qds.NT = 0;
@@ -288,7 +269,7 @@ void iec101_update_mv_node()
       }
      
      if(nd_info!=0)
-    iec_api_update_node(serial_app0,EVT_SUB_DAT_LEVEL_2,MV_ASDU,Spont,nd_info);
+    iec_api_update_node((unsigned int)app,EVT_SUB_DAT_LEVEL_2,MV_ASDU,Spont,nd_info);
     
 
 }
@@ -442,9 +423,14 @@ static int get_zero_pos()
 }
 static void yx_all_cll()
 {
+   struct app_info* app=iec_sys_api_find_app("iec101");
+  
+  if(app==0)
+    return;
+  
     struct node_frame_info *nd_info=0;
    Info_E_SIQ  siq;
-   int node_addr_len=((struct app_info*)serial_app0)->cfg.node_addr_len;
+   int node_addr_len=app->cfg.node_addr_len;
     siq.BL = 0;
     siq.NT = 0;
     siq.IV = 0;
@@ -527,13 +513,16 @@ static void yx_all_cll()
   IEC101_INIT_NODE_INFO(nd_info,YX_START,0,node_addr_len);
   iec_api_add_element_to_node(nd_info,SIQ,&siq);
   
-  iec_api_update_node(serial_app0,EVT_SUB_DAT_LEVEL_1,M_SP_NA,Introgen,nd_info);
+  iec_api_update_node((unsigned int)app,EVT_SUB_DAT_LEVEL_1,M_SP_NA,Introgen,nd_info);
 
 }
 
 static int iec101_all_call_proc()
 {
+   struct app_info* app=iec_sys_api_find_app("iec101");
   
+  if(app==0)
+    return CMD_RES_OK;
   yx_all_cll();
   
   
@@ -542,7 +531,7 @@ static int iec101_all_call_proc()
     Info_E_QDS qds;
     Info_E_QOI qoi;
 
-    int node_addr_len=((struct app_info*)serial_app0)->cfg.node_addr_len;
+    int node_addr_len=app->cfg.node_addr_len;
       qds.BL = 0;
       qds.IV = 0;
       qds.NT = 0;
@@ -596,13 +585,13 @@ static int iec101_all_call_proc()
     iec_api_add_element_to_node(nd_info,SVA,&gSystemDev.ftu_dev->c_realdata.Hz);
     iec_api_add_element_to_node(nd_info,QDS,&qds);
     
-    iec_api_update_node(serial_app0,EVT_SUB_DAT_LEVEL_1,MV_ASDU,Introgen,nd_info);
+    iec_api_update_node((unsigned int)app,EVT_SUB_DAT_LEVEL_1,MV_ASDU,Introgen,nd_info);
     nd_info=0;
     
     IEC101_INIT_NODE_INFO(nd_info,0,0,node_addr_len);
     qoi=GOL_CALL;
     iec_api_add_element_to_node(nd_info,QOI,&qoi);
-    iec_api_update_node(serial_app0,EVT_SUB_DAT_LEVEL_1,C_IC_NA,Actterm,nd_info);  
+    iec_api_update_node((unsigned int)app,EVT_SUB_DAT_LEVEL_1,C_IC_NA,Actterm,nd_info);  
 
      return CMD_RES_OK;
 }
@@ -636,14 +625,14 @@ static int iec101_test_proc(Info_E_FBP *fbp)
   return CMD_RES_OK;
 }
 
-int iec101_sys_cmd_callback(unsigned int asdu_ident,char *node_data,unsigned int node_len)
+int iec101_sys_cmd_callback(unsigned int linkid,unsigned int asdu_ident,char *node_data,unsigned int node_len)
 {
     int cmd_res=0;
     switch (asdu_ident)
     {
     case C_IC_NA:
         cmd_res=iec101_all_call_proc();
-        ((struct link_obj*)serial_link0)->data_trans_active=1;
+        ((struct link_obj*)linkid)->data_trans_active=1;
     case C_CS_NA:
         cmd_res = iec101_sync_time_proc((Info_E_TM56 *)node_data);
         break;
@@ -841,6 +830,6 @@ int iec101_ctrl_cmd_callback(unsigned int asdu_ident,unsigned int node_addr,char
 
 void iec_recv_data(unsigned char *buff,unsigned int len)
 {
-  iec_sys_api_send_phy_recv(IEC101_LINK_NAME,buff,len);
+  iec_sys_api_send_phy_recv("serial0",buff,len);
   serial_begin_recv();
 }

@@ -11,7 +11,7 @@
 #define CMD_RES_ERR_ASDU    (-3)
 #define CMD_RES_ERR_NODE    (-4)
 
-typedef int (*sys_cmd_proc)(unsigned int asdu_ident,char* node_data,unsigned int len);
+typedef int (*sys_cmd_proc)(unsigned int linkid,unsigned int asdu_ident,char* node_data,unsigned int len);
 typedef int (*ctrl_cmd_proc)(unsigned int asdu_ident,unsigned int node_addr,char* node_data,unsigned int len);
 typedef int (*file_cmd_proc)();
 typedef int (*param_cmd_proc)();

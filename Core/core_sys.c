@@ -20,7 +20,7 @@ void iec_main_thread_entry(void *param);
  *
  * @return 链路ID  0 未找到
  */
-static struct link_obj *iec_sys_find_link(struct sys_info *info,char *name)
+ static struct link_obj *iec_sys_find_link(struct sys_info *info,char *name)
 {
   int i=0;
   char link_name[CFG_NAME_MAX];
@@ -102,6 +102,10 @@ WEAK void iec_sys_create_link_complete(char *name,unsigned int linkid)
 }
 
 
+WEAK void iec_sys_start_app_complete(char *name,unsigned int appid)
+{
+}
+
 
 /**
  * 创建链路实例事件处理函数
@@ -167,6 +171,7 @@ static void iec_sys_evt_start_handle(struct sys_info *info,struct iec_event *evt
 {
   int sub_evt=evt->evt_sub_type;
   struct link_obj *link=(struct link_obj *)(evt->sub_msg);
+  struct app_info *app=(struct app_info *)(evt->sub_msg);
 
   switch(sub_evt)
     {
@@ -174,6 +179,7 @@ static void iec_sys_evt_start_handle(struct sys_info *info,struct iec_event *evt
       break;
     case EVT_SUB_SYS_APP:
       app_start((int)evt->sub_msg);
+      iec_sys_start_app_complete(app->cfg.name,(unsigned int)app);
       break;
     case EVT_SUB_SYS_LINK_SERIAL:
       serial_link_thread_start((struct serial_link_info *)link);
@@ -319,7 +325,14 @@ void iec_sys_api_create_link(char *link_name,int link_type,unsigned int link_add
     }
   else if(link_type==EVT_SUB_SYS_LINK_SOCKET) //socket
     {
-
+      struct link_param *link=rt_malloc(sizeof(struct link_param));
+      rt_memset(link,0,sizeof(struct link_param));
+      link->link_addr=link_addr;
+      link->link_addr_len=0;
+      link->link_dir=dir;
+      rt_memcpy(link->name, link_name, rt_strlen(link_name));
+      iec_set_event_sub(evt, EVT_SUB_SYS_LINK_SOCKET, (int*)link, 1);
+      iec_post_event(gSys_Info.sys_event, evt, 20);
     }
 }
 
@@ -412,9 +425,8 @@ void iec_sys_api_app_set_cmd_cb(char *app_name,int cb_idx,void *cb)
   iec_post_event(gSys_Info.sys_event, evt, 20);
 }
 
-void iec_sys_api_send_phy_recv(char *name,char *buff,int len)
+void iec_sys_api_send_phyid_recv(struct link_obj *link,char *buff, int len)
 {
-  struct link_obj *link=iec_sys_find_link(&gSys_Info, name);
   struct link_recv_info *recv_info=rt_malloc(sizeof(struct link_recv_info));
 
   recv_info->recv_data=buff;
@@ -425,4 +437,20 @@ void iec_sys_api_send_phy_recv(char *name,char *buff,int len)
   iec_post_event(link->mb_event, evt, 20);
 }
 
+void iec_sys_api_send_phy_recv(char *name,char *buff,int len)
+{
+  struct link_obj *link=iec_sys_find_link(&gSys_Info, name);
+  if(link==0)
+    return;
+  iec_sys_api_send_phyid_recv(link,buff,len);
+}
 
+struct app_info* iec_sys_api_find_app(char *name)
+{
+  return iec_sys_find_app(&gSys_Info,name);
+}
+
+struct link_obj* iec_sys_api_find_link(char *name)
+{
+  return iec_sys_find_link(&gSys_Info,name);
+}

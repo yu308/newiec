@@ -329,8 +329,9 @@ void app_linkframe_convert_to_asdu(struct app_info *info,struct app_recv_info *r
       recv_info->ack_cause=Actcon;
       if(info->sys_cmd_cb!=0)
       {
-          state=info->sys_cmd_cb(recv_info->asdu_ident,&recv_info->asdu_sub_data[info->cfg.node_addr_len],
+          state=info->sys_cmd_cb(recv_info->link_id,recv_info->asdu_ident,&recv_info->asdu_sub_data[info->cfg.node_addr_len],
                            recv_info->asdu_sub_len-info->cfg.node_addr_len);
+          
       }
     }
   else if((recv_info->asdu_ident>109)&&(recv_info->asdu_ident<114))

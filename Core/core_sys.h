@@ -31,4 +31,7 @@ extern void iec_sys_api_start_app(char *app_name);
 extern void iec_sys_api_app_bind_link(char *link_name,char *app_name);
 extern void iec_sys_api_app_set_cmd_cb(char *app_name,int cb_idx,void *cb);
 extern void iec_sys_api_send_phy_recv(char *name,char *buff,int len);
+
+extern struct app_info* iec_sys_api_find_app(char *name);
+extern struct link_obj* iec_sys_api_find_link(char *name);
 #endif

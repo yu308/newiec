@@ -110,6 +110,7 @@ struct app_send_info
 /// </summary>
 struct app_recv_info
 {
+  int link_id;
   int asdu_ident;
   int cause;
   int ack_cause;
