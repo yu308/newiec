@@ -20,35 +20,48 @@ static void iec104_recv_thread(void *param)
   struct net_link_info *link=(struct net_link_info*)param;
   int bytes_received=0;
   
+  link->cfg.socket_close_sem=rt_sem_create("sem",0,RT_IPC_FLAG_FIFO);
   net_link_thread_start(link);
   rt_kprintf("IEC104_MAIN: create a main thread,socket=%08x\n", link->cfg.socket);
   char *temp_buff=rt_malloc(256);
   while(1)
     {
       bytes_received = recv(link->cfg.socket,temp_buff, 256, 0);
-      if (bytes_received <= 0)
+      if (bytes_received > 0)
         {
-          goto err;
+           iec_sys_api_send_phyid_recv(link,temp_buff,bytes_received);
         }
-      iec_sys_api_send_phyid_recv(link,temp_buff,bytes_received);
+      else if(bytes_received==-3)
+      {
+        continue;
+      }
+      else goto err;
+
+      if(rt_sem_take(link->cfg.socket_close_sem,500)==RT_EOK)
+      {
+        goto err;
+      }
     }
 
  err:
   /* 关闭此socket链接,并清除iec104 context ,删除此任务*/
+   iec_sys_api_netlink_send_close(link);
+   rt_sem_delete(link->cfg.socket_close_sem);
   closesocket(link->cfg.socket);
   rt_free(temp_buff);
   rt_thread_delete(rt_thread_self());
 }
 
+int socket_timeout=1000;
 void iec104_recv_create(int socketid)
 {
-  //char name[24];
-  //rt_memset(name, 0, 24);
-  // lwip_setsockopt(socketid, SOL_SOCKET, SO_RCVTIMEO, &socket_timeout, sizeof(socket_timeout));
-  //rt_sprintf(name, "%08x", socketid);
+  char name[24];
+  rt_memset(name, 0, 24);
+  lwip_setsockopt(socketid, SOL_SOCKET, SO_RCVTIMEO, &socket_timeout, sizeof(socket_timeout));
+  rt_sprintf(name, "cs%04x", socketid);
   
   
-  iec_sys_api_create_link("cs8900", EVT_SUB_SYS_LINK_SOCKET,socketid,0,1);
+  iec_sys_api_create_link(name, EVT_SUB_SYS_LINK_SOCKET,socketid,0,1);
 }
 
 /*
@@ -133,6 +146,7 @@ void iec104_cs8900_link_complete(int linkid)
 {
   int *net_link=rt_malloc(sizeof(int));
    net_link=(int*)linkid;
+   iec_sys_api_app_bind_link(((struct net_link_info *)linkid)->obj.name,"iec104");
   rt_thread_t tid=rt_thread_create("recv", iec104_recv_thread, net_link, IEC104_THREAD_STACK_SIZE, IEC104_RECV_THREAD_PROI, IEC104_THREAD_TICKS);
   rt_thread_startup(tid);
 }

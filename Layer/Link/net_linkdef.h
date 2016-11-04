@@ -72,11 +72,13 @@ union control_domain
 
 struct net_link_cfg
 {
-	int socket;
-
+  int socket;
+  
   rt_thread_t time_monitor;
   rt_mutex_t  time_mtx;
   rt_mutex_t  counter_mtx;
+  
+  rt_sem_t socket_close_sem;
 };
 
 struct net_link_info

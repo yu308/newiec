@@ -80,6 +80,21 @@ void app_add_link(struct app_info *app,unsigned int link_id)
 
 }
 
+void app_remove_link(struct app_info *app,unsigned int link_id)
+{
+   int i=0;
+  for(i=0;i<CFG_LINK_MAX;i++)
+  {
+    if(app->linklayer_id[i]==link_id)
+    {
+      app->linklayer_id[i]=0;
+      return ;
+    }
+  }
+
+  rt_kprintf("IEC:APP: link not found\n");
+}
+
 void app_set_cmd_cb(struct app_info *app,unsigned int cb_idx,void *cb)
 {
   if(cb_idx==EVT_SUB_APP_CTRL_CMD)

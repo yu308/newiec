@@ -454,3 +454,10 @@ struct link_obj* iec_sys_api_find_link(char *name)
 {
   return iec_sys_find_link(&gSys_Info,name);
 }
+
+void iec_sys_api_netlink_send_close(struct net_link_info *net_link)
+{
+   struct iec_event *evt=iec_create_event((int)net_link, (int)net_link, EVT_LINK_PHY_DISCONNECT, 0, 0);
+  iec_set_event_sub(evt, EVT_SUB_DAT_LINK_PHY,(int*)0, 0);
+  iec_post_event(net_link->obj.mb_event, evt, 20);
+}

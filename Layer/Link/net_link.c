@@ -169,6 +169,8 @@ struct net_link_info *net_link_create(char *name,int socketid,int dir)
  */
 void net_link_del(struct net_link_info *net_info)
 {
+   net_info->obj.active=0;
+   app_remove_link((struct app_info*)(net_info->obj.applayer_id),(unsigned int)net_info);
   rt_free(net_info->obj.send_buff);
   rt_free(net_info->obj.recv_buff);
 
@@ -474,6 +476,7 @@ void net_link_thread_entry(void *param)
 		case EVT_LINK_PHY_CONNECT:
 			break;
 		case EVT_LINK_PHY_DISCONNECT:
+                      net_link_del(info);
 			break;
 		case EVT_LINK_RECV_DATA:
       net_link_recv_evt_handle(info, evt);
