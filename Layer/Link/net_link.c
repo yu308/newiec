@@ -454,6 +454,17 @@ static void net_link_send_evt_handle(struct net_link_info *net_link,struct iec_e
     net_link_send_cnt_full(net_link);
 }
 
+
+/** 
+ * 通信 计数错误或超时错误时 链路通知socket接收任务关闭socket链接 
+ * socket接收任务关闭socket后,再产生链接断开事件信息
+ * @param net_link 
+ */
+void net_link_notify_close(struct net_link_info *net_link)
+{
+  rt_sem_release(net_link->cfg.socket_close_sem); 
+}
+
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
 void net_link_thread_entry(void *param)
 {
@@ -476,19 +487,22 @@ void net_link_thread_entry(void *param)
 		case EVT_LINK_PHY_CONNECT:
 			break;
 		case EVT_LINK_PHY_DISCONNECT:
-                      net_link_del(info);
+      net_link_del(info);
 			break;
 		case EVT_LINK_RECV_DATA:
       net_link_recv_evt_handle(info, evt);
 			break;
 		case EVT_LINK_SEND_DATA:
+      net_link_send_evt_handle(info, evt);
 			break;
     case EVT_IEC_TIMEOUT:
       /*关闭socket*/
-      net_link_del(info);
+      rt_kprintf("monitor timer timeout.\n");
+      net_link_notify_close(info);
       break;
     case EVT_IEC_CNT_FULL:
-      net_link_del(info);
+      rt_kprintf("K or W counter wrong.\n");
+      net_link_notify_close(info);
       break;
 		default:
 			break;
