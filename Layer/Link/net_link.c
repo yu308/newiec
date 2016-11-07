@@ -74,13 +74,16 @@ static int net_link_counter_check(struct net_link_info *net_link,int counter_t,i
   rt_mutex_take(net_link->cfg.counter_mtx,RT_WAITING_FOREVER);
   if(counter_t==1)
     {
+       rt_mutex_release(net_link->cfg.counter_mtx);
       return (net_link->recv_counter==val);
     }
   else if(counter_t==2)
     {
+       rt_mutex_release(net_link->cfg.counter_mtx);
       return (net_link->sent_counter==val);
     }
 
+   rt_mutex_release(net_link->cfg.counter_mtx);
   return 0;
 }
 
@@ -156,11 +159,13 @@ struct net_link_info *net_link_create(char *name,int socketid,int dir)
   net_info->cfg.time_monitor=rt_thread_create("tmonitor",net_link_time_monitor,net_info,NET_THREAD_STACK_SIZE,
                                               NET_THREAD_PROI,NET_THREAD_PROI);
   net_info->cfg.time_mtx=rt_mutex_create("tmtx",RT_IPC_FLAG_FIFO);
+  net_info->cfg.counter_mtx=rt_mutex_create("cntr",RT_IPC_FLAG_FIFO);
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
   net_info->obj.mb_event=rt_mb_create("netmb", 4, RT_IPC_FLAG_FIFO);
 #endif
   return net_info;
 }
+
 
 /** 
  * 删除net链路
@@ -174,14 +179,18 @@ void net_link_del(struct net_link_info *net_info)
   rt_free(net_info->obj.send_buff);
   rt_free(net_info->obj.recv_buff);
 
+  rt_thread_suspend(net_info->cfg.time_monitor);
   rt_thread_delete(net_info->cfg.time_monitor);
   rt_mutex_delete(net_info->cfg.time_mtx);
+  rt_mutex_delete(net_info->cfg.counter_mtx);
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
   if(net_info->obj.mb_event!=0)
     rt_mb_delete(net_info->obj.mb_event);
   if(net_info->obj.tid!=0)
     rt_thread_delete(net_info->obj.tid);
 #endif
+  
+  iec_sys_api_link_notify_del(net_info,net_info->obj.applayer_id);
 }
 
 /** 
@@ -258,11 +267,11 @@ static int net_link_check_phy_data(struct net_link_info *net_link,char *buff,uns
     {
       if(ctrl.u_domain.sbit_act==1)
         {
-          net_link->obj.data_trans_active=1;
+          net_link->obj.active=1;
         }
       else if(ctrl.u_domain.stopbit_act==1)
         {
-          net_link->obj.data_trans_active=0;
+          net_link->obj.active=0;
         }
 
       return F104_U_FORMAT_BYTE;
@@ -291,7 +300,8 @@ static int net_link_pack_U_frame(struct net_link_info *net_link,union control_do
     ack_ctrl.u_domain.stopbit_confirm=1;
   if(ctrl.u_domain.tbit_act==1)
     ack_ctrl.u_domain.tbit_confirm=1;
-
+  
+  ack_ctrl.u_domain.flag=F104_U_FORMAT_BYTE;
   rt_memcpy(&net_link->obj.send_buff[2],ack_ctrl.bytes,4);
   net_link->obj.send_buff[1]=4;
 
@@ -315,7 +325,7 @@ static void net_link_phy_recv_dispatch(struct net_link_info *net_link,int format
 
   if(format==F104_I_FORMAT_BYTE_2)
     {
-      if(net_link->obj.data_trans_active==1)/*链路启用*/
+      if(net_link->obj.active==1)/*链路启用*/
         {
           asdu_buff=rt_malloc(len-4);
           rt_memcpy(asdu_buff,&apci_data[4],len-4);
@@ -340,12 +350,15 @@ static void net_link_app_recv_dispatch(struct net_link_info *net_link,struct iec
 {
   if(evt->evt_sub_type==EVT_SUB_DAT_USER)/* 控制方向回应 */
     {
-      if(net_link->obj.data_trans_active==1)
+      if(net_link->obj.active==1)
+      {
+        evt->evt_sub_type=EVT_SUB_DAT_LEVEL_1;
         link_send_req_evt_to_app((struct link_obj*)net_link,evt->evt_sub_type);
+      }
     }
   else
     {
-      if(net_link->obj.active==1)/*总招完成?*/
+      if(net_link->obj.data_trans_active==1)/*总招完成?*/
         {
           if(link_get_dir(&net_link->obj)==1)/*平衡模式*/
             {
@@ -377,7 +390,7 @@ static void net_link_recv_evt_handle(struct net_link_info *net_link,struct iec_e
       format=net_link_check_phy_data(net_link,recv_info->recv_data,recv_info->recv_len);
       if(format<0)
         {
-          net_link_del(net_link);
+          //net_link_del(net_link);
           return;
         }
       net_link_phy_recv_dispatch(net_link,format,&recv_info->recv_data[2],recv_info->recv_len-2);
@@ -385,6 +398,7 @@ static void net_link_recv_evt_handle(struct net_link_info *net_link,struct iec_e
     case EVT_SUB_DAT_LEVEL_1:
     case EVT_SUB_DAT_LEVEL_2:
     case EVT_SUB_DAT_USER:
+      net_link_app_recv_dispatch(net_link,evt);
       break;
       break;
     }
@@ -419,7 +433,7 @@ static int net_link_pack_I_frame(struct net_link_info *net_link,char *asdu_data,
   rt_memcpy(&send_buff[idx], asdu_data, len);
   idx+=len;
 
-  return len;
+  return idx;
 }
 
 /** 
@@ -448,6 +462,7 @@ static void net_link_send_evt_handle(struct net_link_info *net_link,struct iec_e
   if(net_link->current_k<CFG_IEC104_K)
     {
       net_link->obj.write(net_link->cfg.socket, net_link->obj.send_buff,count);
+      net_link_counter_add(net_link,2);
       net_link->current_k++;
     }
   else

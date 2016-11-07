@@ -128,7 +128,7 @@ static void app_evt_dispatch_recv_asdu(struct app_info *info,int link_id,char *a
     }
 
   int recv_asdu_addr=0;
-  rt_memcpy(&recv_asdu_addr, &asdu_data[3], info->cfg.asdu_addr_len);
+  rt_memcpy(&recv_asdu_addr, &asdu_data[2+info->cfg.cause_len], info->cfg.asdu_addr_len);
 
   if(recv_asdu_addr!=info->cfg.asdu_addr)
     {

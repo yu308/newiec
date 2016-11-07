@@ -91,6 +91,28 @@ static int iec_sys_add_app(struct sys_info *info,void *app)
   return 1;
 }
 
+static int iec_sys_remove_link(struct sys_info *info,struct link_obj *link)
+{
+  int i=0;
+  struct link_obj *link_temp=0;
+
+  arraylist_iterate(info->sys_link_obj, i, link_temp)
+    {
+      if(link!=0)
+        {
+          if(rt_strcmp(link_temp->name, link->name)==0)
+          {
+            arraylist_remove(info->sys_link_obj,i);
+            rt_kprintf("IEC:SYS:DEL: linkid %08x\n",link);
+            rt_free(link);
+            break;
+          }
+        }
+    }
+  
+ 
+  return 0;
+}
 
 
 WEAK void iec_sys_create_app_complete(char *name,unsigned int appid)
@@ -195,6 +217,8 @@ static void iec_sys_app_bind_link(struct app_info *app,struct link_obj *link)
 {
   link->applayer_id=(unsigned int)app;
    app_add_link(app,(unsigned int)link);
+   
+   rt_kprintf("IEC_SYS:BIND: link is %08x,appid is %08x,%08x\n",link,app,link->applayer_id);
 }
 
 static void iec_sys_evt_edit_handle(struct sys_info *info,struct iec_event *evt)
@@ -227,6 +251,15 @@ static void iec_sys_evt_edit_handle(struct sys_info *info,struct iec_event *evt)
   }
 }
 
+void iec_sys_evt_del_link_handle(struct sys_info *info,struct iec_event *evt)
+{
+   int *param=evt->main_msg;
+  struct link_obj *link=(struct link_obj *)param[0];
+  struct app_info *app=(struct app_info *)param[1];
+  
+  iec_sys_remove_link(info,link);
+}
+
 /// <summary>
 /// 主任务
 /// </summary>
@@ -255,6 +288,7 @@ void iec_main_thread_entry(void *param)
       iec_sys_evt_create_app_handle(info,evt);
 			break;
 		case EVT_SYS_DEL_LINK:
+                iec_sys_evt_del_link_handle(info,evt);
 			break;
 		case EVT_SYS_DEL_APP:
 			break;
@@ -460,4 +494,14 @@ void iec_sys_api_netlink_send_close(struct net_link_info *net_link)
    struct iec_event *evt=iec_create_event((int)net_link, (int)net_link, EVT_LINK_PHY_DISCONNECT, 0, 0);
   iec_set_event_sub(evt, EVT_SUB_DAT_LINK_PHY,(int*)0, 0);
   iec_post_event(net_link->obj.mb_event, evt, 20);
+}
+
+void iec_sys_api_link_notify_del(struct link_obj *link,struct app_info *app)
+{
+  struct iec_event *evt=0;
+  int *recv=(int *)rt_malloc(sizeof(int)*2);
+  recv[0]=(int)link;
+  recv[1]=(int)app;
+  evt=iec_create_event((int)link, link->applayer_id, EVT_SYS_DEL_LINK, recv, 1);
+  iec_post_event(gSys_Info.sys_event, evt, 20);
 }

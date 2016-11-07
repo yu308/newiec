@@ -11,6 +11,14 @@
 #define IEC104_THREAD_STACK_SIZE  2048
 #define IEC104_THREAD_TICKS       20
 
+extern int iec104_sys_cmd_callback(unsigned int linkid,unsigned int asdu_ident,char *node_data,unsigned int node_len);
+extern int iec104_ctrl_cmd_callback(unsigned int asdu_ident,unsigned int node_addr,char *node_data,unsigned int node_len);
+
+
+void iec104_socket_write(unsigned int socket,char *buff, int len)
+{
+  send(socket,buff,len,0);
+}
 
 /*
   单独每个socket链接的接收任务
@@ -20,12 +28,20 @@ static void iec104_recv_thread(void *param)
   struct net_link_info *link=(struct net_link_info*)param;
   int bytes_received=0;
   
+  link_set_write_handle(&link->obj,(int *)iec104_socket_write);
   link->cfg.socket_close_sem=rt_sem_create("sem",0,RT_IPC_FLAG_FIFO);
   net_link_thread_start(link);
+
   rt_kprintf("IEC104_MAIN: create a main thread,socket=%08x\n", link->cfg.socket);
+  rt_kprintf("IEC104_MAIN: netlink is %08x,appid is %08x\n",link,link->obj.applayer_id);
   char *temp_buff=rt_malloc(256);
   while(1)
     {
+      if(rt_sem_take(link->cfg.socket_close_sem,500)==RT_EOK)
+      {
+        goto err;
+      }
+      
       bytes_received = recv(link->cfg.socket,temp_buff, 256, 0);
       if (bytes_received > 0)
         {
@@ -37,10 +53,7 @@ static void iec104_recv_thread(void *param)
       }
       else goto err;
 
-      if(rt_sem_take(link->cfg.socket_close_sem,500)==RT_EOK)
-      {
-        goto err;
-      }
+      
     }
 
  err:
@@ -49,6 +62,7 @@ static void iec104_recv_thread(void *param)
    rt_sem_delete(link->cfg.socket_close_sem);
   closesocket(link->cfg.socket);
   rt_free(temp_buff);
+  rt_thread_suspend(rt_thread_self());
   rt_thread_delete(rt_thread_self());
 }
 
@@ -144,13 +158,22 @@ static void iec104_SS_thread_create(int sock)
 
 void iec104_cs8900_link_complete(int linkid)
 {
-  int *net_link=rt_malloc(sizeof(int));
-   net_link=(int*)linkid;
-   iec_sys_api_app_bind_link(((struct net_link_info *)linkid)->obj.name,"iec104");
-  rt_thread_t tid=rt_thread_create("recv", iec104_recv_thread, net_link, IEC104_THREAD_STACK_SIZE, IEC104_RECV_THREAD_PROI, IEC104_THREAD_TICKS);
+ // int *net_link=rt_malloc(sizeof(int));
+   //net_link=(int*)linkid;
+  
+  rt_kprintf("IEC104_MAIN: gened netlink is %08x,appid is %08x\n",linkid);
+  iec_sys_api_app_bind_link(((struct net_link_info *)linkid)->obj.name,"iec104");
+  
+  rt_thread_t tid=rt_thread_create("recv", iec104_recv_thread, (void *)linkid, IEC104_THREAD_STACK_SIZE, IEC104_RECV_THREAD_PROI, IEC104_THREAD_TICKS);
   rt_thread_startup(tid);
 }
 
+void iec104_cs8900_app_complete(char *name,int appid)
+{
+   iec_sys_api_start_app(name);
+    iec_sys_api_app_set_cmd_cb(name, EVT_SUB_APP_CTRL_CMD, (int *)iec104_ctrl_cmd_callback);
+    iec_sys_api_app_set_cmd_cb(name, EVT_SUB_APP_SYS_CMD, (int *)iec104_sys_cmd_callback);
+}
 
 void iec104_cs8900_link_init(int *localip)
 {

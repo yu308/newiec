@@ -421,9 +421,9 @@ static int get_zero_pos()
 {
 	return gSystemDev.ftu_dev->out_status.zero_alarm;
 }
-static void yx_all_cll()
+static void yx_all_cll(char *name)
 {
-   struct app_info* app=iec_sys_api_find_app("iec101");
+   struct app_info* app=iec_sys_api_find_app(name);
   
   if(app==0)
     return;
@@ -517,13 +517,13 @@ static void yx_all_cll()
 
 }
 
-static int iec101_all_call_proc()
+static int iec_all_call_proc(char *name)
 {
-   struct app_info* app=iec_sys_api_find_app("iec101");
+   struct app_info* app=iec_sys_api_find_app(name);
   
   if(app==0)
     return CMD_RES_OK;
-  yx_all_cll();
+  yx_all_cll(name);
   
   
   struct node_frame_info *nd_info=0;
@@ -631,7 +631,35 @@ int iec101_sys_cmd_callback(unsigned int linkid,unsigned int asdu_ident,char *no
     switch (asdu_ident)
     {
     case C_IC_NA:
-        cmd_res=iec101_all_call_proc();
+        cmd_res=iec_all_call_proc("iec101");
+        ((struct link_obj*)linkid)->data_trans_active=1;
+    case C_CS_NA:
+        cmd_res = iec101_sync_time_proc((Info_E_TM56 *)node_data);
+        break;
+    case C_TS_NA:
+        cmd_res = iec101_test_proc((Info_E_FBP*)node_data);
+        break;
+    case C_CD_NA:
+        cmd_res = iec101_delay_time_proc((Info_E_TM16*)node_data);
+        break;
+    case C_RP_NA:
+        cmd_res = iec101_reset_proc((Info_E_QRP*)node_data);
+        break;
+    default:
+        cmd_res = CMD_RES_ERR_TYPE;
+        break;
+    }
+
+    return cmd_res;
+}
+
+int iec104_sys_cmd_callback(unsigned int linkid,unsigned int asdu_ident,char *node_data,unsigned int node_len)
+{
+    int cmd_res=0;
+    switch (asdu_ident)
+    {
+    case C_IC_NA:
+        cmd_res=iec_all_call_proc("iec104");
         ((struct link_obj*)linkid)->data_trans_active=1;
     case C_CS_NA:
         cmd_res = iec101_sync_time_proc((Info_E_TM56 *)node_data);
@@ -827,6 +855,21 @@ int iec101_ctrl_cmd_callback(unsigned int asdu_ident,unsigned int node_addr,char
     return cmd_res;
 }
 
+
+int iec104_ctrl_cmd_callback(unsigned int asdu_ident,unsigned int node_addr,char *node_data,unsigned int node_len)
+{
+    int cmd_res=0;
+    switch (asdu_ident)
+    {
+    case C_DC_NA:
+      return dc_node_ctrl_proc(node_addr,node_data,node_len);
+        break;
+    default:
+        return CMD_RES_ERR_TYPE;
+    }
+
+    return cmd_res;
+}
 
 void iec_recv_data(unsigned char *buff,unsigned int len)
 {
