@@ -9,36 +9,75 @@ void net_link_thread_entry(void *param);
 #define MAX_EVENT_COUNT			(5)
 #endif
 
-/** 
- * 递增超时计数 
- * 
- * @param net_link 
- */
-static void net_link_time_counter_add(struct net_link_info *net_link)
+
+void net_link_time_enable(struct net_link_info *net_link,int t_idx,int enable)
 {
   rt_mutex_take(net_link->cfg.time_mtx,RT_WAITING_FOREVER);
-  net_link->t0_delay++;
-  net_link->t1_delay++;
-  net_link->t2_delay++;
-  net_link->t3_delay++;
+  
+  if(t_idx==0)
+    net_link->t0_start=enable;
+  else
+   if(t_idx==1)
+    net_link->t1_start=enable;
+   else
+    if(t_idx==2)
+    net_link->t2_start=enable;
+    else
+     if(t_idx==3)
+    net_link->t3_start=enable;
+  
   rt_mutex_release(net_link->cfg.time_mtx);
 }
 
-/** 
- *  复位超时计数
- * 
- * @param net_link 
- */
-static void net_link_time_counter_dec(struct net_link_info *net_link)
+
+static void net_link_time0_counter(struct net_link_info *net_link)
 {
   rt_mutex_take(net_link->cfg.time_mtx,RT_WAITING_FOREVER);
-  net_link->t0_delay=0;
-  net_link->t1_delay=0;
-  net_link->t2_delay=0;
-  net_link->t3_delay=0;
-  rt_mutex_release(net_link->cfg.time_mtx);
-
+  
+  if(net_link->t0_start==1)
+    net_link->t0_delay++;
+  else 
+    net_link->t0_delay=0;
+  
+   rt_mutex_release(net_link->cfg.time_mtx);
 }
+
+static void net_link_time1_counter(struct net_link_info *net_link)
+{
+  rt_mutex_take(net_link->cfg.time_mtx,RT_WAITING_FOREVER);
+  
+  if(net_link->t1_start==1)
+    net_link->t1_delay++;
+  else 
+    net_link->t1_delay=0;
+  
+   rt_mutex_release(net_link->cfg.time_mtx);
+}
+
+static void net_link_time2_counter(struct net_link_info *net_link)
+{
+  rt_mutex_take(net_link->cfg.time_mtx,RT_WAITING_FOREVER);
+  
+  if(net_link->t2_start==1)
+    net_link->t2_delay++;
+  else 
+    net_link->t2_delay=0;
+  
+   rt_mutex_release(net_link->cfg.time_mtx);
+}
+
+static void net_link_time3_counter(struct net_link_info *net_link)
+{
+  rt_mutex_take(net_link->cfg.time_mtx,RT_WAITING_FOREVER);
+  
+  if(net_link->t3_start==1)
+    net_link->t3_delay++;
+  else 
+    net_link->t3_delay=0;
+  
+   rt_mutex_release(net_link->cfg.time_mtx);
+}
+
 
 /** 
  * 递增数据帧收发计数
@@ -93,10 +132,10 @@ static int net_link_counter_check(struct net_link_info *net_link,int counter_t,i
  * 
  * @param net_link 
  */
-static void net_link_send_timeout(struct net_link_info *net_link)
+static void net_link_send_timeout(struct net_link_info *net_link,int tim)
 {
   struct iec_event *evt=iec_create_event((int)net_link,(int)net_link,EVT_IEC_TIMEOUT,0,0);
-  iec_set_event_sub(evt, EVT_SUB_IEC_T3_TIMEOUT,0, 0);
+  iec_set_event_sub(evt, tim,0, 0);
   iec_post_event(net_link->obj.mb_event, evt, 20);
 }
 
@@ -118,11 +157,27 @@ static void net_link_time_monitor(void *param)
   while(1)
     {
       rt_thread_delay(RT_TICK_PER_SECOND);
-      net_link_time_counter_add(net_link);
-
-      if(net_link->t3_delay>=CFG_IEC104_T3)
+      net_link_time0_counter(net_link);
+      net_link_time1_counter(net_link);
+      net_link_time2_counter(net_link);
+      net_link_time3_counter(net_link);
+      
+ 
+        if(net_link->t0_delay>=CFG_IEC104_T0)
         {
-          net_link_send_timeout(net_link);
+          net_link_send_timeout(net_link,EVT_SUB_IEC_T0_TIMEOUT);
+        }
+        else if(net_link->t1_delay>=CFG_IEC104_T1)
+        {
+          net_link_send_timeout(net_link,EVT_SUB_IEC_T1_TIMEOUT);
+        }
+        else if(net_link->t2_delay>=CFG_IEC104_T2)
+        {
+          net_link_send_timeout(net_link,EVT_SUB_IEC_T2_TIMEOUT);
+        }
+        else if(net_link->t3_delay>=CFG_IEC104_T3)
+        {
+          net_link_send_timeout(net_link,EVT_SUB_IEC_T3_TIMEOUT);
         }
     }
 }
@@ -237,7 +292,7 @@ static int net_link_check_phy_data(struct net_link_info *net_link,char *buff,uns
   if(res<0)
     return 0;
 
-  net_link_time_counter_dec(net_link);
+  //net_link_time_counter_dec(net_link);
 
   rt_memcpy(ctrl.bytes,&buff[2],4);
 
@@ -309,6 +364,28 @@ static int net_link_pack_U_frame(struct net_link_info *net_link,union control_do
 }
 
 /** 
+ *  生成U帧数据
+ * 
+ * @param net_link 
+ * @param ctrl 
+ * 
+ * @return 数据长度
+ */
+static int net_link_pack_S_frame(struct net_link_info *net_link)
+{
+  union control_domain ack_ctrl;
+
+  net_link->obj.send_buff[0]=HEAD_START_TAG;
+  ack_ctrl.s_domain.recv_num=net_link->recv_counter;
+  ack_ctrl.s_domain.unused_bit=0;
+  ack_ctrl.s_domain.flag=F104_S_FORMAT_BYTE;
+  rt_memcpy(&net_link->obj.send_buff[2],ack_ctrl.bytes,4);
+  net_link->obj.send_buff[1]=4;
+
+  return 6;
+}
+
+/** 
  * 链路接收端数据分发处理
  * 
  * @param net_link 
@@ -322,11 +399,30 @@ static void net_link_phy_recv_dispatch(struct net_link_info *net_link,int format
   rt_memcpy(ctrl.bytes,apci_data,4);
   char *asdu_buff=0;
   int ack_len=0;
-
+  
+   /*  */
+  net_link_time_enable(net_link,3,0);//首先清0
+  net_link_time3_counter(net_link);
+  
   if(format==F104_I_FORMAT_BYTE_2)
     {
       if(net_link->obj.active==1)/*链路启用*/
         {
+          /* W 接收计数确认*/
+          net_link->current_w++;
+          net_link_time_enable(net_link,2,0);//首先清0
+          net_link_time2_counter(net_link);
+          if(net_link->current_w==FRAME_COUNT_W)
+          {
+            ack_len=net_link_pack_S_frame(net_link);
+            net_link->obj.write(net_link->cfg.socket,net_link->obj.send_buff,ack_len);
+            net_link->current_w=0;
+          }
+          else
+          {
+            net_link_time_enable(net_link,2,1);//重新计数
+          }
+          
           asdu_buff=rt_malloc(len-4);
           rt_memcpy(asdu_buff,&apci_data[4],len-4);
           link_send_asdu_evt_to_app((struct link_obj*)net_link,asdu_buff,len-4);
@@ -334,10 +430,18 @@ static void net_link_phy_recv_dispatch(struct net_link_info *net_link,int format
     }
   else if(format==F104_U_FORMAT_BYTE)
     {
+      net_link_time_enable(net_link,1,0);
+       net_link_time1_counter(net_link);
       ack_len=net_link_pack_U_frame(net_link,ctrl);
       net_link->obj.write(net_link->cfg.socket,net_link->obj.send_buff,ack_len);
+      
       //net_link_counter_add(net_link,2);//增加发送计数
     }
+  else if(format==F104_S_FORMAT_BYTE)
+  {
+    net_link_time_enable(net_link,1,0);
+     net_link_time1_counter(net_link);
+  }
 }
 
 /** 
@@ -456,19 +560,23 @@ static void net_link_send_evt_handle(struct net_link_info *net_link,struct iec_e
         }
       count=net_link_pack_I_frame(net_link,send_info->app_data, send_info->app_data_len);
       rt_free(send_info->app_data);
+      
+      net_link_time_enable(net_link,1,0);
+      net_link_time1_counter(net_link);
       break;
     }
 
   if(net_link->current_k<CFG_IEC104_K)
     {
+
       net_link->obj.write(net_link->cfg.socket, net_link->obj.send_buff,count);
+      net_link_time_enable(net_link,1,1);
       net_link_counter_add(net_link,2);
       net_link->current_k++;
     }
   else
     net_link_send_cnt_full(net_link);
 }
-
 
 /** 
  * 通信 计数错误或超时错误时 链路通知socket接收任务关闭socket链接 
@@ -479,6 +587,37 @@ void net_link_notify_close(struct net_link_info *net_link)
 {
   rt_sem_release(net_link->cfg.socket_close_sem); 
 }
+
+static void net_link_timeout_evt_handle(struct net_link_info *net_link,struct iec_event *evt)
+{
+  int sub_evt=evt->evt_sub_type;
+  int ack_len=0;
+  union control_domain ctrl;
+  switch(sub_evt)
+  {
+    case EVT_SUB_IEC_T0_TIMEOUT:
+      break;
+      case EVT_SUB_IEC_T1_TIMEOUT:
+       rt_kprintf("monitor timer timeout.\n");
+      net_link_notify_close(net_link);
+    break;
+      case EVT_SUB_IEC_T2_TIMEOUT:
+        net_link_time_enable(net_link,2,0);
+        net_link_time2_counter(net_link);
+       ack_len=net_link_pack_S_frame(net_link);
+       net_link->obj.write(net_link->cfg.socket,net_link->obj.send_buff,ack_len);
+       net_link->current_w=0;
+    break;
+      case EVT_SUB_IEC_T3_TIMEOUT:
+        rt_memset(ctrl.bytes,0,4);
+        ctrl.u_domain.tbit_act=1;
+        ack_len=net_link_pack_U_frame(net_link,ctrl);
+        net_link->obj.write(net_link->cfg.socket,net_link->obj.send_buff,ack_len);
+    break;
+  }
+}
+
+
 
 #if(CFG_RUNNING_MODE==MUTLI_MODE)
 void net_link_thread_entry(void *param)
@@ -511,9 +650,7 @@ void net_link_thread_entry(void *param)
       net_link_send_evt_handle(info, evt);
 			break;
     case EVT_IEC_TIMEOUT:
-      /*关闭socket*/
-      rt_kprintf("monitor timer timeout.\n");
-      net_link_notify_close(info);
+      net_link_timeout_evt_handle(info,evt);
       break;
     case EVT_IEC_CNT_FULL:
       rt_kprintf("K or W counter wrong.\n");

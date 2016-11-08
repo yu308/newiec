@@ -160,16 +160,28 @@ void iec101_app_complete(char *name,unsigned int appid)
     iec_sys_api_app_set_cmd_cb(name, EVT_SUB_APP_SYS_CMD, (int *)iec101_sys_cmd_callback);
 }
 
-struct ftu_data last_realdata;
+struct ftu_data last_realdata_iec101;
+struct ftu_data last_realdata_iec104;
 
 void iec_update_mv_node(char *app_name)
 {
   struct node_frame_info *nd_info=0;
   struct app_info* app=iec_sys_api_find_app(app_name);
   
+ struct ftu_data *last_realdata=0;
+  
   if(app==0)
     return;
 
+  if(rt_strcmp(app_name,"iec104")==0)
+  {
+    last_realdata=&last_realdata_iec104;
+  }
+  else 
+  {
+    last_realdata=&last_realdata_iec101;
+  }
+  
   Info_E_QDS qds;
   Info_E_QOI qoi;
 
@@ -181,88 +193,88 @@ void iec_update_mv_node(char *app_name)
       qds.RES = 0;
       qds.SB = 0;
       
-     COMPARE_VAL(gSystemDev.ftu_dev->c_realdata.Uab,last_realdata.Uab,50)
+     COMPARE_VAL(gSystemDev.ftu_dev->c_realdata.Uab,last_realdata->Uab,50)
      {
-       last_realdata.Uab=gSystemDev.ftu_dev->c_realdata.Uab;
+       last_realdata->Uab=gSystemDev.ftu_dev->c_realdata.Uab;
       IEC101_INIT_NODE_INFO(nd_info,MV_UAB_ADDR,0,node_addr_len);
       iec_api_add_element_to_node(nd_info,SVA,&gSystemDev.ftu_dev->c_realdata.Uab);
       iec_api_add_element_to_node(nd_info,QDS,&qds);
      }
     
-      COMPARE_VAL(gSystemDev.ftu_dev->c_realdata.Ubc,last_realdata.Ubc,50)
+      COMPARE_VAL(gSystemDev.ftu_dev->c_realdata.Ubc,last_realdata->Ubc,50)
       {
-        last_realdata.Ubc=gSystemDev.ftu_dev->c_realdata.Ubc;
+        last_realdata->Ubc=gSystemDev.ftu_dev->c_realdata.Ubc;
         IEC101_INIT_NODE_INFO(nd_info,MV_UBC_ADDR,0,node_addr_len);
         iec_api_add_element_to_node(nd_info,SVA,&gSystemDev.ftu_dev->c_realdata.Ubc);
         iec_api_add_element_to_node(nd_info,QDS,&qds);
       }
     
-      COMPARE_VAL(gSystemDev.ftu_dev->c_realdata.Ia,last_realdata.Ia,250)
+      COMPARE_VAL(gSystemDev.ftu_dev->c_realdata.Ia,last_realdata->Ia,250)
       {
-        last_realdata.Ia=gSystemDev.ftu_dev->c_realdata.Ia;
+        last_realdata->Ia=gSystemDev.ftu_dev->c_realdata.Ia;
         IEC101_INIT_NODE_INFO(nd_info,MV_IA_ADDR,0,node_addr_len);
         iec_api_add_element_to_node(nd_info,SVA,&gSystemDev.ftu_dev->c_realdata.Ia);
         iec_api_add_element_to_node(nd_info,QDS,&qds);
       }
     
-      COMPARE_VAL(gSystemDev.ftu_dev->c_realdata.Ib,last_realdata.Ib,250)
+      COMPARE_VAL(gSystemDev.ftu_dev->c_realdata.Ib,last_realdata->Ib,250)
       {
-        last_realdata.Ib=gSystemDev.ftu_dev->c_realdata.Ib;
+        last_realdata->Ib=gSystemDev.ftu_dev->c_realdata.Ib;
         IEC101_INIT_NODE_INFO(nd_info,MV_IB_ADDR,0,node_addr_len);
         iec_api_add_element_to_node(nd_info,SVA,&gSystemDev.ftu_dev->c_realdata.Ib);
         iec_api_add_element_to_node(nd_info,QDS,&qds);
       }
     
-      COMPARE_VAL(gSystemDev.ftu_dev->c_realdata.Ic,last_realdata.Ic,250)
+      COMPARE_VAL(gSystemDev.ftu_dev->c_realdata.Ic,last_realdata->Ic,250)
       {
-        last_realdata.Ic=gSystemDev.ftu_dev->c_realdata.Ic;
+        last_realdata->Ic=gSystemDev.ftu_dev->c_realdata.Ic;
         IEC101_INIT_NODE_INFO(nd_info,MV_IC_ADDR,0,node_addr_len);
         iec_api_add_element_to_node(nd_info,SVA,&gSystemDev.ftu_dev->c_realdata.Ic);
         iec_api_add_element_to_node(nd_info,QDS,&qds);
       }
     
-      COMPARE_VAL(gSystemDev.ftu_dev->c_realdata.Uzero,last_realdata.Uzero,20)
+      COMPARE_VAL(gSystemDev.ftu_dev->c_realdata.Uzero,last_realdata->Uzero,20)
       {
-        last_realdata.Uzero=gSystemDev.ftu_dev->c_realdata.Uzero;
+        last_realdata->Uzero=gSystemDev.ftu_dev->c_realdata.Uzero;
         IEC101_INIT_NODE_INFO(nd_info,MV_UZ_ADDR,0,node_addr_len);
         iec_api_add_element_to_node(nd_info,SVA,&gSystemDev.ftu_dev->c_realdata.Uzero);
         iec_api_add_element_to_node(nd_info,QDS,&qds);
       }
      
-     COMPARE_VAL(gSystemDev.ftu_dev->c_realdata.Izero,last_realdata.Izero,100)
+     COMPARE_VAL(gSystemDev.ftu_dev->c_realdata.Izero,last_realdata->Izero,100)
       {
-        last_realdata.Izero=gSystemDev.ftu_dev->c_realdata.Izero;
+        last_realdata->Izero=gSystemDev.ftu_dev->c_realdata.Izero;
         IEC101_INIT_NODE_INFO(nd_info,MV_IZ_ADDR,0,node_addr_len);
         iec_api_add_element_to_node(nd_info,SVA,&gSystemDev.ftu_dev->c_realdata.Izero);
         iec_api_add_element_to_node(nd_info,QDS,&qds);
       }
     
-      COMPARE_VAL(gSystemDev.ftu_dev->c_realdata.P,last_realdata.P,5000)
+      COMPARE_VAL(gSystemDev.ftu_dev->c_realdata.P,last_realdata->P,5000)
       {
-        last_realdata.P=gSystemDev.ftu_dev->c_realdata.P;
+        last_realdata->P=gSystemDev.ftu_dev->c_realdata.P;
         IEC101_INIT_NODE_INFO(nd_info,MV_P_ADDR,0,node_addr_len);
         iec_api_add_element_to_node(nd_info,SVA,&gSystemDev.ftu_dev->c_realdata.P);
         iec_api_add_element_to_node(nd_info,QDS,&qds);
       }
     
-      COMPARE_VAL(gSystemDev.ftu_dev->c_realdata.Q,last_realdata.Q,5000)
+      COMPARE_VAL(gSystemDev.ftu_dev->c_realdata.Q,last_realdata->Q,5000)
       {
-        last_realdata.Q=gSystemDev.ftu_dev->c_realdata.Q;
+        last_realdata->Q=gSystemDev.ftu_dev->c_realdata.Q;
         IEC101_INIT_NODE_INFO(nd_info,MV_Q_ADDR,0,node_addr_len);
         iec_api_add_element_to_node(nd_info,SVA,&gSystemDev.ftu_dev->c_realdata.Q);
         iec_api_add_element_to_node(nd_info,QDS,&qds);
       }
-     COMPARE_VAL(gSystemDev.ftu_dev->c_realdata.Cos,last_realdata.Cos,10)
+     COMPARE_VAL(gSystemDev.ftu_dev->c_realdata.Cos,last_realdata->Cos,10)
       {
-        last_realdata.Cos=gSystemDev.ftu_dev->c_realdata.Cos;
+        last_realdata->Cos=gSystemDev.ftu_dev->c_realdata.Cos;
         IEC101_INIT_NODE_INFO(nd_info,MV_COS_ADDR,0,node_addr_len);
         iec_api_add_element_to_node(nd_info,SVA,&gSystemDev.ftu_dev->c_realdata.Cos);
         iec_api_add_element_to_node(nd_info,QDS,&qds);
       }
     
-      COMPARE_VAL(gSystemDev.ftu_dev->c_realdata.Hz,last_realdata.Hz,20)
+      COMPARE_VAL(gSystemDev.ftu_dev->c_realdata.Hz,last_realdata->Hz,30)
       {
-        last_realdata.Hz=gSystemDev.ftu_dev->c_realdata.Hz;
+        last_realdata->Hz=gSystemDev.ftu_dev->c_realdata.Hz;
          IEC101_INIT_NODE_INFO(nd_info,MV_HZ_ADDR,0,node_addr_len);
         iec_api_add_element_to_node(nd_info,SVA,&gSystemDev.ftu_dev->c_realdata.Hz);
         iec_api_add_element_to_node(nd_info,QDS,&qds);
@@ -875,4 +887,24 @@ void iec_recv_data(unsigned char *buff,unsigned int len)
 {
   iec_sys_api_send_phy_recv("serial0",buff,len);
   serial_begin_recv();
+}
+
+
+void iec_changed_all_notify(struct node_frame_info *nd_info,unsigned int asdu_ident,int cause)
+{
+    struct node_frame_info *nd_info_iec104=nd_info;
+   struct app_info* app=iec_sys_api_find_app("iec101");
+   if(app!=0)
+   {
+     nd_info_iec104=rt_malloc(sizeof(struct node_frame_info));
+     rt_memcpy(nd_info_iec104,nd_info,sizeof(struct node_frame_info));
+     
+    iec_api_update_node((unsigned int)app,EVT_SUB_DAT_LEVEL_1,asdu_ident,cause,nd_info);
+   }
+   
+   app=iec_sys_api_find_app("iec104");
+   if(app!=0)
+   {
+    iec_api_update_node((unsigned int)app,EVT_SUB_DAT_LEVEL_1,asdu_ident,cause,nd_info_iec104);  
+   }
 }

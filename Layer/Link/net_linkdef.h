@@ -14,15 +14,19 @@
 
 #define check_format(a,b)  (((a&b)==b)?1:0)
 
-#define FRAME_COUNT_K		24 /* 发送方在未被确认连续编号的I格式帧数量后 停止发送 */
-#define FRAME_COUNT_W		8  /* 接收方接收连续编号的I格式帧数量后发送确认 */
+#define FRAME_COUNT_K		12 /* 发送方在未被确认连续编号的I格式帧数量后 停止发送 0 start counter */
+#define FRAME_COUNT_W		7  /* 接收方接收连续编号的I格式帧数量后发送确认  0 start counter*/
 
 #define STARTDT_ACT_BIT   (1<<2)
 #define STOPDT_ACT_BIT    (1<<4)
 #define TESTFR_ACT_BIT    (1<<6)
 
 #define EVT_IEC_TIMEOUT      (0x100)
-#define EVT_SUB_IEC_T3_TIMEOUT    (1<<0)
+
+#define EVT_SUB_IEC_T0_TIMEOUT     (1)
+#define EVT_SUB_IEC_T1_TIMEOUT    (2)
+#define EVT_SUB_IEC_T2_TIMEOUT     (3)
+#define EVT_SUB_IEC_T3_TIMEOUT    (4)
 
 #define EVT_IEC_CNT_FULL     (0x101)
 #define EVT_SUB_IEC_K_FULL   (0x1)
@@ -87,13 +91,20 @@ struct net_link_info
 	struct net_link_cfg cfg;
 
 
-  unsigned int current_k;
-  unsigned int current_w;
+  unsigned char current_k;
+  unsigned char current_w;
 
-  unsigned int t0_delay;
-  unsigned int t1_delay;
-  unsigned int t2_delay;
-  unsigned int t3_delay;
+  unsigned char t0_start;
+  unsigned char t0_delay;
+  
+  unsigned char t1_start;
+  unsigned char t1_delay;
+  
+  unsigned char t2_start;
+  unsigned char t2_delay;
+  
+  unsigned char t3_start;
+  unsigned char t3_delay;
 
   unsigned int recv_counter;
   unsigned int sent_counter;

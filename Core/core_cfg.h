@@ -90,11 +90,11 @@ extern void XPRINTF();
 #define CFG_LINK_MAX			(4)		/*支持的链路数量 */
 #define CFG_APP_MAX				(1)		/*APP数量 */
 #define	CFG_SOCKET_MAX			(5)		/*网络模式下SOCKET最大连接数*/
-#define CFG_IEC104_T0           (30)
-#define CFG_IEC104_T1           (15)
-#define CFG_IEC104_T2           (10)
-#define CFG_IEC104_T3           (20)
-#define CFG_IEC104_K            (12)
+#define CFG_IEC104_T0           (30)      /* socket建立链接时间 ---主站端 */
+#define CFG_IEC104_T1           (15)      /* 发送后等待确认已发送数据时间 */
+#define CFG_IEC104_T2           (10)       /* 无数据接收时确认已接收数据时间 */     
+#define CFG_IEC104_T3           (20)       /*  空闲发送测试帧时间 */
+#define CFG_IEC104_K            (13)
 #define CFG_IEC104_W            (8)
 
 #define	CFG_ASDU_DATA_BUFF_MAX       (200)		/*ASDU数据缓存长度*/
