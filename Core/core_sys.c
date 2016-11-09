@@ -9,7 +9,7 @@ void iec_main_thread_entry(void *param);
 #define MAIN_THREAD_PROI    (15)
 #define MAIN_THREAD_TICK		(50)
 #define MAIN_THREAD_STACK_SIZE   (512)
-#define MAX_EVENT_COUNT			(5)
+#define MAX_EVENT_COUNT			(12)
 
 
 /**

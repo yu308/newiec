@@ -725,8 +725,9 @@ static int swc_check(rt_int8_t act)
 }
 
 
-static void swc_action(rt_int8_t act)
-{
+static int swc_action(rt_int8_t act)
+{       
+  rt_int32_t res=0;
 	rt_uint32_t state_temp;
 	rt_device_t dev = rt_device_find("io");
 	//register rt_base_t level;
@@ -743,12 +744,18 @@ static void swc_action(rt_int8_t act)
 				if (act == 1)
 				{
 					if (gSystemDev.ftu_dev->swc->get() == SWC_ST_CUT)
-						rt_swc_remote_action_start(gSystemDev.ftu_dev->swc, 1);
+                                        {
+                                          res=1;
+                                          rt_swc_remote_action_start(gSystemDev.ftu_dev->swc, 1);
+                                        }
 				}
 				else if (act == 0)
 				{
 					if (gSystemDev.ftu_dev->swc->get() == SWC_ST_CLOSE)
+                                        {
+                                          res=1;
 						rt_swc_remote_action_start(gSystemDev.ftu_dev->swc, 0);
+                                        }
 				}
 
 			}
@@ -756,6 +763,7 @@ static void swc_action(rt_int8_t act)
 		rt_device_close(dev);
 	}
 	
+        return res;
 }
 
 static int ecact_check(rt_int8_t act)
@@ -778,8 +786,9 @@ static int ecact_check(rt_int8_t act)
 
 }
 
-static void ecact_action(rt_int8_t act)
+static int ecact_action(rt_int8_t act)
 {
+  rt_int32_t res=0;
 	rt_uint32_t state_temp;
 	rt_device_t dev = rt_device_find("io");
 
@@ -796,10 +805,12 @@ static void ecact_action(rt_int8_t act)
 					rt_thread_delay(rt_tick_from_millisecond(200));
 					state_temp = OUT_RESET;
 					rt_device_write(dev, OUT_POS_VOL_ACTIVE, &state_temp, 1);
+                                        res=1;
 				}
 		}
 		rt_device_close(dev);
 	}
+        return res;
 
 }
 
@@ -823,8 +834,10 @@ int dc_node_ctrl_proc(unsigned int node_addr,char *node_data,unsigned int node_l
     }
     else if (dco->SE == EXECUTE)
     {
-      swc_action(dco->DCS-1);
-      return CMD_RES_OK;
+      if(swc_action(dco->DCS-1)==1)
+          return CMD_RES_OK;
+      else 
+        return CMD_RES_FAIL;
     }
   }
   
@@ -844,8 +857,9 @@ int dc_node_ctrl_proc(unsigned int node_addr,char *node_data,unsigned int node_l
     }
     else if (dco->SE == EXECUTE)
     {
-      ecact_action(dco->DCS-1);
+      if(ecact_action(dco->DCS-1)==1)
       return CMD_RES_OK;
+      else return CMD_RES_FAIL;
     }
   }
   

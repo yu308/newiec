@@ -3,6 +3,7 @@
 #include "../Layer/layer.h"
 #include "lwip/sockets.h"
 #include "gpio_dev.h"
+#include "w5500.h"
 
 #define IEC104_SERVER_THREAD_PROI   18
 #define IEC104_RECV_THREAD_PROI   17
@@ -20,6 +21,11 @@ void iec104_socket_write(unsigned int socket,char *buff, int len)
   send(socket,buff,len,0);
 }
 
+void iec104_w5500_socket_write(unsigned int socket,char *buff,int len)
+{
+  	rt_device_t dev = rt_device_find("w5500");
+	rt_device_write(dev, socket, buff, len);
+}
 /*
   单独每个socket链接的接收任务
 */
@@ -77,6 +83,74 @@ void iec104_recv_create(int socketid)
   
   iec_sys_api_create_link(name, EVT_SUB_SYS_LINK_SOCKET,socketid,0,1);
 }
+
+
+static void iec104_w55_recv_thread(void *param)
+{
+  
+   rt_device_t dev = rt_device_find("w5500");
+  struct net_link_info *link=(struct net_link_info*)param;
+  int bytes_received=0;
+  
+  link_set_write_handle(&link->obj,(int *)iec104_w5500_socket_write);
+  link->cfg.socket_close_sem=rt_sem_create("sem",0,RT_IPC_FLAG_FIFO);
+  net_link_thread_start(link);
+
+  rt_kprintf("IEC104_W55: create a main thread,socket=%08x\n", link->cfg.socket);
+  rt_kprintf("IEC104_W55: netlink is %08x,appid is %08x\n",link,link->obj.applayer_id);
+  char *temp_buff=rt_malloc(256);
+  int socket_id=link->cfg.socket;
+  rt_uint32_t set = 0;
+  struct w5500_dev *wdev = (struct w5500_dev *)dev->user_data;
+
+	while (1)
+	{
+          
+           if(rt_sem_take(link->cfg.socket_close_sem,500)==RT_EOK)
+          {
+              goto err;
+            }
+		
+          if(rt_event_recv(wdev->socket_event[socket_id], SOCKET_EVENT_CLOSE | SOCKET_EVENT_DISCON | SOCKET_EVENT_RECV,
+			RT_EVENT_FLAG_OR|RT_EVENT_FLAG_CLEAR, 20, &set)==RT_EOK)
+
+	
+          {     
+		if (((set&SOCKET_EVENT_CLOSE) == SOCKET_EVENT_CLOSE)
+			|| ((set&SOCKET_EVENT_DISCON) == SOCKET_EVENT_DISCON))
+		{
+			led_action(LED_NET_POS, LED_OFF);
+			/* 关闭此socket链接,并清除iec104 context ,删除此任务*/
+                        goto err;
+		}
+
+                if ((set&SOCKET_EVENT_OPEN) == SOCKET_EVENT_OPEN)
+		{
+			led_action(LED_NET_POS, LED_ON);
+			
+		}
+                
+		if ((set&SOCKET_EVENT_RECV) == SOCKET_EVENT_RECV)
+		{
+			bytes_received = rt_device_read(dev, socket_id, temp_buff, 0);
+			if (bytes_received > 0)
+			{
+				
+                                iec_sys_api_send_phyid_recv(link,temp_buff,bytes_received);
+			}
+		}
+          }
+        }
+err:
+  
+     iec_sys_api_netlink_send_close(link);
+   rt_sem_delete(link->cfg.socket_close_sem);
+  rt_device_control(dev, 0xC0, &socket_id);
+  rt_free(temp_buff);
+  rt_thread_suspend(rt_thread_self());
+  rt_thread_delete(rt_thread_self());
+}
+
 
 /*
   TCP服务器监听IEC104固定端口
@@ -168,7 +242,7 @@ void iec104_cs8900_link_complete(int linkid)
   rt_thread_startup(tid);
 }
 
-void iec104_cs8900_app_complete(char *name,int appid)
+void iec104_app_complete(char *name,int appid)
 {
    iec_sys_api_start_app(name);
     iec_sys_api_app_set_cmd_cb(name, EVT_SUB_APP_CTRL_CMD, (int *)iec104_ctrl_cmd_callback);
@@ -181,4 +255,47 @@ void iec104_cs8900_link_init(int *localip)
     if(sock<0)
       return;
     iec104_SS_thread_create(sock);
+}
+
+
+void iec104_w5500_link_complete(int linkid)
+{
+ // int *net_link=rt_malloc(sizeof(int));
+   //net_link=(int*)linkid;
+  
+  rt_kprintf("IEC104_W55: gened netlink is %08x,appid is %08x\n",linkid);
+  iec_sys_api_app_bind_link(((struct net_link_info *)linkid)->obj.name,"iec104");
+  
+  rt_thread_t tid=rt_thread_create("w5recv", iec104_w55_recv_thread, (void *)linkid, IEC104_THREAD_STACK_SIZE, IEC104_RECV_THREAD_PROI, IEC104_THREAD_TICKS);
+  rt_thread_startup(tid);
+}
+
+void iec104_w55_recv_create(int socketid)
+{
+  char name[24];
+  rt_memset(name, 0, 24);
+
+  rt_sprintf(name, "wh%04x", socketid);
+  
+  iec_sys_api_create_link(name, EVT_SUB_SYS_LINK_SOCKET,socketid,0,1);
+}
+
+static void iec104_w55_SS_thread_create()
+{
+      int i = 0;
+
+      for (i = 0; i < SOCKET_COUNT; i++)
+      {
+           iec104_w55_recv_create(i);
+      }
+}
+
+void iec104_w5500_link_init()
+{
+  rt_device_t dev = rt_device_find("w5500");
+  if (dev != 0)
+  {
+    rt_device_open(dev, RT_DEVICE_FLAG_RDWR);
+    //iec104_w55_SS_thread_create(context);
+  }
 }
